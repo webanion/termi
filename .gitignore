@@ -1,0 +1,47 @@
+# OS / editor junk
+.DS_Store
+.idea/
+*.swp
+.vscode/*
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel
+
+# Scratch / throwaway artifacts
+/tmp/
+/temp/
+.playwright-mcp/
+
+# Screenshots and reference images dropped in the repo root
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.webp
+/*.avif
+/*.svg
+/*.bmp
+/*.tif
+/*.tiff
+/*.ico
+/*.heic
