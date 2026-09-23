@@ -181,6 +181,9 @@ function buildMenu() {
         { type: 'separator' },
         { label: 'Next Terminal', accelerator: 'CmdOrCtrl+Shift+]', click: menuAction('next-terminal') },
         { label: 'Previous Terminal', accelerator: 'CmdOrCtrl+Shift+[', click: menuAction('prev-terminal') },
+        // Ctrl+[ is Escape in a terminal, so other systems add Alt.
+        { label: 'Next Pane', accelerator: isMac ? 'Cmd+]' : 'Ctrl+Alt+]', click: menuAction('next-pane') },
+        { label: 'Previous Pane', accelerator: isMac ? 'Cmd+[' : 'Ctrl+Alt+[', click: menuAction('prev-pane') },
         { type: 'separator' },
         ...Array.from({ length: 9 }, (_, i) => ({
           label: `Terminal ${i + 1}`,

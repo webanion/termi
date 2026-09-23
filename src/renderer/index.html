@@ -96,6 +96,8 @@
             <span class="title-text" id="title-text">Termi</span>
             <span class="title-sub" id="title-sub"></span>
           </div>
+          <!-- Shows when the tab has more than one terminal. -->
+          <div class="layout-control" id="layout-control" role="radiogroup" aria-label="Layout"></div>
         </header>
 
         <div class="terminals" id="terminals">
@@ -125,11 +127,17 @@
           <input type="text" name="name" placeholder="API server" required maxlength="60" />
         </label>
 
-        <label class="field">
-          <span class="field-label">Command</span>
-          <textarea name="command" rows="3" placeholder="npm run dev" required spellcheck="false"></textarea>
-          <span class="field-hint">Each line runs in order, in your normal shell.</span>
-        </label>
+        <div class="field">
+          <span class="field-label" id="command-label">Command</span>
+          <div class="term-fields" id="term-fields"></div>
+          <button type="button" class="add-term" id="add-term-field">
+            <svg viewBox="0 0 24 24"><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+            Add terminal
+          </button>
+          <span class="field-hint">
+            Each line runs in order, in your normal shell. Add up to 4 terminals to run them side by side in one tab.
+          </span>
+        </div>
 
         <div class="field">
           <span class="field-label">Folder</span>
@@ -147,7 +155,7 @@
           <span class="check-box"></span>
           <span>
             <span class="check-title">Start when Termi opens</span>
-            <span class="field-hint">Termi runs this command in a new terminal at launch.</span>
+            <span class="field-hint">Termi runs it in a new tab at launch.</span>
           </span>
         </label>
 

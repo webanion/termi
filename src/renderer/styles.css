@@ -216,6 +216,7 @@ body.sidebar-hidden .resizer {
 }
 
 .main-head {
+  position: relative;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
   transition: padding-left var(--dur) var(--ease);
@@ -248,7 +249,9 @@ body.fullscreen {
 }
 
 .title {
-  transition: opacity var(--dur) var(--ease);
+  transition:
+    opacity var(--dur) var(--ease),
+    padding var(--dur) var(--ease);
   flex: 1;
   min-width: 0;
   display: flex;
@@ -283,9 +286,54 @@ body.fullscreen {
   color: var(--faint);
 }
 
+/* Keep the title centered and clear of the layout control. */
+.main-head.has-layout .title {
+  padding: 0 var(--layout-w, 0);
+}
+
 body.blurred .title,
 body.blurred .sidebar-head {
   opacity: 0.6;
+}
+
+/* Layout picker for a tab with more than one terminal. */
+.layout-control {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  transform: translateY(-50%);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility var(--dur) var(--ease);
+}
+
+.layout-control.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.layout-control .icon-btn {
+  width: 24px;
+  height: 22px;
+  border-radius: 5px;
+}
+
+.layout-control .icon-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.75;
+}
+
+.layout-control .icon-btn.on {
+  background: var(--active);
+  color: var(--accent);
 }
 
 /* ---------- Custom traffic lights (Windows and Linux) ---------- */
@@ -804,24 +852,130 @@ textarea:focus-visible {
   background: var(--bg);
 }
 
-.term-pane {
+/* One tab. Its panes sit in a grid, and app.js sets the grid for the chosen layout. */
+.tab-view {
   position: absolute;
   inset: 0;
-  padding: 8px 4px 4px 12px;
   display: none;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
 }
 
-/* Switching terminals cross-fades: the new pane fades in on top of the old one. */
-.term-pane.active {
-  display: block;
+/* Switching tabs cross-fades: the new tab fades in on top of the old one. */
+.tab-view.active {
+  display: grid;
   z-index: 1;
   animation: fade-in var(--dur) var(--ease);
 }
 
-.term-pane.leaving {
-  display: block;
+.tab-view.leaving {
+  display: grid;
   opacity: 0;
   transition: opacity var(--dur) var(--ease);
+}
+
+/* The gap shows as a thin line between panes. */
+.tab-view.split {
+  gap: 1px;
+  background: var(--border);
+}
+
+.term-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* The fit addon reads this box's computed size. With content-box, that size leaves out
+   the padding, so the terminal fits inside the pane instead of running into the next one. */
+.pane-body {
+  box-sizing: content-box;
+  flex: 1;
+  min-height: 0;
+  padding: 8px 4px 4px 12px;
+}
+
+.pane-head {
+  display: none;
+}
+
+.split .pane-head {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 24px;
+  padding: 0 4px 0 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font: 11px var(--mono);
+  white-space: nowrap;
+  transition: color var(--dur) var(--ease);
+}
+
+/* The pane that has focus gets the same accent bar as the active row in the sidebar. */
+.split .pane-head::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transform: scaleY(0.4);
+  transition:
+    opacity var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+
+.split .term-pane.focused .pane-head {
+  color: var(--text-2);
+}
+
+.split .term-pane.focused .pane-head::before {
+  opacity: 1;
+  transform: none;
+}
+
+.pane-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pane-proc {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--faint);
+}
+
+.pane-proc:not(:empty)::before {
+  content: '·';
+  margin-right: 7px;
+}
+
+.pane-head .icon-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  opacity: 0;
+}
+
+.pane-head .icon-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.pane-head:hover .icon-btn,
+.pane-head .icon-btn:focus-visible {
+  opacity: 1;
 }
 
 /* Shows for a moment after select-to-copy. */
@@ -850,7 +1004,7 @@ textarea:focus-visible {
   transform: none;
 }
 
-.term-pane .xterm {
+.pane-body .xterm {
   height: 100%;
 }
 
@@ -1092,6 +1246,71 @@ textarea:focus-visible {
 .check-title {
   display: block;
   font-weight: 500;
+}
+
+.term-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.term-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  animation: fade-in var(--dur) var(--ease);
+}
+
+.term-field textarea {
+  flex: 1;
+  min-width: 0;
+}
+
+.term-fields.multi textarea {
+  min-height: 0;
+}
+
+.term-field-num {
+  flex: none;
+  width: 12px;
+  padding-top: 8px;
+  font: 11px var(--mono);
+  color: var(--faint);
+  text-align: right;
+}
+
+.term-field .icon-btn {
+  margin-top: 6px;
+}
+
+/* One terminal looks like the plain command box it used to be. */
+.term-fields:not(.multi) .term-field-num,
+.term-fields:not(.multi) .icon-btn {
+  display: none;
+}
+
+.add-term {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.add-term svg {
+  width: 12px;
+  height: 12px;
+}
+
+.add-term:hover {
+  border-color: var(--accent);
+  color: var(--text-2);
 }
 
 .dialog-actions {

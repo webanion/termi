@@ -46,16 +46,44 @@ const ICONS = {
   close: '<svg viewBox="0 0 24 24"><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>',
 };
 
+const MAX_PANES = 4;
+const PANE_AREAS = ['a', 'b', 'c', 'd'];
+
+// Layouts for a tab with more than one terminal. Each string is one grid row, and each
+// letter is one terminal, in order. The first layout in each list is the default.
+const LAYOUTS = {
+  2: [
+    { id: 'columns', label: 'Side by side', areas: ['a b'] },
+    { id: 'rows', label: 'Stacked', areas: ['a', 'b'] },
+  ],
+  3: [
+    { id: 'main-left', label: 'Large on the left', areas: ['a b', 'a c'] },
+    { id: 'main-top', label: 'Large on top', areas: ['a a', 'b c'] },
+    { id: 'columns', label: 'Side by side', areas: ['a b c'] },
+    { id: 'rows', label: 'Stacked', areas: ['a', 'b', 'c'] },
+  ],
+  4: [
+    { id: 'grid', label: 'Grid', areas: ['a b', 'c d'] },
+    { id: 'main-left', label: 'Large on the left', areas: ['a b', 'a c', 'a d'] },
+    { id: 'columns', label: 'Side by side', areas: ['a b c d'] },
+    { id: 'rows', label: 'Stacked', areas: ['a', 'b', 'c', 'd'] },
+  ],
+};
+
 const $ = (selector) => document.querySelector(selector);
 
 const state = {
   info: { platform: 'darwin', version: '' },
   settings: null,
-  terminals: [], // { id, term, fit, pane, name, customName, proc, shellName, commandId, activity }
+  // A tab holds 1 to 4 panes. Only a saved command opens more than one.
+  // { id, view, name, customName, commandId, activity, layout, panes, focused }
+  tabs: [],
   activeId: null,
 };
 
+const panes = new Map(); // pty id -> { id, tab, box, term, fit, command, proc, shellName, ui }
 const earlyData = new Map(); // output that arrived before the terminal was registered
+let nextTabId = 1;
 let layoutAnimating = false; // true while the sidebar slides, so terminals refit once at the end
 
 function el(tag, className, html) {
@@ -76,24 +104,38 @@ async function saveSettings(patch) {
   state.settings = await api.settings.update(patch);
 }
 
-function getTerminal(id) {
-  return state.terminals.find((t) => t.id === id);
+function getTab(id) {
+  return state.tabs.find((t) => t.id === id);
 }
 
-function activeTerminal() {
-  return getTerminal(state.activeId);
+function activeTab() {
+  return getTab(state.activeId);
 }
 
-function isBusy(t) {
-  const proc = (t.proc || '').replace(/^-/, '');
-  return Boolean(proc) && proc !== t.shellName;
+function isBusy(pane) {
+  const proc = (pane.proc || '').replace(/^-/, '');
+  return Boolean(proc) && proc !== pane.shellName;
+}
+
+function fitTab(tab) {
+  for (const pane of tab?.panes ?? []) pane.fit.fit();
 }
 
 // ---------- Terminals ----------
 
-async function createTerminal({ name, command, cwd, commandId } = {}) {
-  const pane = el('div', 'term-pane');
-  $('#terminals').appendChild(pane);
+function buildPane(tab, command) {
+  const box = el('div', 'term-pane');
+  // The head only shows when the tab has more than one pane.
+  const head = el('div', 'pane-head');
+  const dot = el('span', 'dot');
+  const name = el('span', 'pane-name');
+  const proc = el('span', 'pane-proc');
+  const close = el('button', 'icon-btn', ICONS.close);
+  close.title = 'Close this terminal';
+  head.append(dot, name, proc, close);
+  const body = el('div', 'pane-body');
+  box.append(head, body);
+  tab.view.appendChild(box);
 
   const term = new Terminal({
     fontFamily: "ui-monospace, 'SF Mono', Menlo, Monaco, 'Cascadia Mono', Consolas, monospace",
@@ -116,7 +158,7 @@ async function createTerminal({ name, command, cwd, commandId } = {}) {
     })
   );
 
-  term.open(pane);
+  term.open(body);
   try {
     const webgl = new WebglAddon();
     webgl.onContextLoss(() => webgl.dispose());
@@ -125,89 +167,128 @@ async function createTerminal({ name, command, cwd, commandId } = {}) {
     // WebGL is not available: xterm keeps its DOM renderer.
   }
 
-  // Measure the pane while it is visible, so the shell starts at the right size.
-  pane.classList.add('active');
-  fit.fit();
-  if (state.activeId !== null) pane.classList.remove('active');
-
-  const created = await api.pty.create({ cols: term.cols, rows: term.rows, cwd, command });
-  const t = {
-    id: created.id,
-    term,
-    fit,
-    pane,
-    name: name || created.title,
-    customName: Boolean(name),
-    proc: created.title,
-    shellName: created.title,
-    commandId: commandId || null,
-    activity: false,
-  };
-  state.terminals.push(t);
+  const pane = { id: null, tab, box, term, fit, command, proc: '', shellName: '', ui: { dot, name, proc } };
 
   // Select to copy: when a mouse selection ends, the text goes to the clipboard.
-  pane.addEventListener('mousedown', () => (selectingIn = t));
+  box.addEventListener('mousedown', () => (selectingIn = pane));
+  box.addEventListener('focusin', () => focusPane(pane));
+  head.addEventListener('click', () => term.focus());
+  close.addEventListener('click', (event) => {
+    event.stopPropagation();
+    removePane(pane);
+  });
+  return pane;
+}
 
-  term.onData((data) => api.pty.write(t.id, data));
-  term.onResize(({ cols, rows }) => api.pty.resize(t.id, cols, rows));
+function attachPty(pane, created) {
+  pane.id = created.id;
+  pane.proc = created.title;
+  pane.shellName = created.title;
+  panes.set(pane.id, pane);
+
+  const { term, tab } = pane;
+  term.onData((data) => api.pty.write(pane.id, data));
+  term.onResize(({ cols, rows }) => api.pty.resize(pane.id, cols, rows));
   term.onTitleChange((title) => {
-    if (!t.customName && title) {
-      t.name = title;
+    if (!tab.customName && title) {
+      tab.name = title;
       render();
     }
   });
 
-  const pending = earlyData.get(t.id);
+  const pending = earlyData.get(pane.id);
   if (pending) {
     term.write(pending);
-    earlyData.delete(t.id);
+    earlyData.delete(pane.id);
   }
-
-  return t;
 }
 
-// The new pane fades in on top. The old one stays under it until the fade ends.
-function showPane(t, visible) {
-  clearTimeout(t.paneTimer);
+// `commands` has one entry per pane. An empty command opens a plain shell.
+async function createTab({ name, commands = [''], cwd, commandId, layout } = {}) {
+  const view = el('div', 'tab-view');
+  $('#terminals').appendChild(view);
+  const tab = {
+    id: nextTabId++,
+    view,
+    name: name || '',
+    customName: Boolean(name),
+    commandId: commandId || null,
+    activity: false,
+    layout: layout || null,
+    panes: [],
+    focused: null,
+  };
+  tab.panes = commands.slice(0, MAX_PANES).map((command) => buildPane(tab, command));
+  tab.focused = tab.panes[0];
+  applyLayout(tab);
+
+  // Measure the panes while they are visible, so each shell starts at the right size.
+  view.classList.add('active');
+  fitTab(tab);
+  if (state.activeId !== null) view.classList.remove('active');
+
+  const created = await Promise.all(
+    tab.panes.map((pane) => api.pty.create({ cols: pane.term.cols, rows: pane.term.rows, cwd, command: pane.command }))
+  );
+  created.forEach((info, index) => attachPty(tab.panes[index], info));
+  if (!tab.name) tab.name = created[0].title;
+  state.tabs.push(tab);
+  return tab;
+}
+
+// The new tab fades in on top. The old one stays under it until the fade ends.
+function showView(tab, visible) {
+  clearTimeout(tab.viewTimer);
   if (visible) {
-    t.pane.classList.remove('leaving');
-    t.pane.classList.add('active');
+    tab.view.classList.remove('leaving');
+    tab.view.classList.add('active');
     return;
   }
-  if (!t.pane.classList.contains('active')) return;
-  t.pane.classList.replace('active', 'leaving');
-  t.paneTimer = setTimeout(() => t.pane.classList.remove('leaving'), DURATION);
+  if (!tab.view.classList.contains('active')) return;
+  tab.view.classList.replace('active', 'leaving');
+  tab.viewTimer = setTimeout(() => tab.view.classList.remove('leaving'), DURATION);
 }
 
 function activate(id) {
-  const t = getTerminal(id);
-  if (!t) return;
+  const tab = getTab(id);
+  if (!tab) return;
   state.activeId = id;
-  t.activity = false;
-  for (const other of state.terminals) showPane(other, other.id === id);
+  tab.activity = false;
+  for (const other of state.tabs) showView(other, other.id === id);
   requestAnimationFrame(() => {
-    t.fit.fit();
-    t.term.focus();
+    fitTab(tab);
+    tab.focused.term.focus();
   });
   render();
 }
 
-function closeTerminal(id) {
-  const index = state.terminals.findIndex((t) => t.id === id);
+function focusPane(pane) {
+  if (pane.tab.focused === pane) return;
+  pane.tab.focused = pane;
+  render();
+}
+
+function forgetPane(pane) {
+  api.pty.kill(pane.id);
+  panes.delete(pane.id);
+  if (selectingIn === pane) selectingIn = null;
+}
+
+function closeTab(id) {
+  const index = state.tabs.findIndex((t) => t.id === id);
   if (index === -1) return;
-  const [t] = state.terminals.splice(index, 1);
-  api.pty.kill(t.id);
-  if (selectingIn === t) selectingIn = null;
-  clearTimeout(t.paneTimer);
-  t.pane.classList.replace('active', 'leaving');
+  const [tab] = state.tabs.splice(index, 1);
+  for (const pane of tab.panes) forgetPane(pane);
+  clearTimeout(tab.viewTimer);
+  tab.view.classList.replace('active', 'leaving');
   setTimeout(() => {
-    t.term.dispose();
-    t.pane.remove();
+    for (const pane of tab.panes) pane.term.dispose();
+    tab.view.remove();
   }, DURATION);
 
   if (state.activeId === id) {
     state.activeId = null;
-    const next = state.terminals[index] || state.terminals[index - 1];
+    const next = state.tabs[index] || state.tabs[index - 1];
     if (next) {
       activate(next.id);
       return;
@@ -216,50 +297,177 @@ function closeTerminal(id) {
   render();
 }
 
-async function openTerminal(options) {
-  const t = await createTerminal(options);
-  activate(t.id);
-  return t;
+// Close one pane. The other panes of the tab take its space. The last pane closes the tab.
+function removePane(pane) {
+  const { tab } = pane;
+  const index = tab.panes.indexOf(pane);
+  if (index === -1) return;
+  if (tab.panes.length === 1) {
+    closeTab(tab.id);
+    return;
+  }
+  forgetPane(pane);
+  tab.panes.splice(index, 1);
+  pane.term.dispose();
+  pane.box.remove();
+  if (tab.focused === pane) tab.focused = tab.panes[index] || tab.panes[index - 1];
+  applyLayout(tab);
+  if (tab.id === state.activeId) {
+    requestAnimationFrame(() => {
+      fitTab(tab);
+      tab.focused.term.focus();
+    });
+  }
+  render();
+}
+
+async function openTab(options) {
+  const tab = await createTab(options);
+  activate(tab.id);
+  return tab;
 }
 
 function cycle(step) {
-  if (state.terminals.length < 2) return;
-  const index = state.terminals.findIndex((t) => t.id === state.activeId);
-  const next = (index + step + state.terminals.length) % state.terminals.length;
-  activate(state.terminals[next].id);
+  if (state.tabs.length < 2) return;
+  const index = state.tabs.findIndex((t) => t.id === state.activeId);
+  const next = (index + step + state.tabs.length) % state.tabs.length;
+  activate(state.tabs[next].id);
+}
+
+function cyclePane(step) {
+  const tab = activeTab();
+  if (!tab || tab.panes.length < 2) return;
+  const index = tab.panes.indexOf(tab.focused);
+  tab.panes[(index + step + tab.panes.length) % tab.panes.length].term.focus();
 }
 
 function setFontSize(size) {
   const fontSize = Math.min(28, Math.max(9, size));
-  for (const t of state.terminals) t.term.options.fontSize = fontSize;
-  activeTerminal()?.fit.fit();
+  for (const tab of state.tabs) for (const pane of tab.panes) pane.term.options.fontSize = fontSize;
+  fitTab(activeTab());
   saveSettings({ fontSize });
 }
 
 api.pty.onData((id, data) => {
-  const t = getTerminal(id);
-  if (!t) {
+  const pane = panes.get(id);
+  if (!pane) {
     earlyData.set(id, (earlyData.get(id) || '') + data);
     return;
   }
-  t.term.write(data);
-  if (id !== state.activeId && !t.activity) {
-    t.activity = true;
+  pane.term.write(data);
+  const { tab } = pane;
+  if (tab.id !== state.activeId && !tab.activity) {
+    tab.activity = true;
     renderTerminals();
   }
 });
 
 api.pty.onTitle((id, title) => {
-  const t = getTerminal(id);
-  if (!t) return;
-  t.proc = title;
+  const pane = panes.get(id);
+  if (!pane) return;
+  pane.proc = title;
   render();
 });
 
 api.pty.onExit((id) => {
   earlyData.delete(id);
-  if (getTerminal(id)) closeTerminal(id);
+  const pane = panes.get(id);
+  if (pane) removePane(pane);
 });
+
+// ---------- Layouts ----------
+
+function layoutFor(tab) {
+  const options = LAYOUTS[tab.panes.length];
+  if (!options) return null;
+  return options.find((l) => l.id === tab.layout) || options[0];
+}
+
+function applyLayout(tab) {
+  const layout = layoutFor(tab);
+  const { style } = tab.view;
+  tab.view.classList.toggle('split', Boolean(layout));
+  const grid = layout ? layout.areas.map((row) => row.split(' ')) : null;
+  style.gridTemplateAreas = layout ? layout.areas.map((row) => `"${row}"`).join(' ') : '';
+  style.gridTemplateColumns = grid ? `repeat(${grid[0].length}, minmax(0, 1fr))` : '';
+  style.gridTemplateRows = grid ? `repeat(${grid.length}, minmax(0, 1fr))` : '';
+  tab.panes.forEach((pane, index) => (pane.box.style.gridArea = layout ? PANE_AREAS[index] : ''));
+}
+
+function setLayout(tab, id) {
+  tab.layout = id;
+  applyLayout(tab);
+  renderLayoutControl();
+  requestAnimationFrame(() => fitTab(tab));
+  // Remember the layout for the next time the saved command runs.
+  if (tab.commandId && commandById(tab.commandId)) {
+    saveSettings({ commands: state.settings.commands.map((c) => (c.id === tab.commandId ? { ...c, layout: id } : c)) });
+  }
+}
+
+// Draw the layout as an icon: a frame, and a line wherever two panes meet.
+function layoutIcon(layout) {
+  const grid = layout.areas.map((row) => row.split(' '));
+  const rowCount = grid.length;
+  const colCount = grid[0].length;
+  const x = (col) => +(4 + (16 * col) / colCount).toFixed(2);
+  const y = (row) => +(5 + (14 * row) / rowCount).toFixed(2);
+  const parts = ['<rect x="4" y="5" width="16" height="14" rx="2" />'];
+  for (const area of new Set(grid.flat())) {
+    let top = rowCount;
+    let bottom = 0;
+    let left = colCount;
+    let right = 0;
+    grid.forEach((row, r) =>
+      row.forEach((cell, c) => {
+        if (cell !== area) return;
+        top = Math.min(top, r);
+        bottom = Math.max(bottom, r + 1);
+        left = Math.min(left, c);
+        right = Math.max(right, c + 1);
+      })
+    );
+    if (right < colCount) parts.push(`<path d="M${x(right)} ${y(top)}V${y(bottom)}" />`);
+    if (bottom < rowCount) parts.push(`<path d="M${x(left)} ${y(bottom)}H${x(right)}" />`);
+  }
+  return `<svg viewBox="0 0 24 24">${parts.join('')}</svg>`;
+}
+
+function renderLayoutControl() {
+  const control = $('#layout-control');
+  const tab = activeTab();
+  const options = tab ? LAYOUTS[tab.panes.length] : null;
+  control.classList.toggle('show', Boolean(options));
+  $('#main-head').classList.toggle('has-layout', Boolean(options));
+  if (!options) return;
+
+  // Build the buttons only when the set of layouts changes, so the hover state can animate.
+  const key = options.map((l) => l.id).join();
+  if (control.dataset.key !== key) {
+    control.dataset.key = key;
+    control.replaceChildren(
+      ...options.map((layout) => {
+        const button = el('button', 'icon-btn', layoutIcon(layout));
+        button.dataset.layout = layout.id;
+        button.title = layout.label;
+        button.setAttribute('role', 'radio');
+        button.setAttribute('aria-label', layout.label);
+        button.addEventListener('click', () => {
+          const current = activeTab();
+          if (current) setLayout(current, layout.id);
+        });
+        return button;
+      })
+    );
+    $('#main-head').style.setProperty('--layout-w', `${control.offsetWidth + 8}px`);
+  }
+  const current = layoutFor(tab).id;
+  for (const button of control.children) {
+    const on = button.dataset.layout === current;
+    button.classList.toggle('on', on);
+    button.setAttribute('aria-checked', String(on));
+  }
+}
 
 // ---------- Saved commands ----------
 
@@ -268,11 +476,34 @@ function commandById(id) {
 }
 
 function runningFor(commandId) {
-  return state.terminals.find((t) => t.commandId === commandId);
+  return state.tabs.find((t) => t.commandId === commandId);
+}
+
+function commandTabOptions(cmd) {
+  return {
+    name: cmd.name,
+    commands: cmd.terminals.map((t) => t.command),
+    cwd: cmd.cwd,
+    commandId: cmd.id,
+    layout: cmd.layout,
+  };
 }
 
 function runCommand(cmd) {
-  return openTerminal({ name: cmd.name, command: cmd.command, cwd: cmd.cwd, commandId: cmd.id });
+  return openTab(commandTabOptions(cmd));
+}
+
+// One line for a command that may have many lines.
+function commandLabel(command) {
+  return command
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join('; ');
+}
+
+function commandSummary(cmd) {
+  return cmd.terminals.map((t) => commandLabel(t.command) || 'Plain shell').join('\n');
 }
 
 async function toggleAutoStart(cmd) {
@@ -287,18 +518,41 @@ function render() {
   renderTerminals();
   renderCommands();
   renderTitle();
+  renderPanes();
+}
+
+// The program running in the pane that has focus, when it is not the shell.
+function focusedProc(tab) {
+  const pane = tab.focused;
+  return pane && isBusy(pane) && pane.proc !== tab.name ? pane.proc : '';
 }
 
 function renderTitle() {
-  const t = activeTerminal();
+  const t = activeTab();
   $('#title-text').textContent = t ? t.name : 'Termi';
-  $('#title-sub').textContent = t && isBusy(t) && t.proc !== t.name ? t.proc : '';
+  $('#title-sub').textContent = t ? focusedProc(t) : '';
   document.title = t ? `${t.name} | Termi` : 'Termi';
-  $('#empty-state').hidden = state.terminals.length > 0;
+  $('#empty-state').hidden = state.tabs.length > 0;
+  renderLayoutControl();
+}
+
+function renderPanes() {
+  for (const tab of state.tabs) {
+    if (tab.panes.length < 2) continue;
+    for (const pane of tab.panes) {
+      const name = commandLabel(pane.command) || pane.shellName;
+      const busy = isBusy(pane);
+      pane.box.classList.toggle('focused', pane === tab.focused);
+      pane.ui.dot.className = `dot ${busy ? 'busy' : ''}`;
+      pane.ui.name.textContent = name;
+      pane.ui.name.title = pane.command || name;
+      pane.ui.proc.textContent = busy && pane.proc !== name ? pane.proc : '';
+    }
+  }
 }
 
 const rows = {
-  terminals: new Map(), // terminal id -> row
+  terminals: new Map(), // tab id -> row
   commands: new Map(), // command id -> row
 };
 
@@ -346,14 +600,14 @@ function buildTerminalRow(id) {
   close.title = 'Close terminal';
   close.addEventListener('click', (event) => {
     event.stopPropagation();
-    closeTerminal(id);
+    closeTab(id);
   });
   actions.append(close);
   item.append(dot, name, meta, kbd, actions);
 
   item.addEventListener('click', () => activate(id));
   item.addEventListener('dblclick', () => {
-    const t = getTerminal(id);
+    const t = getTab(id);
     if (t) startRename(t, name);
   });
   return { item, dot, name, meta, kbd };
@@ -361,10 +615,11 @@ function buildTerminalRow(id) {
 
 function updateTerminalRow(row, t, index) {
   row.item.classList.toggle('active', t.id === state.activeId);
-  row.item.title = t.commandId ? commandById(t.commandId)?.command || t.name : t.name;
-  row.dot.className = `dot ${t.activity ? 'activity' : isBusy(t) ? 'busy' : ''}`;
+  const cmd = t.commandId ? commandById(t.commandId) : null;
+  row.item.title = cmd ? commandSummary(cmd) : t.name;
+  row.dot.className = `dot ${t.activity ? 'activity' : t.panes.some(isBusy) ? 'busy' : ''}`;
   if (row.name.contentEditable !== 'true') row.name.textContent = t.name;
-  const meta = isBusy(t) && t.proc !== t.name ? t.proc : '';
+  const meta = focusedProc(t);
   row.meta.textContent = meta;
   row.meta.hidden = !meta;
   row.kbd.textContent = index < 9 ? `${modKey()}${index + 1}` : '';
@@ -372,8 +627,8 @@ function updateTerminalRow(row, t, index) {
 }
 
 function renderTerminals() {
-  $('#running-count').textContent = state.terminals.length;
-  syncList($('#terminal-list'), rows.terminals, state.terminals, buildTerminalRow, updateTerminalRow);
+  $('#running-count').textContent = state.tabs.length;
+  syncList($('#terminal-list'), rows.terminals, state.tabs, buildTerminalRow, updateTerminalRow);
 }
 
 function startRename(t, nameEl) {
@@ -391,7 +646,7 @@ function startRename(t, nameEl) {
       t.customName = true;
     }
     render();
-    if (t.id === state.activeId) t.term.focus();
+    if (t.id === state.activeId) t.focused.term.focus();
   };
   const onKey = (event) => {
     if (event.key === 'Enter') {
@@ -417,7 +672,7 @@ function buildCommandRow(id) {
   stop.addEventListener('click', (event) => {
     event.stopPropagation();
     const running = runningFor(id);
-    if (running) closeTerminal(running.id);
+    if (running) closeTab(running.id);
   });
   const edit = el('button', 'icon-btn', ICONS.edit);
   edit.title = 'Edit';
@@ -450,7 +705,7 @@ function buildCommandRow(id) {
 function updateCommandRow(row, cmd) {
   const running = runningFor(cmd.id);
   row.item.classList.toggle('active', Boolean(running && running.id === state.activeId));
-  row.item.title = `${cmd.command}${cmd.cwd ? `\nin ${cmd.cwd}` : ''}`;
+  row.item.title = `${commandSummary(cmd)}${cmd.cwd ? `\nin ${cmd.cwd}` : ''}`;
   if (row.running !== Boolean(running)) {
     row.running = Boolean(running);
     row.stateIcon.innerHTML = running ? '<span class="dot"></span>' : ICONS.play;
@@ -549,13 +804,61 @@ let editingId = null;
 
 let dialogTimer = 0;
 
+const termFields = $('#term-fields');
+
+function commandInputs() {
+  return [...termFields.querySelectorAll('textarea')];
+}
+
+// One command box per terminal. With more than one, each box gets a number and a remove button.
+function addCommandField(value = '') {
+  if (termFields.children.length >= MAX_PANES) return null;
+  const row = el('div', 'term-field');
+  const number = el('span', 'term-field-num');
+  const input = el('textarea');
+  input.spellcheck = false;
+  input.value = value;
+  const remove = el('button', 'icon-btn small', ICONS.close);
+  remove.type = 'button';
+  remove.title = 'Remove this terminal';
+  remove.addEventListener('click', () => {
+    const inputs = commandInputs();
+    const index = inputs.indexOf(input);
+    row.remove();
+    updateCommandFields();
+    const next = commandInputs();
+    next[Math.min(index, next.length - 1)]?.focus();
+  });
+  row.append(number, input, remove);
+  termFields.append(row);
+  updateCommandFields();
+  return input;
+}
+
+function updateCommandFields() {
+  const fields = [...termFields.children];
+  const multi = fields.length > 1;
+  termFields.classList.toggle('multi', multi);
+  fields.forEach((row, index) => {
+    row.querySelector('.term-field-num').textContent = index + 1;
+    const input = row.querySelector('textarea');
+    input.rows = multi ? 2 : 3;
+    input.required = index === 0;
+    input.placeholder = index === 0 ? 'npm run dev' : 'Leave empty for a plain shell';
+    input.setAttribute('aria-label', multi ? `Command for terminal ${index + 1}` : 'Command');
+  });
+  $('#command-label').textContent = multi ? 'Commands' : 'Command';
+  $('#add-term-field').hidden = fields.length >= MAX_PANES;
+}
+
 function openCommandDialog(cmd = null) {
   clearTimeout(dialogTimer);
   dialog.classList.remove('closing');
   editingId = cmd?.id ?? null;
   $('#command-dialog-title').textContent = cmd ? 'Edit saved command' : 'New saved command';
   form.elements.name.value = cmd?.name ?? '';
-  form.elements.command.value = cmd?.command ?? '';
+  termFields.replaceChildren();
+  for (const t of cmd?.terminals ?? [{ command: '' }]) addCommandField(t.command);
   form.elements.cwd.value = cmd?.cwd ?? '';
   form.elements.autoStart.checked = cmd?.autoStart ?? false;
   const del = $('#delete-command');
@@ -577,32 +880,34 @@ form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const data = {
     name: form.elements.name.value.trim(),
-    command: form.elements.command.value.trim(),
+    terminals: commandInputs().map((input) => ({ command: input.value.trim() })),
     cwd: form.elements.cwd.value.trim(),
     autoStart: form.elements.autoStart.checked,
   };
-  if (!data.name || !data.command) return;
+  if (!data.name || !data.terminals[0]?.command) return;
 
   const commands = editingId
     ? state.settings.commands.map((c) => (c.id === editingId ? { ...c, ...data } : c))
     : [...state.settings.commands, { id: uid(), ...data }];
   await saveSettings({ commands });
 
-  // Keep the name of a running terminal in step with its command.
+  // Keep the name of a running tab in step with its command.
   if (editingId) {
-    for (const t of state.terminals) if (t.commandId === editingId) t.name = data.name;
+    for (const t of state.tabs) if (t.commandId === editingId) t.name = data.name;
   }
   closeCommandDialog();
   render();
 });
 
-// Cmd+Enter saves from inside the command box.
-form.elements.command.addEventListener('keydown', (event) => {
+// Cmd+Enter saves from inside a command box.
+termFields.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
     event.preventDefault();
     form.requestSubmit();
   }
 });
+
+$('#add-term-field').addEventListener('click', () => addCommandField()?.focus());
 
 $('#cancel-command').addEventListener('click', closeCommandDialog);
 dialog.addEventListener('cancel', (event) => {
@@ -611,7 +916,7 @@ dialog.addEventListener('cancel', (event) => {
 });
 dialog.addEventListener('close', () => {
   dialog.classList.remove('closing');
-  activeTerminal()?.term.focus();
+  activeTab()?.focused.term.focus();
 });
 
 $('#delete-command').addEventListener('click', async (event) => {
@@ -622,7 +927,7 @@ $('#delete-command').addEventListener('click', async (event) => {
     return;
   }
   await saveSettings({ commands: state.settings.commands.filter((c) => c.id !== editingId) });
-  for (const t of state.terminals) if (t.commandId === editingId) t.commandId = null;
+  for (const t of state.tabs) if (t.commandId === editingId) t.commandId = null;
   closeCommandDialog();
   render();
 });
@@ -646,7 +951,7 @@ function animateLayout() {
   clearTimeout(layoutTimer);
   layoutTimer = setTimeout(() => {
     layoutAnimating = false;
-    activeTerminal()?.fit.fit();
+    fitTab(activeTab());
   }, DURATION + 20);
 }
 
@@ -679,7 +984,7 @@ function setupResizer() {
       resizer.removeEventListener('pointermove', onMove);
       resizer.removeEventListener('pointerup', onUp);
       saveSettings({ sidebarWidth: width });
-      activeTerminal()?.fit.fit();
+      fitTab(activeTab());
     };
     resizer.addEventListener('pointermove', onMove);
     resizer.addEventListener('pointerup', onUp);
@@ -721,25 +1026,27 @@ function setupHeaderDoubleClick() {
 // ---------- Menu actions ----------
 
 const menuActions = {
-  'new-terminal': () => openTerminal(),
+  'new-terminal': () => openTab(),
   'new-command': () => openCommandDialog(),
   'close-terminal': () => {
     if (dialog.open) closeCommandDialog();
-    else if (state.activeId !== null) closeTerminal(state.activeId);
+    else if (state.activeId !== null) closeTab(state.activeId);
   },
-  clear: () => activeTerminal()?.term.clear(),
+  clear: () => activeTab()?.focused.term.clear(),
   'toggle-sidebar': toggleSidebar,
   'font-bigger': () => setFontSize(state.settings.fontSize + 1),
   'font-smaller': () => setFontSize(state.settings.fontSize - 1),
   'font-reset': () => setFontSize(DEFAULT_FONT_SIZE),
   'next-terminal': () => cycle(1),
   'prev-terminal': () => cycle(-1),
+  'next-pane': () => cyclePane(1),
+  'prev-pane': () => cyclePane(-1),
 };
 
 api.onMenuAction((action) => {
   const select = /^select-terminal-(\d)$/.exec(action);
   if (select) {
-    const t = state.terminals[Number(select[1])];
+    const t = state.tabs[Number(select[1])];
     if (t) activate(t.id);
     return;
   }
@@ -764,8 +1071,8 @@ async function init() {
 
   $('#hide-sidebar').addEventListener('click', toggleSidebar);
   $('#show-sidebar').addEventListener('click', toggleSidebar);
-  $('#add-terminal').addEventListener('click', () => openTerminal());
-  $('#empty-new-terminal').addEventListener('click', () => openTerminal());
+  $('#add-terminal').addEventListener('click', () => openTab());
+  $('#empty-new-terminal').addEventListener('click', () => openTab());
   $('#add-command').addEventListener('click', () => openCommandDialog());
   $('#empty-new-command').addEventListener('click', () => openCommandDialog());
   $('#commands-empty').addEventListener('click', () => openCommandDialog());
@@ -774,16 +1081,16 @@ async function init() {
   new ResizeObserver(() => {
     cancelAnimationFrame(fitFrame);
     if (layoutAnimating) return;
-    fitFrame = requestAnimationFrame(() => activeTerminal()?.fit.fit());
+    fitFrame = requestAnimationFrame(() => fitTab(activeTab()));
   }).observe($('#terminals'));
 
   // Start saved commands marked auto-start. With none, open a plain shell.
   const autoStart = settings.commands.filter((c) => c.autoStart);
   if (autoStart.length) {
-    for (const cmd of autoStart) await createTerminal({ name: cmd.name, command: cmd.command, cwd: cmd.cwd, commandId: cmd.id });
-    activate(state.terminals[0].id);
+    for (const cmd of autoStart) await createTab(commandTabOptions(cmd));
+    activate(state.tabs[0].id);
   } else {
-    await openTerminal();
+    await openTab();
   }
 
   // Turn animations on only after the first layout, so the app does not animate into place.
