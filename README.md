@@ -21,7 +21,7 @@ npm start
 ## Build the app
 
 ```sh
-npm run dist        # dmg and zip in dist/
+npm run dist        # dmg and zip in _releases/<version>/
 ```
 
 The logo is flat: one solid color, with no gradients or shadows. To change it, edit `assets/logo.svg`

@@ -1,7 +1,7 @@
 {
   "name": "termi",
   "productName": "Termi",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A terminal app with a warm dark theme, saved commands, and auto-start.",
   "main": "src/main/main.js",
   "author": "Jawad Ahbab",
@@ -31,7 +31,7 @@
     "productName": "Termi",
     "directories": {
       "buildResources": "assets",
-      "output": "dist"
+      "output": "_releases/${version}"
     },
     "files": [
       "src/**/*",
