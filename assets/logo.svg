@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Flat design: one solid shape, no gradients or shadows. -->
+  <rect x="100" y="100" width="824" height="824" rx="186" fill="#D97757"/>
+  <!-- prompt chevron -->
+  <path d="M300 352 L482 512 L300 672" fill="none" stroke="#FAF6EE" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- cursor -->
+  <rect x="540" y="626" width="196" height="84" rx="26" fill="#FAF6EE"/>
+  <!-- spark -->
+  <path d="M700 250 C707 306 722 321 778 328 C722 335 707 350 700 406 C693 350 678 335 622 328 C678 321 693 306 700 250 Z" fill="#FAF6EE"/>
+</svg>
