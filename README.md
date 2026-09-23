@@ -50,6 +50,33 @@ It needs `rsvg-convert` (`brew install librsvg`).
 Double-click a running terminal in the sidebar to rename it. In a tab with more than one terminal, ⌘W closes the
 whole tab. To close one terminal, use the × in its pane header, or type `exit`.
 
+## MCP server
+
+`src/mcp/server.js` is an MCP server for the saved commands. An AI assistant such as Claude Code can use it to
+list, add, and edit them. It runs on plain Node over stdio and has no dependencies.
+
+| Tool | What it does |
+| --- | --- |
+| `list_saved_commands` | Lists every saved command with its id, name, terminal commands, folder, auto-start, and layout |
+| `add_saved_command` | Adds a saved command with 1 to 4 terminals |
+| `edit_saved_command` | Changes a saved command, found by id or by name. Only the fields you give change |
+| `get_termi_docs` | Returns the guide to the server. The same text is the `termi://docs` resource |
+
+The guide is `src/mcp/docs.md`. The server adds a reference to the end of it, built from the code: the layouts, every
+tool and parameter, and the paths this install uses. So the reference never goes out of date.
+
+It follows the same rules as the saved command dialog. The first terminal needs a command, and a tab has at most 4
+terminals. It writes to the same `settings.json` as the app. A running Termi watches that file, so a change shows in
+the sidebar right away, and the name of a running tab follows a rename.
+
+To add it to Claude Code for all your projects:
+
+```sh
+claude mcp add termi --scope user -- node /path/to/termi/src/mcp/server.js
+```
+
+Set `TERMI_USER_DATA` to point the server (and the app) at another data folder, for example for tests.
+
 ## Where data is stored
 
 `~/Library/Application Support/Termi/`:

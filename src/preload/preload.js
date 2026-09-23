@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('termi', {
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),
     update: (patch) => ipcRenderer.invoke('settings:update', patch),
+    onChange: (callback) => listen('settings:changed', callback),
   },
 
   pty: {

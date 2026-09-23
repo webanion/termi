@@ -1,7 +1,7 @@
 const path = require('path');
 const { app, BrowserWindow, Menu, ipcMain, dialog, shell, nativeImage, clipboard } = require('electron');
 const { loadWindowState, trackWindowState } = require('./window-state');
-const { getSettings, updateSettings } = require('./settings');
+const { getSettings, updateSettings, watchSettings } = require('./settings');
 const { PtyManager } = require('./pty-manager');
 const { SystemStats } = require('./system-stats');
 
@@ -251,6 +251,7 @@ app.whenReady().then(() => {
   ptys = new PtyManager(sendToRenderer);
   stats = new SystemStats((sample) => sendToRenderer('stats:update', sample));
   registerIpc();
+  watchSettings((settings) => sendToRenderer('settings:changed', settings));
   buildMenu();
   createWindow();
 

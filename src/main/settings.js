@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const { app } = require('electron');
 const { readJson, writeJson } = require('./json-file');
@@ -23,21 +24,46 @@ function settingsFile() {
   return path.join(app.getPath('userData'), 'settings.json');
 }
 
+function loadSettings() {
+  const settings = { ...DEFAULTS, ...readJson(settingsFile(), {}) };
+  settings.commands = settings.commands.map(upgradeCommand);
+  return settings;
+}
+
 function getSettings() {
-  if (!cache) {
-    cache = { ...DEFAULTS, ...readJson(settingsFile(), {}) };
-    cache.commands = cache.commands.map(upgradeCommand);
-  }
+  if (!cache) cache = loadSettings();
   return cache;
 }
 
 // Merge a partial update into the settings and save them to disk.
+// Start from the file, not the cache, so a change from the MCP server is not lost.
 function updateSettings(patch) {
   const allowed = Object.keys(DEFAULTS);
   const clean = Object.fromEntries(Object.entries(patch || {}).filter(([key]) => allowed.includes(key)));
-  cache = { ...getSettings(), ...clean };
+  cache = { ...loadSettings(), ...clean };
   writeJson(settingsFile(), cache);
   return cache;
 }
 
-module.exports = { getSettings, updateSettings };
+// Call onChange with the new settings when another program (the MCP server) changes the file.
+// Watch the folder, because each write replaces the file with a new one.
+function watchSettings(onChange) {
+  const file = settingsFile();
+  let timer = null;
+  try {
+    fs.watch(path.dirname(file), (_event, name) => {
+      if (name !== path.basename(file)) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const next = loadSettings();
+        if (JSON.stringify(next) === JSON.stringify(getSettings())) return;
+        cache = next;
+        onChange(cache);
+      }, 100);
+    });
+  } catch {
+    // Without a watcher, outside changes show after the next start.
+  }
+}
+
+module.exports = { getSettings, updateSettings, watchSettings };

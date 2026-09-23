@@ -932,6 +932,18 @@ $('#delete-command').addEventListener('click', async (event) => {
   render();
 });
 
+// The MCP server changed the saved commands. Keep running tabs in step, like a save from the dialog.
+api.settings.onChange((settings) => {
+  state.settings = settings;
+  for (const t of state.tabs) {
+    if (!t.commandId) continue;
+    const cmd = commandById(t.commandId);
+    if (cmd) t.name = cmd.name;
+    else t.commandId = null;
+  }
+  render();
+});
+
 $('#pick-folder').addEventListener('click', async () => {
   const current = form.elements.cwd.value.trim().replace(/^~(?=$|\/)/, state.info.home);
   const folder = await api.pickFolder(current || undefined);
