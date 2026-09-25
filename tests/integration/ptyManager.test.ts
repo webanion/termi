@@ -1,5 +1,6 @@
-// PtyManager with real shells through node-pty. The shell is /bin/sh, so the test does not
-// depend on whoever runs it and their shell setup.
+// PtyManager with real shells through node-pty. The shell is /bin/bash, so the test does not
+// depend on whoever runs it. Not /bin/sh: on macOS that is a stub that execs another shell, so
+// the program node-pty reports is not the one the manager started.
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -31,7 +32,7 @@ async function until(check: () => boolean, ms = 8000) {
 }
 
 beforeEach(() => {
-  vi.stubEnv('SHELL', '/bin/sh');
+  vi.stubEnv('SHELL', '/bin/bash');
   // Each manager gets its own list. Ids restart at 1 per manager, and a shell the last test
   // stopped can still report its exit after this test began.
   const events: Sent[] = [];
@@ -49,7 +50,7 @@ afterEach(() => {
 describe('PtyManager', () => {
   it('starts a shell in the folder asked for', async () => {
     const { id, title } = ptys.create({ cwd: dir, command: 'pwd' }, 1);
-    expect(title).toBe('sh');
+    expect(title).toBe('bash');
     await until(() => output(id).includes(dir));
   });
 
