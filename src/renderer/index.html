@@ -20,7 +20,10 @@
         <svg viewBox="0 0 12 12"><path d="M3 6h6" /></svg>
       </button>
       <button class="light maximize" data-action="maximize" aria-label="Maximize window">
-        <svg viewBox="0 0 12 12"><path d="M4 4h4v4" /><path d="M8 8H4V4" /></svg>
+        <svg viewBox="0 0 12 12">
+          <path d="M4 4h4v4" />
+          <path d="M8 8H4V4" />
+        </svg>
       </button>
     </div>
 
@@ -28,8 +31,18 @@
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-head drag">
           <div class="spacer"></div>
-          <button class="icon-btn no-drag" id="hide-sidebar" title="Hide sidebar (⌘B)" aria-label="Hide sidebar">
-            <svg viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12" /><path d="M9 4l0 16" /></svg>
+          <button
+            class="icon-btn no-drag"
+            id="hide-sidebar"
+            title="Hide sidebar (⌘B)"
+            aria-label="Hide sidebar"
+          >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12"
+              />
+              <path d="M9 4l0 16" />
+            </svg>
           </button>
         </div>
 
@@ -38,8 +51,16 @@
             <div class="section-head">
               <span class="section-title">Running</span>
               <span class="section-count" id="running-count">0</span>
-              <button class="icon-btn small" id="add-terminal" title="New terminal (⌘T)" aria-label="New terminal">
-                <svg viewBox="0 0 24 24"><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+              <button
+                class="icon-btn small"
+                id="add-terminal"
+                title="New terminal (⌘T)"
+                aria-label="New terminal"
+              >
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 5l0 14" />
+                  <path d="M5 12l14 0" />
+                </svg>
               </button>
             </div>
             <ul class="list" id="terminal-list"></ul>
@@ -48,14 +69,24 @@
           <section class="section">
             <div class="section-head">
               <span class="section-title">Saved commands</span>
-              <button class="icon-btn small" id="add-command" title="New saved command (⇧⌘N)" aria-label="New saved command">
-                <svg viewBox="0 0 24 24"><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+              <button
+                class="icon-btn small"
+                id="add-command"
+                title="New saved command (⇧⌘N)"
+                aria-label="New saved command"
+              >
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 5l0 14" />
+                  <path d="M5 12l14 0" />
+                </svg>
               </button>
             </div>
             <ul class="list" id="command-list"></ul>
             <button class="commands-empty" id="commands-empty" hidden>
               Save a command you run often. Turn on
-              <svg class="inline-bolt" viewBox="0 0 24 24"><path d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11" /></svg>
+              <svg class="inline-bolt" viewBox="0 0 24 24">
+                <path d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11" />
+              </svg>
               to start it when Termi opens.
             </button>
           </section>
@@ -63,21 +94,51 @@
 
         <footer class="sidebar-foot">
           <div class="stat" id="stat-cpu">
-            <svg viewBox="0 0 24 24"><path d="M5 6a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1l0 -12" /><path d="M9 9h6v6h-6l0 -6" /><path d="M3 10h2" /><path d="M3 14h2" /><path d="M10 3v2" /><path d="M14 3v2" /><path d="M21 10h-2" /><path d="M21 14h-2" /><path d="M14 21v-2" /><path d="M10 21v-2" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M5 6a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1l0 -12"
+              />
+              <path d="M9 9h6v6h-6l0 -6" />
+              <path d="M3 10h2" />
+              <path d="M3 14h2" />
+              <path d="M10 3v2" />
+              <path d="M14 3v2" />
+              <path d="M21 10h-2" />
+              <path d="M21 14h-2" />
+              <path d="M14 21v-2" />
+              <path d="M10 21v-2" />
+            </svg>
             <span class="stat-bar"><span></span></span>
             <span class="stat-value">-</span>
           </div>
           <div class="stat net" id="stat-down" title="Download speed">
-            <svg viewBox="0 0 24 24"><path d="M12 5l0 14" /><path d="M18 13l-6 6" /><path d="M6 13l6 6" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M12 5l0 14" />
+              <path d="M18 13l-6 6" />
+              <path d="M6 13l6 6" />
+            </svg>
             <span class="stat-value">-</span>
           </div>
           <div class="stat" id="stat-mem">
-            <svg viewBox="0 0 24 24"><path d="M4 7h16a1 1 0 0 1 1 1v8a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-8a1 1 0 0 1 1 -1" /><path d="M7 10h3v4h-3z" /><path d="M14 10h3v4h-3z" /><path d="M7 17v3" /><path d="M12 17v3" /><path d="M17 17v3" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M4 7h16a1 1 0 0 1 1 1v8a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-8a1 1 0 0 1 1 -1"
+              />
+              <path d="M7 10h3v4h-3z" />
+              <path d="M14 10h3v4h-3z" />
+              <path d="M7 17v3" />
+              <path d="M12 17v3" />
+              <path d="M17 17v3" />
+            </svg>
             <span class="stat-bar"><span></span></span>
             <span class="stat-value">-</span>
           </div>
           <div class="stat net" id="stat-up" title="Upload speed">
-            <svg viewBox="0 0 24 24"><path d="M12 5l0 14" /><path d="M18 11l-6 -6" /><path d="M6 11l6 -6" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M12 5l0 14" />
+              <path d="M18 11l-6 -6" />
+              <path d="M6 11l6 -6" />
+            </svg>
             <span class="stat-value">-</span>
           </div>
         </footer>
@@ -87,8 +148,18 @@
 
       <main class="main">
         <header class="main-head drag" id="main-head">
-          <button class="icon-btn no-drag" id="show-sidebar" title="Show sidebar (⌘B)" aria-label="Show sidebar">
-            <svg viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12" /><path d="M9 4l0 16" /></svg>
+          <button
+            class="icon-btn no-drag"
+            id="show-sidebar"
+            title="Show sidebar (⌘B)"
+            aria-label="Show sidebar"
+          >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12"
+              />
+              <path d="M9 4l0 16" />
+            </svg>
           </button>
           <div class="title">
             <img src="../../assets/logo-mark.svg" alt="" class="title-logo" />
@@ -96,7 +167,12 @@
             <span class="title-sub" id="title-sub"></span>
           </div>
           <!-- Shows when the tab has more than one terminal. -->
-          <div class="layout-control" id="layout-control" role="radiogroup" aria-label="Layout"></div>
+          <div
+            class="layout-control"
+            id="layout-control"
+            role="radiogroup"
+            aria-label="Layout"
+          ></div>
         </header>
 
         <div class="terminals" id="terminals">
@@ -105,7 +181,9 @@
             <h1>Termi</h1>
             <p>No terminals are running.</p>
             <div class="empty-actions">
-              <button class="btn primary" id="empty-new-terminal">New terminal <kbd>⌘T</kbd></button>
+              <button class="btn primary" id="empty-new-terminal">
+                New terminal <kbd>⌘T</kbd>
+              </button>
               <button class="btn" id="empty-new-command">Save a command</button>
             </div>
           </div>
@@ -130,11 +208,15 @@
           <span class="field-label" id="command-label">Command</span>
           <div class="term-fields" id="term-fields"></div>
           <button type="button" class="add-term" id="add-term-field">
-            <svg viewBox="0 0 24 24"><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M12 5l0 14" />
+              <path d="M5 12l14 0" />
+            </svg>
             Add terminal
           </button>
           <span class="field-hint">
-            Each line runs in order, in your normal shell. Add up to 4 terminals to run them side by side in one tab.
+            Each line runs in order, in your normal shell. Add up to 4 terminals to run them side by
+            side in one tab.
           </span>
         </div>
 
@@ -143,7 +225,11 @@
           <div class="field-row">
             <input type="text" name="cwd" placeholder="~" spellcheck="false" />
             <button type="button" class="btn" id="pick-folder">
-              <svg viewBox="0 0 24 24"><path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" /></svg>
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"
+                />
+              </svg>
               Choose
             </button>
           </div>
