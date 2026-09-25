@@ -121,6 +121,29 @@ describe('Termi', () => {
     );
   });
 
+  // Other systems take the shortcuts in main, before xterm, and leave it every plain Ctrl+letter.
+  it.runIf(process.platform !== 'darwin')(
+    'takes Ctrl+Shift+T from the terminal, and leaves Ctrl+W to the shell',
+    async () => {
+      const count = () => page.locator('#terminal-list .item').count();
+      const before = await count();
+      await page.locator('.tab-view.active .xterm-helper-textarea').first().focus();
+      await page.keyboard.press('Control+Shift+T');
+      await until(async () => (await count()) === before + 1);
+
+      // Ctrl+W deletes the word before the cursor instead of closing the tab.
+      await page.locator('.tab-view.active .xterm-helper-textarea').first().focus();
+      await page.keyboard.type('echo kept dropped');
+      await page.keyboard.press('Control+W');
+      await page.keyboard.type(`> '${marker(6)}'`);
+      await page.keyboard.press('Enter');
+      await until(
+        () => fs.existsSync(marker(6)) && fs.readFileSync(marker(6), 'utf8').trim() === 'kept',
+      );
+      expect(await count()).toBe(before + 1);
+    },
+  );
+
   it('asks before quitting while a program runs', async () => {
     await page.locator('.tab-view.active .xterm-helper-textarea').first().focus();
     await page.keyboard.type('sleep 30');
