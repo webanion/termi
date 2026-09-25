@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Report it privately through GitHub: on the repository's **Security** tab, choose **Report a vulnerability**, or go straight to [the form](https://github.com/JawadAhbab/termi/security/advisories/new). Only you and the maintainers, Jawad Ahbab ([@JawadAhbab](https://github.com/JawadAhbab)) and Md. Moniruzzaman ([@geniusmonir](https://github.com/geniusmonir)), can see the report. Do not open an issue, and do not put the details in a pull request or a discussion.
+Report it privately through GitHub: on the repository's **Security** tab, choose **Report a vulnerability**, or go straight to [the form](https://github.com/webanion/termi/security/advisories/new). Only you and the maintainers, Jawad Ahbab ([@JawadAhbab](https://github.com/JawadAhbab)) and Md. Moniruzzaman ([@geniusmonir](https://github.com/geniusmonir)), can see the report. Do not open an issue, and do not put the details in a pull request or a discussion.
 
 A useful report says which version, on which platform, what you found, what an attacker could do with it, and enough detail to reproduce it. A proof of concept helps. If you are not sure whether something is a real issue, send it anyway and say so.
 

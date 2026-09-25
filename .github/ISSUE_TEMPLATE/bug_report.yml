@@ -4,7 +4,7 @@ labels: [bug]
 body:
   - type: markdown
     attributes:
-      value: A security problem goes to the maintainers privately, never here. [SECURITY](https://github.com/JawadAhbab/termi/security/policy) says how.
+      value: A security problem goes to the maintainers privately, never here. [SECURITY](https://github.com/webanion/termi/security/policy) says how.
   - type: textarea
     id: what
     attributes:
