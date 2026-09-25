@@ -39,6 +39,7 @@ These rules are what keep a page that shows untrusted terminal output from reach
 | `npm run typecheck` | TypeScript for both projects, node (`tsconfig.node.json`) and web (`tsconfig.web.json`). |
 | `npm run lint` | ESLint, including the import rules above. |
 | `npm run format:check` | Prettier. `npm run format` fixes it. |
+| `npm run test:scripts` | The tests for the scripts in `scripts/`, such as the changelog tool, run with `node --test`. |
 | `npm run dist` | Build and package the macOS app. |
 | `node out/main/mcpServer.js` | The MCP server, after a build. |
 
@@ -46,7 +47,7 @@ These rules are what keep a page that shows untrusted terminal output from reach
 
 ## Before a pull request
 
-`typecheck`, `lint`, `format:check` and `build` pass. Then run the app, in development and as a build, and say in the pull request what you checked and on which platform, macOS or Linux. The test suite arrives with #4.
+`typecheck`, `lint`, `format:check`, `test:scripts` and `build` pass. Then run the app, in development and as a build, and say in the pull request what you checked and on which platform, macOS or Linux. The test suite arrives with #4.
 
 ## Conventions
 
