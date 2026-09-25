@@ -14,7 +14,7 @@ A terminal app for macOS and Linux with a warm dark theme, saved commands that o
 - Select text in a terminal to copy it. A double-click copies a word, and a triple-click copies a line.
 - The sidebar footer shows CPU use, memory use, and download and upload speed. Termi checks them every 1.5 seconds, and stops while the window is minimized.
 - Termi reopens at the same window position and size. If that display is gone, the window moves to the main display.
-- macOS keeps its own traffic lights in Termi's header. Linux gets drawn ones.
+- The header holds the system's own window controls: the traffic lights on the left on macOS, and minimize, maximize and close on the right on Linux.
 
 ## Install
 
@@ -33,21 +33,15 @@ npm ci
 npm run dev
 ```
 
-`npm ci` also rebuilds node-pty for Electron. `npm run dev` serves the window's code from a dev server that reloads when you save. `npm start` builds Termi into `out/` and runs that build.
+`npm ci` also downloads Electron and rebuilds node-pty for it. `npm run dev` serves the window's code from a dev server that reloads when you save. `npm start` builds Termi into `out/` and runs that build.
 
-On Ubuntu 23.10 and later, the development copy of Electron needs an AppArmor profile to start its sandbox when you run it from a normal terminal (VS Code's terminal works without one). Once, with your checkout's path in place of `/path/to/termi`:
+On Ubuntu 23.10 and later, the development copy of Electron needs an AppArmor profile to start its sandbox when you run it from a normal terminal (VS Code's terminal works without one). `npm run setup:apparmor` checks, and changes nothing: it names the Electron binary and the profile it would write, and says whether the restriction is on. To install the profile, once per checkout:
 
 ```sh
-sudo tee /etc/apparmor.d/termi-dev > /dev/null <<'EOF'
-abi <abi/4.0>,
-include <tunables/global>
-
-profile termi-dev /path/to/termi/node_modules/electron/dist/electron flags=(unconfined) {
-  userns,
-}
-EOF
-sudo apparmor_parser -r /etc/apparmor.d/termi-dev
+npm run setup:apparmor -- --execute
 ```
+
+It writes `/etc/apparmor.d/termi-dev-<hash>` with `sudo` and loads it. On macOS, or where the restriction is off, it says nothing is needed.
 
 ## Tests and checks
 
@@ -57,7 +51,7 @@ Termi is written in TypeScript, with a React renderer, and built with electron-v
 npm run typecheck
 npm run lint
 npm run format:check
-npm run test:scripts      # the changelog tool
+npm run test:scripts      # the changelog tool and the AppArmor script
 npm test                  # unit tests
 npm run test:integration  # the MCP server and real shells, after a build
 npm run smoke             # the built app, end to end
@@ -74,7 +68,7 @@ npm run dist:linux  # AppImage and deb for x64, on Linux
 
 Both write to `_releases/<version>/`. The macOS builds are not signed.
 
-The logo is flat: one solid color, with no gradients or shadows. To change it, edit `assets/logo.svg` and `assets/logo-mark.svg`, which is the same logo without the outer padding, then run `npm run icons`. It needs `rsvg-convert` (`brew install librsvg` on macOS, `sudo apt install librsvg2-bin` on Ubuntu), and `iconutil`, which only macOS has, for the `.icns`.
+The logo is flat: one solid color, with no gradients or shadows. To change it, edit `assets/logo.svg` and `assets/logo-mark.svg`, which is the same logo without the outer padding, then run `npm run icons`. It needs `rsvg-convert` (`brew install librsvg` on macOS, `sudo apt install librsvg2-bin` on Ubuntu). The `.icns` also needs `iconutil`, which only macOS has, so elsewhere the script writes the PNGs and leaves the committed `icon.icns` as it is.
 
 ## Releases
 
@@ -84,18 +78,20 @@ Releases are made by the Release workflow in GitHub Actions, never by hand. Run 
 
 | Action | macOS | Linux |
 | --- | --- | --- |
-| New terminal | ⌘T | Ctrl+T |
-| Close terminal | ⌘W | Ctrl+W |
+| New terminal | ⌘T | Ctrl+Shift+T |
+| Close terminal | ⌘W | Ctrl+Shift+W |
 | New saved command | ⇧⌘N | Ctrl+Shift+N |
-| Go to terminal 1 to 9 | ⌘1 to ⌘9 | Ctrl+1 to Ctrl+9 |
-| Previous and next terminal | ⇧⌘[ and ⇧⌘] | Ctrl+Shift+[ and Ctrl+Shift+] |
+| Go to terminal 1 to 9 | ⌘1 to ⌘9 | Alt+1 to Alt+9 |
+| Previous and next terminal | ⇧⌘[ and ⇧⌘] | Ctrl+Page Up and Ctrl+Page Down |
 | Previous and next pane in a split tab | ⌘[ and ⌘] | Ctrl+Alt+[ and Ctrl+Alt+] |
-| Clear the terminal | ⌘K | Ctrl+K |
-| Show or hide the sidebar | ⌘B | Ctrl+B |
+| Clear the terminal | ⌘K | Ctrl+Shift+K |
+| Show or hide the sidebar | ⌘B | Ctrl+Shift+B |
+| Copy and paste | ⌘C and ⌘V | Ctrl+Shift+C and Ctrl+Shift+V |
+| Full screen | ⌃⌘F | F11 |
 | Text size | ⌘+, ⌘- and ⌘0 | Ctrl+=, Ctrl+- and Ctrl+0 |
 | Open a link | ⌘ click | Ctrl+click |
 
-On Linux, several of these share a key with the shell, such as Ctrl+W, which deletes a word, and Ctrl+K, which deletes to the end of the line. #8 moves them to the Ctrl+Shift keys other Linux terminals use.
+On Linux a plain Ctrl+letter always reaches the shell, so Ctrl+C interrupts, Ctrl+W deletes a word, Ctrl+K deletes to the end of the line and Ctrl+B stays the tmux prefix. Termi's own shortcuts use the keys other Linux terminals use: Ctrl+Shift with a letter, Alt+1 to 9 for tabs, and Ctrl+Page Up and Page Down to move between them.
 
 Double-click a running terminal in the sidebar to rename it. In a tab with more than one terminal, closing the terminal closes the whole tab. To close one terminal, use the × in its pane header, or type `exit`.
 

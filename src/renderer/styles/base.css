@@ -21,10 +21,16 @@
   --head-h: 40px;
   --sidebar-w: 232px;
   --lights-w: 78px;
+  /* The header's padding at each end of the window, clear of the window controls. Outside
+     macOS they sit in an overlay that env() reports. Without one, both come to 8px. */
+  --head-left: calc(8px + env(titlebar-area-x, 0px));
+  --head-right: calc(8px + 100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
   --radius: 6px;
   --ui-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --serif: ui-serif, 'Iowan Old Style', Georgia, 'Times New Roman', serif;
-  --mono: ui-monospace, 'SF Mono', Menlo, Monaco, 'Cascadia Mono', Consolas, monospace;
+  --mono:
+    ui-monospace, 'SF Mono', Menlo, Monaco, 'Cascadia Mono', Consolas, 'DejaVu Sans Mono',
+    'Ubuntu Mono', 'Noto Sans Mono', 'Liberation Mono', monospace;
 
   /* One timing for every animation. DURATION in theme.ts must match --dur. */
   --dur: 220ms;

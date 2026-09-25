@@ -1,11 +1,37 @@
 import { app, Menu, type MenuItemConstructorOptions } from 'electron';
 import type { SendEvent } from '../shared/ipc';
+import { SHORTCUT_ACTIONS, shortcutAccelerator, type ShortcutAction } from '../shared/shortcuts';
+import { runShortcut } from './shortcuts';
 
 const isMac = process.platform === 'darwin';
 
+const keys = (name: ShortcutAction) => shortcutAccelerator(name, process.platform);
+
+// Other systems give the page every key before the menu, and xterm keeps Ctrl+letters, so a key
+// the menu registered would go to the menu or to the shell depending on focus. There no item
+// registers its key, a role's included, which leaves Ctrl+Z, Ctrl+A and Ctrl+Q to the shell.
+// The items still show their keys, and handleShortcuts takes the table's. Only the development
+// build's developer tools keep theirs.
+function unregistered(items: MenuItemConstructorOptions[]): MenuItemConstructorOptions[] {
+  return items.map((item) => {
+    const kept = { ...item, registerAccelerator: item.role === 'toggleDevTools' };
+    if (Array.isArray(item.submenu)) kept.submenu = unregistered(item.submenu);
+    return kept;
+  });
+}
+
 // The menu's own items only tell the renderer what to do.
 export function buildMenu(send: SendEvent): void {
-  const action = (name: string) => () => send('menu:action', name);
+  const item = (label: string, name: ShortcutAction): MenuItemConstructorOptions => ({
+    label,
+    accelerator: keys(name),
+    click: () => runShortcut(name, send),
+  });
+  // macOS keeps these roles' own keys, which the table repeats. Other systems show the table's.
+  const roleItem = (
+    role: 'copy' | 'paste' | 'togglefullscreen',
+    name: ShortcutAction,
+  ): MenuItemConstructorOptions => (isMac ? { role } : { role, accelerator: keys(name) });
 
   const template: MenuItemConstructorOptions[] = [
     ...(isMac
@@ -36,14 +62,10 @@ export function buildMenu(send: SendEvent): void {
     {
       label: 'Shell',
       submenu: [
-        { label: 'New Terminal', accelerator: 'CmdOrCtrl+T', click: action('new-terminal') },
-        {
-          label: 'New Saved Command…',
-          accelerator: 'CmdOrCtrl+Shift+N',
-          click: action('new-command'),
-        },
+        item('New Terminal', 'new-terminal'),
+        item('New Saved Command…', 'new-command'),
         { type: 'separator' },
-        { label: 'Close Terminal', accelerator: 'CmdOrCtrl+W', click: action('close-terminal') },
+        item('Close Terminal', 'close-terminal'),
         ...(isMac
           ? []
           : [
@@ -59,23 +81,23 @@ export function buildMenu(send: SendEvent): void {
         { role: 'redo' },
         { type: 'separator' },
         { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
+        roleItem('copy', 'copy'),
+        roleItem('paste', 'paste'),
         { role: 'selectAll' },
         { type: 'separator' },
-        { label: 'Clear Buffer', accelerator: 'CmdOrCtrl+K', click: action('clear') },
+        item('Clear Buffer', 'clear'),
       ],
     },
     {
       label: 'View',
       submenu: [
-        { label: 'Toggle Sidebar', accelerator: 'CmdOrCtrl+B', click: action('toggle-sidebar') },
+        item('Toggle Sidebar', 'toggle-sidebar'),
         { type: 'separator' },
-        { label: 'Bigger Text', accelerator: 'CmdOrCtrl+=', click: action('font-bigger') },
-        { label: 'Smaller Text', accelerator: 'CmdOrCtrl+-', click: action('font-smaller') },
-        { label: 'Default Text Size', accelerator: 'CmdOrCtrl+0', click: action('font-reset') },
+        item('Bigger Text', 'font-bigger'),
+        item('Smaller Text', 'font-smaller'),
+        item('Default Text Size', 'font-reset'),
         { type: 'separator' },
-        { role: 'togglefullscreen' },
+        roleItem('togglefullscreen', 'toggle-fullscreen'),
         ...(app.isPackaged
           ? []
           : [
@@ -90,35 +112,16 @@ export function buildMenu(send: SendEvent): void {
         { role: 'minimize' },
         { role: 'zoom' },
         { type: 'separator' },
-        {
-          label: 'Next Terminal',
-          accelerator: 'CmdOrCtrl+Shift+]',
-          click: action('next-terminal'),
-        },
-        {
-          label: 'Previous Terminal',
-          accelerator: 'CmdOrCtrl+Shift+[',
-          click: action('prev-terminal'),
-        },
-        // Ctrl+[ is Escape in a terminal, so other systems add Alt.
-        {
-          label: 'Next Pane',
-          accelerator: isMac ? 'Cmd+]' : 'Ctrl+Alt+]',
-          click: action('next-pane'),
-        },
-        {
-          label: 'Previous Pane',
-          accelerator: isMac ? 'Cmd+[' : 'Ctrl+Alt+[',
-          click: action('prev-pane'),
-        },
+        item('Next Terminal', 'next-terminal'),
+        item('Previous Terminal', 'prev-terminal'),
+        item('Next Pane', 'next-pane'),
+        item('Previous Pane', 'prev-pane'),
         { type: 'separator' },
-        ...Array.from({ length: 9 }, (_, i) => ({
-          label: `Terminal ${i + 1}`,
-          accelerator: `CmdOrCtrl+${i + 1}`,
-          click: action(`select-terminal-${i}`),
-        })),
+        ...SHORTCUT_ACTIONS.filter((name) => name.startsWith('select-terminal-')).map((name, i) =>
+          item(`Terminal ${i + 1}`, name),
+        ),
       ],
     },
   ];
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  Menu.setApplicationMenu(Menu.buildFromTemplate(isMac ? template : unregistered(template)));
 }

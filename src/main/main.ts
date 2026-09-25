@@ -2,6 +2,7 @@ import { app, nativeImage, type BrowserWindow } from 'electron';
 import { APP_ICON, createWindow } from './window';
 import { buildMenu } from './menu';
 import { registerIpc } from './ipc';
+import { handleShortcuts } from './shortcuts';
 import { watchSettings } from './settings';
 import { PtyManager } from './ptyManager';
 import { SystemStats } from './systemStats';
@@ -20,6 +21,7 @@ const sendToRenderer: SendEvent = (channel, ...args) => {
 
 function openWindow(terminals: PtyManager, stats: SystemStats): void {
   const win = createWindow(terminals, stats, sendToRenderer);
+  handleShortcuts(win, sendToRenderer);
   mainWindow = win;
   win.on('closed', () => {
     if (mainWindow === win) mainWindow = null;

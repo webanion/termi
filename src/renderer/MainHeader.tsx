@@ -6,10 +6,12 @@ import { SidebarIcon } from './Icons';
 import { LayoutControl } from './LayoutControl';
 import { useAppState } from './useAppState';
 import { LAYOUTS } from '../shared/layouts';
+import { shortcutLabel } from '../shared/shortcuts';
 
 export function MainHeader() {
   const tabs = useAppState((s) => s.tabs);
   const activeId = useAppState((s) => s.activeId);
+  const platform = useAppState((s) => s.info.platform);
   // The title follows the active tab once its shells are running.
   const found = tabs.find((t) => t.id === activeId);
   const tab = found?.ready ? found : undefined;
@@ -29,7 +31,7 @@ export function MainHeader() {
       <button
         className="icon-btn no-drag"
         id="show-sidebar"
-        title="Show sidebar (⌘B)"
+        title={`Show sidebar (${shortcutLabel('toggle-sidebar', platform)})`}
         aria-label="Show sidebar"
         onClick={toggleSidebar}
       >

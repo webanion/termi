@@ -35,8 +35,57 @@ export function resolveCwd(cwd: string | undefined): string {
   return home;
 }
 
-export function shellEnv(): Record<string, string> {
-  const env: Record<string, string | undefined> = { ...process.env };
+// What `npm run` sets for its scripts, besides the npm_* variables. The shells are login shells,
+// so a user's own EDITOR comes back from their profile.
+const NPM_VARIABLES = ['COLOR', 'EDITOR', 'INIT_CWD', 'NODE'];
+
+// What electron-vite sets for the Electron it starts, in development and in preview. Its
+// NODE_ENV replaces whatever the user had, so that one goes too.
+const ELECTRON_VITE_VARIABLES = [
+  'NODE_ENV',
+  'NODE_ENV_ELECTRON_VITE',
+  'ELECTRON_RENDERER_URL',
+  'ELECTRON_EXEC_PATH',
+  'ELECTRON_MAJOR_VER',
+  'ELECTRON_ENTRY',
+  'ELECTRON_CLI_ARGS',
+  'NO_SANDBOX',
+  'REMOTE_DEBUGGING_PORT',
+  'V8_INSPECTOR_PORT',
+  'V8_INSPECTOR_BRK_PORT',
+];
+
+// `npm run` puts node_modules/.bin of the package folder and of every folder above it in front
+// of PATH, then its own node-gyp-bin folder. Take those off the front, as many times as nested
+// runs added them, and keep the rest of PATH as the user had it.
+function withoutNpmPath(value: string, packageJson: string | undefined): string {
+  const binFolders = new Set<string>();
+  if (packageJson) {
+    let dir = path.dirname(packageJson);
+    for (;;) {
+      binFolders.add(path.join(dir, 'node_modules', '.bin'));
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
+  const entries = value.split(path.delimiter);
+  const start = entries.findIndex(
+    (entry) => !binFolders.has(entry) && path.basename(entry) !== 'node-gyp-bin',
+  );
+  return start === -1 ? '' : entries.slice(start).join(path.delimiter);
+}
+
+export function shellEnv(source: NodeJS.ProcessEnv = process.env): Record<string, string> {
+  const env: Record<string, string | undefined> = { ...source };
+  if (env.npm_lifecycle_event !== undefined || env.npm_execpath !== undefined) {
+    if (env.PATH !== undefined) env.PATH = withoutNpmPath(env.PATH, env.npm_package_json);
+    for (const key of Object.keys(env)) if (key.startsWith('npm_')) delete env[key];
+    for (const key of NPM_VARIABLES) delete env[key];
+  }
+  if (env.NODE_ENV_ELECTRON_VITE !== undefined) {
+    for (const key of ELECTRON_VITE_VARIABLES) delete env[key];
+  }
   // Apps opened from Finder have no locale, which breaks Unicode in the shell.
   if (!env.LANG) env.LANG = 'en_US.UTF-8';
   env.TERM = 'xterm-256color';

@@ -110,7 +110,6 @@ function updateTab(id: number, change: (tab: TabState) => TabState): void {
 // ---------- Reading ----------
 
 export const isMac = (info: AppInfo) => info.platform === 'darwin';
-export const modKey = (info: AppInfo) => (isMac(info) ? '⌘' : 'Ctrl+');
 
 function tabById(id: number | null): TabState | undefined {
   return state.tabs.find((t) => t.id === id);
@@ -495,8 +494,11 @@ export function resetSidebarWidth(): void {
   void saveSettings({ sidebarWidth: SIDEBAR_DEFAULT }).then(applySidebar);
 }
 
-// Double-click on an empty part of a header zooms the window, like a native title bar.
+// On macOS, a double-click on an empty part of a header zooms the window, like a native title
+// bar. Other systems do that themselves on the header's drag region, and a toggle here as well
+// would undo it.
 export function zoomFromHeader(target: EventTarget | null): void {
+  if (!isMac(state.info)) return;
   if (target instanceof Element && target.closest('button')) return;
   api.window.toggleMaximize();
 }

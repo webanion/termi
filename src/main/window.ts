@@ -8,6 +8,10 @@ import type { SendEvent } from '../shared/ipc';
 
 const isMac = process.platform === 'darwin';
 const HEADER_HEIGHT = 40;
+// --bg and --text-2 in styles/base.css: the page's background, which the header shares, and the
+// header's title color.
+const BACKGROUND = '#262624';
+const TITLE_COLOR = '#c2c0b6';
 
 export const APP_ICON = path.join(__dirname, '..', '..', 'assets', 'icon.png');
 
@@ -35,15 +39,23 @@ export function createWindow(ptys: PtyManager, stats: SystemStats, send: SendEve
     show: false,
     title: 'Termi',
     icon: APP_ICON,
-    backgroundColor: '#262624',
-    // macOS keeps its real traffic lights, placed inside our own header.
-    // Other systems get a frameless window and the header draws them.
+    backgroundColor: BACKGROUND,
+    // The system's own window controls, inside our own header. macOS places its traffic lights
+    // on the left. Other systems put theirs in an overlay on the right, in the header's colors
+    // and a pixel short of its height, so the header's bottom border runs on under them.
     ...(isMac
       ? {
           titleBarStyle: 'hidden' as const,
           trafficLightPosition: { x: 14, y: (HEADER_HEIGHT - 16) / 2 },
         }
-      : { frame: false }),
+      : {
+          titleBarStyle: 'hidden' as const,
+          titleBarOverlay: {
+            color: BACKGROUND,
+            symbolColor: TITLE_COLOR,
+            height: HEADER_HEIGHT - 1,
+          },
+        }),
     webPreferences: {
       preload: path.join(__dirname, '..', 'preload', 'preload.js'),
       contextIsolation: true,

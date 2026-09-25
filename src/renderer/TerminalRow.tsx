@@ -5,7 +5,6 @@ import {
   focusActiveTab,
   focusedProc,
   isBusy,
-  modKey,
   renameTab,
   type TabState,
 } from './appStore';
@@ -14,6 +13,7 @@ import { cx } from './cx';
 import { CloseIcon } from './Icons';
 import { useAppState } from './useAppState';
 import type { Presence } from './usePresence';
+import { isShortcutAction, shortcutLabel } from '../shared/shortcuts';
 
 interface Props {
   tab: TabState;
@@ -23,7 +23,7 @@ interface Props {
 
 export function TerminalRow({ tab, index, presence }: Props) {
   const activeId = useAppState((s) => s.activeId);
-  const info = useAppState((s) => s.info);
+  const platform = useAppState((s) => s.info.platform);
   const commands = useAppState((s) => s.settings.commands);
   const [renaming, setRenaming] = useState(false);
   const [renameText, setRenameText] = useState('');
@@ -32,6 +32,8 @@ export function TerminalRow({ tab, index, presence }: Props) {
   // A leaving row keeps the shortcut it showed.
   const [shown, setShown] = useState(index);
   if (index >= 0 && index !== shown) setShown(index);
+  const select = `select-terminal-${shown}`;
+  const shortcut = isShortcutAction(select) ? shortcutLabel(select, platform) : '';
 
   const cmd = tab.commandId ? commands.find((c) => c.id === tab.commandId) : undefined;
   const meta = focusedProc(tab);
@@ -105,8 +107,8 @@ export function TerminalRow({ tab, index, presence }: Props) {
       <span className="item-meta" hidden={!meta}>
         {meta}
       </span>
-      <span className="item-kbd" hidden={shown >= 9 || shown < 0}>
-        {shown >= 0 && shown < 9 ? `${modKey(info)}${shown + 1}` : ''}
+      <span className="item-kbd" hidden={!shortcut}>
+        {shortcut}
       </span>
       <span className="item-actions">
         <button
