@@ -2,12 +2,11 @@ import os from 'os';
 import fs from 'fs';
 import path from 'path';
 import * as pty from 'node-pty';
+import type { SendEvent } from '../shared/ipc';
 import type { PtyCreateOptions, PtyCreated } from '../shared/types';
 
 const FLUSH_MS = 8; // group output into batches, so fast output does not flood IPC
 const TITLE_POLL_MS = 1000;
-
-type Send = (channel: string, ...args: unknown[]) => void;
 
 interface PtyEntry {
   proc: pty.IPty;
@@ -15,6 +14,7 @@ interface PtyEntry {
   timer: ReturnType<typeof setTimeout> | null;
   title: string;
   shellName: string;
+  owner: number; // the webContents that opened it
 }
 
 function defaultShell(): string {
@@ -51,13 +51,13 @@ export class PtyManager {
   private nextId = 1;
   private readonly poller: ReturnType<typeof setInterval>;
 
-  constructor(private readonly send: Send) {
+  constructor(private readonly send: SendEvent) {
     this.poller = setInterval(() => this.pollTitles(), TITLE_POLL_MS);
   }
 
   // Start a shell. When `command` is set, type it into the shell after the
   // shell prints its first output, so the user keeps a shell when it ends.
-  create({ cols = 80, rows = 24, cwd, command }: PtyCreateOptions = {}): PtyCreated {
+  create({ cols = 80, rows = 24, cwd, command }: PtyCreateOptions, owner: number): PtyCreated {
     const id = this.nextId++;
     const shell = defaultShell();
     const args = process.platform === 'win32' ? [] : ['-l'];
@@ -70,7 +70,7 @@ export class PtyManager {
     });
 
     const shellName = path.basename(shell).replace(/\.exe$/i, '');
-    const entry: PtyEntry = { proc, buffer: '', timer: null, title: shellName, shellName };
+    const entry: PtyEntry = { proc, buffer: '', timer: null, title: shellName, shellName, owner };
     this.ptys.set(id, entry);
 
     let pendingCommand = command && command.trim() ? command : null;
@@ -159,6 +159,11 @@ export class PtyManager {
       if (name && name !== entry.shellName) count += 1;
     }
     return count;
+  }
+
+  // Stop the terminals a page opened, when that page reloads or goes away.
+  killOwnedBy(owner: number): void {
+    for (const [id, entry] of this.ptys) if (entry.owner === owner) this.kill(id);
   }
 
   killAll(): void {
