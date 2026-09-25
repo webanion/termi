@@ -34,6 +34,17 @@ describe('readSettingsFile', () => {
     ]);
   });
 
+  it('migrates a version 1 file: the guide has not been seen', () => {
+    const file = readSettingsFile({ version: 1, commands: [], fontSize: 15 });
+    expect(file.version).toBe(SETTINGS_VERSION);
+    expect(file.guideSeen).toBe(false);
+    expect(file.fontSize).toBe(15);
+  });
+
+  it('keeps guideSeen once it is set', () => {
+    expect(readSettingsFile({ version: 2, commands: [], guideSeen: true }).guideSeen).toBe(true);
+  });
+
   it('keeps keys it does not know, so a newer build keeps its settings', () => {
     const file = readSettingsFile({ version: 1, commands: [], future: { on: true } });
     expect(file.future).toEqual({ on: true });
@@ -64,6 +75,10 @@ describe('readSettingsFile', () => {
 });
 
 describe('cleanSettingsPatch', () => {
+  it('accepts guideSeen', () => {
+    expect(cleanSettingsPatch({ guideSeen: true })).toEqual({ guideSeen: true });
+  });
+
   it('keeps the known settings and drops any other key', () => {
     expect(cleanSettingsPatch({ fontSize: 14, sidebarHidden: true, bogus: 1 })).toEqual({
       fontSize: 14,
@@ -76,6 +91,7 @@ describe('cleanSettingsPatch', () => {
     expect(() => cleanSettingsPatch({ fontSize: '14' })).toThrow(/fontSize/);
     expect(() => cleanSettingsPatch({ sidebarWidth: Number.NaN })).toThrow(/sidebarWidth/);
     expect(() => cleanSettingsPatch({ sidebarHidden: 'yes' })).toThrow(/sidebarHidden/);
+    expect(() => cleanSettingsPatch({ guideSeen: 1 })).toThrow(/guideSeen/);
   });
 
   it('refuses an update that is not an object', () => {

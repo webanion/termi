@@ -4,13 +4,14 @@ import { isRecord, isSavedCommandShape } from './savedCommands';
 import type { SavedCommand, Settings, StoredCommand } from './types';
 
 // Bump this and add a step to MIGRATIONS whenever the shape of the file changes.
-export const SETTINGS_VERSION = 1;
+export const SETTINGS_VERSION = 2;
 
 export const DEFAULT_SETTINGS: Settings = {
   commands: [],
   sidebarWidth: 232,
   sidebarHidden: false,
   fontSize: 13,
+  guideSeen: false,
 };
 
 // The file as written: the settings, its version, and any keys this build does not know,
@@ -30,6 +31,10 @@ const MIGRATIONS: Record<number, (file: Record<string, unknown>) => void> = {
   0: (file) => {
     if (Array.isArray(file.commands))
       file.commands = (file.commands as StoredCommand[]).map(upgradeCommand);
+  },
+  // Version 2 added guideSeen. Someone upgrading from version 1 has not seen the guide.
+  1: (file) => {
+    if (typeof file.guideSeen !== 'boolean') file.guideSeen = false;
   },
 };
 
@@ -53,6 +58,7 @@ const PATCH_CHECKS: { [K in keyof Settings]: (value: unknown) => boolean } = {
   sidebarWidth: (value) => typeof value === 'number' && Number.isFinite(value),
   sidebarHidden: (value) => typeof value === 'boolean',
   fontSize: (value) => typeof value === 'number' && Number.isFinite(value),
+  guideSeen: (value) => typeof value === 'boolean',
 };
 
 // Keep the known settings from an update and drop any other key. Throw when a known setting

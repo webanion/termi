@@ -30,6 +30,17 @@ async function until(check: () => Promise<boolean> | boolean, ms = 10_000): Prom
 
 const text = (selector: string) => page.locator(selector).first().textContent();
 
+const settingsFile = () =>
+  JSON.parse(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8')) as Record<string, unknown>;
+
+// A menu item's click, as when it is chosen from the menu, on either platform.
+const clickMenu = (id: string) =>
+  app.evaluate(({ Menu }, itemId) => {
+    const item = Menu.getApplicationMenu()?.getMenuItemById(itemId);
+    if (!item) throw new Error(`No menu item ${itemId}`);
+    item.click();
+  }, id);
+
 beforeAll(async () => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'termi-e2e-'));
   const quad = [1, 2, 3, 4].map((n) => ({ command: `echo ${n} > '${marker(n)}'` }));
@@ -85,6 +96,19 @@ describe('Termi', () => {
     expect(await text('#title-text')).toBe('Quad');
   });
 
+  // The file the test starts from is version 1, from before the guide, like an upgrade.
+  it('opens the guide by itself on the first launch, and records that it did', async () => {
+    const guide = page.locator('#guide-dialog');
+    await until(async () => (await guide.getAttribute('open')) !== null);
+    expect(await text('#guide-title')).toBe('Terminals and tabs');
+    await page.locator('#guide-next').click();
+    expect(await text('#guide-title')).toBe('Saved commands');
+    await page.keyboard.press('Escape');
+    await until(async () => (await guide.getAttribute('open')) === null);
+    await until(() => settingsFile().guideSeen === true);
+    expect(settingsFile().version).toBe(2);
+  });
+
   it('sends typing through xterm to the shell', async () => {
     await page.locator('.tab-view.active .xterm-helper-textarea').first().focus();
     await page.keyboard.type(`echo typed > '${marker(5)}'`);
@@ -123,6 +147,45 @@ describe('Termi', () => {
     await until(async () =>
       (await page.locator('#terminal-list .item-name').allTextContents()).includes('Quad renamed'),
     );
+  });
+
+  it('lists the shortcuts and runs actions from the palette, through the menu', async () => {
+    const mac = process.platform === 'darwin';
+    await clickMenu('show-shortcuts');
+    const sheet = page.locator('#shortcut-sheet');
+    await until(async () => (await sheet.getAttribute('open')) !== null);
+    expect(await sheet.locator('.shortcut-row').count()).toBeGreaterThan(10);
+    expect(await sheet.textContent()).toContain(mac ? '⌘T' : 'Ctrl+Shift+T');
+    await page.keyboard.press('Escape');
+    await until(async () => (await sheet.getAttribute('open')) === null);
+
+    for (const [query, size] of [
+      ['bigger', 14],
+      ['default text', 13],
+    ] as const) {
+      await clickMenu('command-palette');
+      await page.locator('#palette-input').waitFor();
+      await page.keyboard.type(query);
+      await page.keyboard.press('Enter');
+      await until(() => settingsFile().fontSize === size);
+    }
+  });
+
+  it('opens the bug report form, filled in, and sends nothing itself', async () => {
+    await app.evaluate(({ shell }) => {
+      const record = globalThis as unknown as { opened: string[] };
+      record.opened = [];
+      shell.openExternal = (async (url: string) => {
+        record.opened.push(url);
+      }) as typeof shell.openExternal;
+    });
+    await clickMenu('report-issue');
+    const opened = () => app.evaluate(() => (globalThis as unknown as { opened: string[] }).opened);
+    await until(async () => (await opened()).length === 1);
+    const url = new URL((await opened())[0] ?? '');
+    expect(url.pathname).toBe('/webanion/termi/issues/new');
+    expect(url.searchParams.get('template')).toBe('bug_report.yml');
+    expect(url.searchParams.get('version')).toMatch(/^\d+\.\d+\.\d+/);
   });
 
   // Other systems take the shortcuts in main, before xterm, and leave it every plain Ctrl+letter.

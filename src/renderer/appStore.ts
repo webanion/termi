@@ -16,6 +16,7 @@ import {
   type RuntimeEvents,
 } from './terminalRuntime';
 import { DEFAULT_FONT_SIZE, DURATION, SIDEBAR_DEFAULT } from './theme';
+import { issueUrl, releaseNotesUrl } from './helpLinks';
 
 const api = window.termi;
 
@@ -51,6 +52,8 @@ export interface DialogState {
   token: number; // changes on every open, so the form starts fresh
 }
 
+export type Overlay = 'guide' | 'shortcuts' | 'palette';
+
 export interface AppState {
   info: AppInfo;
   settings: Settings;
@@ -59,6 +62,8 @@ export interface AppState {
   leavingId: number | null; // the tab that was active and is fading out
   closing: ClosingTab[]; // closed tabs, kept while they fade out
   dialog: DialogState | null;
+  overlay: Overlay | null; // the guide, the shortcut sheet or the command palette
+  guidePage: number;
   toast: { text: string; visible: boolean };
 }
 
@@ -78,12 +83,15 @@ let state: AppState = {
     sidebarWidth: SIDEBAR_DEFAULT,
     sidebarHidden: false,
     fontSize: DEFAULT_FONT_SIZE,
+    guideSeen: true,
   },
   tabs: [],
   activeId: null,
   leavingId: null,
   closing: [],
   dialog: null,
+  overlay: null,
+  guidePage: 0,
   toast: { text: '', visible: false },
 };
 
@@ -518,6 +526,35 @@ function showToast(text: string): void {
   toastTimer = setTimeout(() => setState({ toast: { ...state.toast, visible: false } }), 1400);
 }
 
+// ---------- Help ----------
+
+const OVERLAYS: Record<string, Overlay> = {
+  'show-guide': 'guide',
+  'show-shortcuts': 'shortcuts',
+  'command-palette': 'palette',
+};
+
+export function openOverlay(overlay: Overlay): void {
+  if (state.dialog) closeCommandDialog();
+  setState({ overlay });
+  if (overlay === 'guide' && !state.settings.guideSeen) void saveSettings({ guideSeen: true });
+}
+
+export function closeOverlay(): void {
+  if (!state.overlay) return;
+  setState({ overlay: null });
+  focusActiveTab();
+}
+
+export function setGuidePage(page: number): void {
+  setState({ guidePage: page });
+}
+
+function shellName(): string {
+  const tab = activeTab() ?? state.tabs[0];
+  return tab ? (focusedPane(tab)?.shellName ?? '') : '';
+}
+
 // ---------- Menu actions ----------
 
 const menuActions: Record<string, () => unknown> = {
@@ -540,9 +577,23 @@ const menuActions: Record<string, () => unknown> = {
   'prev-terminal': () => cycle(-1),
   'next-pane': () => cyclePane(1),
   'prev-pane': () => cyclePane(-1),
+  'report-issue': () => window.open(issueUrl(state.info, shellName())),
+  'release-notes': () => window.open(releaseNotesUrl(state.info.version)),
 };
 
-function onMenuAction(action: string): void {
+// Run an action from the menu, a shortcut or the command palette. An action that opens the help
+// already showing closes it instead, and any other closes the help first.
+export function runAction(action: string): void {
+  const overlay = OVERLAYS[action];
+  if (overlay) {
+    if (state.overlay === overlay) closeOverlay();
+    else openOverlay(overlay);
+    return;
+  }
+  if (state.overlay) {
+    closeOverlay();
+    if (action === 'close-terminal') return;
+  }
   const select = /^select-terminal-(\d)$/.exec(action);
   if (select) {
     const t = readyTabs(state.tabs)[Number(select[1])];
@@ -568,7 +619,7 @@ export async function init(): Promise<void> {
   applyWindowState(windowState);
 
   api.window.onState(applyWindowState);
-  api.onMenuAction(onMenuAction);
+  api.onMenuAction(runAction);
   api.settings.onChange((next) => {
     // The MCP server changed the saved commands. Keep running tabs in step, like a save from
     // the dialog.
@@ -625,6 +676,8 @@ export async function init(): Promise<void> {
   } else {
     openTab();
   }
+  // The guide opens by itself once, on the first launch.
+  if (!settings.guideSeen) openOverlay('guide');
 }
 
 // This module holds the live state and the IPC listeners. Hot-swapping it would leave

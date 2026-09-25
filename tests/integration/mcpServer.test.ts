@@ -5,6 +5,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { SETTINGS_VERSION } from '../../src/shared/settings';
 
 const SERVER = path.join(__dirname, '..', '..', 'out', 'main', 'mcpServer.js');
 
@@ -98,7 +99,7 @@ describe('MCP server', () => {
     expect(added.result?.isError).toBeUndefined();
     const id = (added.result?.structuredContent?.added as { id: string }).id;
     expect(settings().commands[0]).toMatchObject({ id, name: 'Dev', layout: 'main-top' });
-    expect(settings().version).toBe(1);
+    expect(settings().version).toBe(SETTINGS_VERSION);
 
     const listed = await call('list_saved_commands');
     expect(listed.result?.structuredContent?.commands).toEqual([
@@ -162,7 +163,7 @@ describe('MCP server', () => {
       { id: 'old', terminals: ['ls'] },
     ]);
     await call('edit_saved_command', { target: 'old', autoStart: true });
-    expect(settings()).toMatchObject({ version: 1, future: 1 });
+    expect(settings()).toMatchObject({ version: SETTINGS_VERSION, future: 1 });
   });
 
   it('serves its guide as a resource and a tool', async () => {

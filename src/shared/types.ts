@@ -25,6 +25,7 @@ export interface Settings {
   sidebarWidth: number;
   sidebarHidden: boolean;
   fontSize: number;
+  guideSeen: boolean; // the guide opens by itself once, on the first launch
 }
 
 export interface AppInfo {

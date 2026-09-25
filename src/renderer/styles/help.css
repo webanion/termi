@@ -1,0 +1,168 @@
+/* ---------- Guide, shortcut sheet and command palette ---------- */
+
+.help-dialog {
+  width: min(560px, calc(100vw - 32px));
+}
+
+.help-dialog:focus {
+  outline: none;
+}
+
+#shortcut-sheet {
+  width: min(680px, calc(100vw - 32px));
+}
+
+.guide-text,
+.shortcut-list,
+.palette-list {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.help-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+}
+
+.help-body .dialog-head h2 {
+  flex: 1;
+  min-width: 0;
+}
+
+.help-step {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.grow {
+  flex: 1;
+}
+
+.help-body .btn:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.guide-text {
+  color: var(--text-2);
+  line-height: 1.55;
+  max-height: min(52vh, 420px);
+  overflow-y: auto;
+}
+
+.guide-text p,
+.guide-text ul {
+  margin: 0 0 10px;
+}
+
+.guide-text ul {
+  padding-left: 18px;
+}
+
+.guide-text li + li {
+  margin-top: 6px;
+}
+
+.guide-text h3 {
+  margin: 12px 0 6px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.guide-text code {
+  font: 12px var(--mono);
+  color: var(--text);
+}
+
+.keys {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: 11.5px var(--ui-font);
+  white-space: nowrap;
+}
+
+.shortcut-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 28px;
+  margin: 0;
+  max-height: min(64vh, 520px);
+  overflow-y: auto;
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.shortcut-row dt {
+  color: var(--text-2);
+}
+
+.shortcut-row dd {
+  margin: 0;
+}
+
+.palette {
+  width: min(520px, calc(100vw - 32px));
+  margin-top: 12vh;
+}
+
+.palette-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.palette-input:focus-visible {
+  outline: none;
+}
+
+.palette-input {
+  margin: 0;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font: 14px var(--ui-font);
+  outline: none;
+}
+
+.palette-list {
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  max-height: min(50vh, 360px);
+  overflow-y: auto;
+}
+
+.palette-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  color: var(--text-2);
+  cursor: default;
+}
+
+.palette-item.selected {
+  background: var(--active);
+  color: var(--text);
+}
+
+.palette-empty {
+  padding: 10px;
+  color: var(--muted);
+}
