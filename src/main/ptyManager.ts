@@ -1,6 +1,8 @@
+import { execFile } from 'child_process';
 import os from 'os';
 import fs from 'fs';
 import path from 'path';
+import { promisify } from 'util';
 import * as pty from 'node-pty';
 import type { SendEvent } from '../shared/ipc';
 import type { PtyCreateOptions, PtyCreated } from '../shared/types';
@@ -14,7 +16,33 @@ interface PtyEntry {
   timer: ReturnType<typeof setTimeout> | null;
   title: string;
   shellName: string;
+  // The name node-pty reports for the shell itself, once learned. It differs from shellName when
+  // $SHELL is a stub for another shell: on macOS /bin/sh runs bash, which node-pty calls bash.
+  shellProcess: string | null;
+  learning: boolean;
   owner: number; // the webContents that opened it
+}
+
+const execFileAsync = promisify(execFile);
+
+// Whether a shell is in the foreground of its own terminal: whether the terminal's foreground
+// process group is the shell's. It is field 8 of /proc/<pid>/stat on Linux, and ps tells on
+// macOS. Null when there is no way to tell.
+async function shellInForeground(pid: number): Promise<boolean | null> {
+  try {
+    if (process.platform === 'linux') {
+      const stat = await fs.promises.readFile(`/proc/${pid}/stat`, 'utf8');
+      const fields = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
+      return Number(fields[5]) === pid;
+    }
+    if (process.platform === 'darwin') {
+      const { stdout } = await execFileAsync('ps', ['-o', 'tpgid=', '-p', String(pid)]);
+      return Number(stdout.trim()) === pid;
+    }
+  } catch {
+    return false; // Gone, or not ready: try again on the next poll.
+  }
+  return null;
 }
 
 function defaultShell(): string {
@@ -119,7 +147,16 @@ export class PtyManager {
     });
 
     const shellName = path.basename(shell).replace(/\.exe$/i, '');
-    const entry: PtyEntry = { proc, buffer: '', timer: null, title: shellName, shellName, owner };
+    const entry: PtyEntry = {
+      proc,
+      buffer: '',
+      timer: null,
+      title: shellName,
+      shellName,
+      shellProcess: null,
+      learning: false,
+      owner,
+    };
     this.ptys.set(id, entry);
 
     let pendingCommand = command && command.trim() ? command : null;
@@ -133,6 +170,7 @@ export class PtyManager {
     if (pendingCommand) setTimeout(typeCommand, 1500);
 
     proc.onData((data) => {
+      this.learnShellName(entry);
       if (pendingCommand) setTimeout(typeCommand, 60);
       entry.buffer += data;
       if (!entry.timer) {
@@ -184,9 +222,32 @@ export class PtyManager {
     }
   }
 
+  // Learn the name node-pty gives the shell, at a moment the shell itself has its terminal. The
+  // name is read before and after the check, so a program that starts in between is never
+  // taken for the shell. Until then, and when there is no way to tell, $SHELL's name stands.
+  private learnShellName(entry: PtyEntry): void {
+    if (entry.shellProcess !== null || entry.learning) return;
+    entry.learning = true;
+    const read = () => {
+      try {
+        return path.basename(entry.proc.process);
+      } catch {
+        return '';
+      }
+    };
+    const before = read();
+    void shellInForeground(entry.proc.pid).then((foreground) => {
+      entry.learning = false;
+      if (foreground === null) entry.shellProcess = entry.shellName;
+      else if (foreground && before && read() === before) entry.shellProcess = before;
+    });
+  }
+
   // Report the name of the program running in the foreground of each terminal.
   // On Linux node-pty gives its full path, such as /usr/bin/zsh, so keep only
-  // the base name, which is what macOS reports and what shellName holds.
+  // the base name, which is what macOS reports and what shellName holds. The
+  // shell itself is reported as shellName, even when its process is named
+  // otherwise, so the page and busyCount see it as idle.
   pollTitles(): void {
     for (const [id, entry] of this.ptys) {
       let title: string;
@@ -195,6 +256,9 @@ export class PtyManager {
       } catch {
         continue;
       }
+      this.learnShellName(entry);
+      const bare = (name: string) => name.replace(/^-/, '');
+      if (entry.shellProcess && bare(title) === bare(entry.shellProcess)) title = entry.shellName;
       if (title && title !== entry.title) {
         entry.title = title;
         this.send('pty:title', id, title);
