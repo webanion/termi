@@ -1,6 +1,5 @@
 // PtyManager with real shells through node-pty. The shell is /bin/bash, so the test does not
-// depend on whoever runs it. Not /bin/sh: on macOS that is a stub that execs another shell, so
-// the program node-pty reports is not the one the manager started.
+// depend on whoever runs it, except in the case about a shell started through /bin/sh.
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -86,6 +85,24 @@ describe('PtyManager', () => {
     expect(sent.some((s) => s.channel === 'pty:title' && s.args[1] === 'sleep')).toBe(true);
     ptys.write(id, '\x03');
     await until(() => ptys.busyCount() === 0);
+  });
+
+  // On macOS /bin/sh becomes the shell /private/var/select/sh names, and node-pty calls the idle
+  // shell bash, not sh, while ps still calls it sh (#18). On Linux /bin/sh is dash, called sh.
+  it('counts a shell started through /bin/sh as idle at its prompt', async () => {
+    vi.stubEnv('SHELL', '/bin/sh');
+    const { id, title } = ptys.create({}, 1);
+    expect(title).toBe('sh');
+    await until(() => output(id).length > 0);
+    ptys.write(id, 'sleep 30\r');
+    await until(() => ptys.busyCount() === 1);
+    ptys.write(id, '\x03');
+    await until(() => ptys.busyCount() === 0);
+    // A later poll still reports the idle shell under the name the page knows it by.
+    await new Promise((r) => setTimeout(r, 1500));
+    expect(ptys.busyCount()).toBe(0);
+    const titles = sent.filter((s) => s.channel === 'pty:title' && s.args[0] === id);
+    expect(titles.at(-1)?.args[1]).toBe('sh');
   });
 
   it('stops the shells a page opened, and only those', async () => {
