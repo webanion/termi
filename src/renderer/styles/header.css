@@ -11,7 +11,7 @@
 }
 
 .sidebar-head {
-  padding-left: var(--lights-w);
+  padding-left: var(--head-left);
   transition:
     padding-left var(--dur) var(--ease),
     opacity var(--dur) var(--ease);
@@ -20,6 +20,7 @@
 .main-head {
   position: relative;
   border-bottom: 1px solid var(--border);
+  padding-right: var(--head-right);
   background: var(--bg);
   transition: padding-left var(--dur) var(--ease);
 }
@@ -37,13 +38,18 @@
 }
 
 body.sidebar-hidden .main-head {
-  padding-left: var(--lights-w);
+  padding-left: var(--head-left);
 }
 
 body.sidebar-hidden #show-sidebar {
   width: 26px;
   opacity: 1;
   pointer-events: auto;
+}
+
+/* macOS's traffic lights take the left end instead. */
+body.platform-darwin {
+  --head-left: var(--lights-w);
 }
 
 body.fullscreen {
@@ -102,7 +108,7 @@ body.blurred .sidebar-head {
 .layout-control {
   position: absolute;
   top: 50%;
-  right: 8px;
+  right: var(--head-right);
   display: flex;
   gap: 2px;
   padding: 2px;

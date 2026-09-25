@@ -97,23 +97,3 @@ export const UpIcon = () => (
     <path d="M6 11l6 -6" />
   </svg>
 );
-
-// The glyphs inside the drawn traffic lights.
-export const LightCloseIcon = () => (
-  <svg viewBox="0 0 12 12">
-    <path d="M3.5 3.5l5 5M8.5 3.5l-5 5" />
-  </svg>
-);
-
-export const LightMinimizeIcon = () => (
-  <svg viewBox="0 0 12 12">
-    <path d="M3 6h6" />
-  </svg>
-);
-
-export const LightMaximizeIcon = () => (
-  <svg viewBox="0 0 12 12">
-    <path d="M4 4h4v4" />
-    <path d="M8 8H4V4" />
-  </svg>
-);
