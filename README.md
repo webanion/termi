@@ -4,7 +4,7 @@
 
 A terminal app for macOS and Linux with a warm dark theme, saved commands that open several terminals side by side, and auto-start. Built with Electron, React, xterm.js and node-pty.
 
-![Termi running a saved command with an API server, a web server and a plain shell side by side](docs/screenshot.png)
+![Termi on macOS, with a saved command running an API server, a web server, the tests in watch mode and the git log in a grid of four terminals](docs/screenshot.png)
 
 ## What it does
 
