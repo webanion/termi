@@ -6,13 +6,13 @@
   "main": "out/main/main.js",
   "author": "Jawad Ahbab",
   "license": "MIT",
-  "homepage": "https://github.com/JawadAhbab/termi#readme",
+  "homepage": "https://github.com/webanion/termi#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JawadAhbab/termi.git"
+    "url": "git+https://github.com/webanion/termi.git"
   },
   "bugs": {
-    "url": "https://github.com/JawadAhbab/termi/issues"
+    "url": "https://github.com/webanion/termi/issues"
   },
   "keywords": [
     "terminal",

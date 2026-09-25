@@ -2,6 +2,15 @@
 # Commit subjects come out as chore(deps), chore(deps-dev) or chore(ci), so the commit check
 # passes and the changelog files them under Other. Each runtime dependency gets its own pull
 # request, since Electron, node-pty, React and xterm.js each need a run of the app to review.
+#
+# Some majors cannot land on their own, so they are held here rather than opened as pull requests
+# that fail npm ci. Remove a rule once what it waits for has shipped.
+# - @types/node follows the Node that Electron bundles (Node 24 in Electron 44) and .nvmrc, so
+#   its major moves by hand, with the Electron upgrade that changes Node.
+# - TypeScript majors wait for typescript-eslint to accept them (8.70 accepts below 6.1).
+# - Vite majors, and the @vitejs/plugin-react major that needs them, wait for electron-vite to
+#   accept them (5.0 accepts Vite 5 to 7). electron-vite itself is not held, so its next major
+#   arrives as a pull request, which is the signal to lift this rule.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -13,6 +22,15 @@ updates:
       prefix: chore
       prefix-development: chore
       include: scope
+    ignore:
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      - dependency-name: vite
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@vitejs/plugin-react'
+        update-types: ['version-update:semver-major']
     groups:
       dev-dependencies:
         dependency-type: development

@@ -23,7 +23,7 @@ import {
 } from './changelog.mjs';
 
 const SCRIPT = fileURLToPath(new URL('./changelog.mjs', import.meta.url));
-const REPO = 'https://github.com/JawadAhbab/termi';
+const REPO = 'https://github.com/webanion/termi';
 const HEADER = '# Changelog\n\nEvery release of Termi, newest first.\n';
 
 test('parses type, scope, summary and breaking markers', () => {
@@ -335,7 +335,7 @@ test('after v0.1.0, lint, suggest, write and notes work from that tag, past the 
     assert.ok(written.out.includes(`[Compare with v0.1.0](${REPO}/compare/v0.1.0...v0.1.1)`));
     assert.match(
       written.out,
-      /### Fixes\n\n- \*\*main:\*\* count idle shells as idle on Linux \(\[[0-9a-f]{7}\]\(https:\/\/github\.com\/JawadAhbab\/termi\/commit\/[0-9a-f]{40}\), \[#13\]\(https:\/\/github\.com\/JawadAhbab\/termi\/pull\/13\)\)/,
+      /### Fixes\n\n- \*\*main:\*\* count idle shells as idle on Linux \(\[[0-9a-f]{7}\]\(https:\/\/github\.com\/webanion\/termi\/commit\/[0-9a-f]{40}\), \[#13\]\(https:\/\/github\.com\/webanion\/termi\/pull\/13\)\)/,
     );
     assert.match(written.out, /### Other\n\n- Tweak /);
     assert.doesNotMatch(written.out, /Merge pull request|add Termi terminal app|release v0\.1\.0/);

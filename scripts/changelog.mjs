@@ -23,7 +23,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-export const REPO_URL = 'https://github.com/JawadAhbab/termi';
+export const REPO_URL = 'https://github.com/webanion/termi';
 
 export const TYPES = [
   ['feat', 'Features'],

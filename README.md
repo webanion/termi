@@ -1,6 +1,6 @@
 # Termi
 
-[![CI](https://github.com/JawadAhbab/termi/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/JawadAhbab/termi/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/JawadAhbab/termi)](https://github.com/JawadAhbab/termi/releases/latest) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/webanion/termi/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/webanion/termi/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/webanion/termi)](https://github.com/webanion/termi/releases/latest) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A terminal app for macOS and Linux with a warm dark theme, saved commands that open several terminals side by side, and auto-start. Built with Electron, React, xterm.js and node-pty.
 
@@ -18,7 +18,7 @@ A terminal app for macOS and Linux with a warm dark theme, saved commands that o
 
 ## Install
 
-Download a release from [Releases](https://github.com/JawadAhbab/termi/releases). Each release has a `SHA256SUMS` file to check the downloads against.
+Download a release from [Releases](https://github.com/webanion/termi/releases). Each release has a `SHA256SUMS` file to check the downloads against.
 
 **macOS.** `Termi-<version>-mac-arm64.dmg` for Apple silicon or `Termi-<version>-mac-x64.dmg` for Intel, or the `.zip` of either. Open it and drag Termi to Applications. The builds are not signed yet, so the first time, right-click Termi and choose **Open**, or run `xattr -dr com.apple.quarantine /Applications/Termi.app`.
 
@@ -129,7 +129,7 @@ Set `TERMI_USER_DATA` to point the app and the MCP server at another folder, for
 
 ## Contributing
 
-Bug reports, ideas and pull requests are welcome. [CONTRIBUTING](.github/CONTRIBUTING.md) covers everything from branch names to what a pull request needs, and [AGENTS.md](AGENTS.md) describes the code's layout and the rules that keep the page away from the shell. Issues labelled [good first issue](https://github.com/JawadAhbab/termi/labels/good%20first%20issue) are a place to start. Everyone taking part follows the [Code of Conduct](.github/CODE_OF_CONDUCT.md).
+Bug reports, ideas and pull requests are welcome. [CONTRIBUTING](.github/CONTRIBUTING.md) covers everything from branch names to what a pull request needs, and [AGENTS.md](AGENTS.md) describes the code's layout and the rules that keep the page away from the shell. Issues labelled [good first issue](https://github.com/webanion/termi/labels/good%20first%20issue) are a place to start. Everyone taking part follows the [Code of Conduct](.github/CODE_OF_CONDUCT.md).
 
 ## Security
 
