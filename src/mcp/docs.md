@@ -54,7 +54,7 @@ A running Termi watches the file. After a change from this server:
 - a change to the terminals, folder, or layout applies the next time the command starts. A running tab keeps its
   terminals.
 
-The watcher is in the app source (`src/main/settings.ts`). A packaged build made before the MCP server was added does not have it. That build shows changes only after a restart, and its next save can overwrite them. Rebuild it with `npm run dist`.
+The watcher is in the app source (`src/main/settings.ts`). A packaged build made before the MCP server was added does not have it. That build shows changes only after a restart, and its next save can overwrite them. Rebuild it with `npm run dist:mac` or `npm run dist:linux`.
 
 ## What the server cannot do
 

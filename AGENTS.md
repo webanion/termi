@@ -40,14 +40,15 @@ These rules are what keep a page that shows untrusted terminal output from reach
 | `npm run lint` | ESLint, including the import rules above. |
 | `npm run format:check` | Prettier. `npm run format` fixes it. |
 | `npm run test:scripts` | The tests for the scripts in `scripts/`, such as the changelog tool, run with `node --test`. |
-| `npm run dist` | Build and package the macOS app. |
+| `npm run dist:mac` | Build and package the macOS app: dmg and zip, arm64 and x64. |
+| `npm run dist:linux` | Build and package the Linux app: AppImage and deb, x64. |
 | `node out/main/mcpServer.js` | The MCP server, after a build. |
 
 `TERMI_USER_DATA` points the app and the MCP server at another data folder. Use a temporary one for any test, so real settings are never touched.
 
 ## Before a pull request
 
-`typecheck`, `lint`, `format:check`, `test:scripts` and `build` pass. Then run the app, in development and as a build, and say in the pull request what you checked and on which platform, macOS or Linux. The test suite arrives with #4.
+`typecheck`, `lint`, `format:check`, `test:scripts` and `build` pass, which is what CI (`.github/workflows/ci.yml`) runs on Linux and macOS for every pull request, along with a check that every commit subject is a Conventional Commit. Then run the app, in development and as a build, and say in the pull request what you checked and on which platform, macOS or Linux. The test suite arrives with #4.
 
 ## Conventions
 
@@ -61,7 +62,8 @@ These rules are what keep a page that shows untrusted terminal output from reach
 
 ## Ask first
 
-- Running a release, or pushing or deleting tags.
+- Running the Release workflow, or pushing or deleting tags. Releases only come from `.github/workflows/release.yml`.
+- Changing the CI or release workflows.
 - Adding a dependency.
 - Adding an IPC channel or an MCP tool, or widening what an existing one accepts.
 - Anything that touches `webPreferences`, the CSP, or how links and navigation are handled.
