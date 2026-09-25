@@ -57,7 +57,11 @@ beforeAll(async () => {
   app = await _electron.launch({ executablePath: ELECTRON, args: [ROOT], env, timeout: 60_000 });
   page = await app.firstWindow();
   page.on('console', (message) => {
-    if (['error', 'warning'].includes(message.type())) problems.push(message.text());
+    if (!['error', 'warning'].includes(message.type())) return;
+    // xterm warns when one of its idle tasks overruns by 20ms, which follows the machine's load,
+    // not Termi. Anything else the page logs is a problem.
+    if (/^task queue exceeded allotted deadline by \d+ms$/.test(message.text())) return;
+    problems.push(message.text());
   });
   page.on('pageerror', (error) => problems.push(error.message));
   await page.waitForSelector('#terminal-list .item', { timeout: 30_000 });
