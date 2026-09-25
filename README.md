@@ -73,7 +73,7 @@ The logo is flat: one solid color, with no gradients or shadows. To change it, e
 
 ## Releases
 
-Releases are made by the Release workflow in GitHub Actions, never by hand. Run it from `main` and choose the bump. It opens a pull request from `release/v<version>` with the version bumped and a `CHANGELOG.md` section written from the commits since the last release. Merging that pull request runs CI on the merge commit, builds the macOS and Linux packages, then tags `v<version>` and publishes the GitHub Release with the packages and a `SHA256SUMS` file. The changelog groups commits by their Conventional Commits type, so every commit subject has to follow it, and CI checks that on each pull request.
+Releases are made by the Release workflow in GitHub Actions, never by hand. Run it from `main` and choose the bump. It opens a pull request from `release/v<version>` with the version bumped and a `CHANGELOG.md` section written from the commits since the last release. Merging that pull request runs CI on the merge commit, builds the macOS and Linux packages, then tags `v<version>` and publishes the GitHub Release with the packages, a `SHA256SUMS` file, and its contributors: everyone whose commits are in it. The changelog groups commits by their Conventional Commits type, so every commit subject has to follow it, and CI checks that on each pull request.
 
 ## Shortcuts
 
