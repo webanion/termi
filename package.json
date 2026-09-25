@@ -19,6 +19,7 @@
     "lint:fix": "eslint \"src/**/*.ts\" electron.vite.config.ts --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "test:scripts": "node --test \"scripts/*.test.mjs\"",
     "icons": "bash scripts/buildIcons.sh",
     "rebuild": "electron-rebuild -f -w node-pty",
     "postinstall": "electron-rebuild -f -w node-pty",
