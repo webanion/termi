@@ -44,8 +44,7 @@ A tool that breaks a rule returns an error that says what to fix. Nothing is sav
 
 ## How changes reach the app
 
-The server reads and writes Termi's `settings.json` (the path is in "This install" below). The app keeps its own
-settings in that file too (sidebar width, text size), and the server never changes them.
+The server reads and writes Termi's `settings.json` (the path is in "This install" below). The app keeps its own settings in that file too (sidebar width, text size, whether the guide has opened), and the server never changes them.
 
 A running Termi watches the file. After a change from this server:
 

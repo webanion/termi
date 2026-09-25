@@ -15,6 +15,7 @@ A terminal app for macOS and Linux with a warm dark theme, saved commands that o
 - The sidebar footer shows CPU use, memory use, and download and upload speed. Termi checks them every 1.5 seconds, and stops while the window is minimized.
 - Termi reopens at the same window position and size. If that display is gone, the window moves to the main display.
 - The header holds the system's own window controls: the traffic lights on the left on macOS, and minimize, maximize and close on the right on Linux.
+- Help is built in. A short guide opens on the first launch and from the Help menu, a sheet lists every shortcut, and a command palette finds any action or running terminal by name. Help, Report an Issue opens the bug report form with the Termi version, the system and the shell filled in, for you to read and submit.
 
 ## Install
 
@@ -90,6 +91,8 @@ Releases are made by the Release workflow in GitHub Actions, never by hand. Run 
 | Full screen | ⌃⌘F | F11 |
 | Text size | ⌘+, ⌘- and ⌘0 | Ctrl+=, Ctrl+- and Ctrl+0 |
 | Open a link | ⌘ click | Ctrl+click |
+| Command palette | ⇧⌘P | Ctrl+Shift+P |
+| Keyboard shortcuts | ⌘/ | Ctrl+Shift+/ |
 
 On Linux a plain Ctrl+letter always reaches the shell, so Ctrl+C interrupts, Ctrl+W deletes a word, Ctrl+K deletes to the end of the line and Ctrl+B stays the tmux prefix. Termi's own shortcuts use the keys other Linux terminals use: Ctrl+Shift with a letter, Alt+1 to 9 for tabs, and Ctrl+Page Up and Page Down to move between them.
 
@@ -122,7 +125,7 @@ claude mcp add termi --scope user -- node /path/to/termi/out/main/mcpServer.js
 
 Termi keeps its data in `~/Library/Application Support/Termi/` on macOS, and in `$XDG_CONFIG_HOME/Termi` on Linux, which is usually `~/.config/Termi`.
 
-- `settings.json`: the saved commands, with their terminals and layout, the sidebar width and the text size. It has a version number, and Termi upgrades an older file when it reads it.
+- `settings.json`: the saved commands, with their terminals and layout, the sidebar width, the text size, and whether the guide has opened. It has a version number, and Termi upgrades an older file when it reads it.
 - `window-state.json`: the window's position and size.
 
 Set `TERMI_USER_DATA` to point the app and the MCP server at another folder, for example for tests.
