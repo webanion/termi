@@ -17,10 +17,19 @@ A terminal app for macOS with a warm dark theme, built with Electron, xterm.js, 
 
 ```sh
 npm install
-npm start
+npm run dev
 ```
 
-`npm install` also rebuilds node-pty for Electron.
+`npm install` also rebuilds node-pty for Electron. `npm run dev` serves the window's code from a dev server that reloads when you save. `npm start` builds Termi into `out/` and runs that build.
+
+Termi is written in TypeScript and built with electron-vite. Before you open a pull request, run:
+
+```sh
+npm run typecheck
+npm run lint
+npm run format:check
+npm run build
+```
 
 ## Build the app
 
@@ -52,8 +61,7 @@ whole tab. To close one terminal, use the × in its pane header, or type `exit`.
 
 ## MCP server
 
-`src/mcp/server.js` is an MCP server for the saved commands. An AI assistant such as Claude Code can use it to
-list, add, and edit them. It runs on plain Node over stdio and has no dependencies.
+`src/mcp/server.ts` is an MCP server for the saved commands. An AI assistant such as Claude Code can use it to list, add, and edit them. `npm run build` bundles it into `out/main/mcpServer.js`, which runs on plain Node over stdio and has no dependencies.
 
 | Tool | What it does |
 | --- | --- |
@@ -62,17 +70,16 @@ list, add, and edit them. It runs on plain Node over stdio and has no dependenci
 | `edit_saved_command` | Changes a saved command, found by id or by name. Only the fields you give change |
 | `get_termi_docs` | Returns the guide to the server. The same text is the `termi://docs` resource |
 
-The guide is `src/mcp/docs.md`. The server adds a reference to the end of it, built from the code: the layouts, every
-tool and parameter, and the paths this install uses. So the reference never goes out of date.
+The guide is `src/mcp/docs.md`, and the build puts it inside the server. The server adds a reference to the end of it, built from the code: the layouts, every tool and parameter, and the paths this install uses. So the reference never goes out of date.
 
 It follows the same rules as the saved command dialog. The first terminal needs a command, and a tab has at most 4
 terminals. It writes to the same `settings.json` as the app. A running Termi watches that file, so a change shows in
 the sidebar right away, and the name of a running tab follows a rename.
 
-To add it to Claude Code for all your projects:
+To add it to Claude Code for all your projects, build Termi once with `npm run build`, then:
 
 ```sh
-claude mcp add termi --scope user -- node /path/to/termi/src/mcp/server.js
+claude mcp add termi --scope user -- node /path/to/termi/out/main/mcpServer.js
 ```
 
 Set `TERMI_USER_DATA` to point the server (and the app) at another data folder, for example for tests.
