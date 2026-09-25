@@ -1,0 +1,28 @@
+# Weekly update pull requests for npm packages and for the actions the workflows pin by SHA.
+# Commit subjects come out as chore(deps), chore(deps-dev) or chore(ci), so the commit check
+# passes and the changelog files them under Other. Each runtime dependency gets its own pull
+# request, since Electron, node-pty, React and xterm.js each need a run of the app to review.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      prefix-development: chore
+      include: scope
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore(ci)
+    groups:
+      actions:
+        patterns: ['*']
