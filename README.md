@@ -33,7 +33,7 @@ npm ci
 npm run dev
 ```
 
-`npm ci` also rebuilds node-pty for Electron. `npm run dev` serves the window's code from a dev server that reloads when you save. `npm start` builds Termi into `out/` and runs that build.
+`npm ci` also downloads Electron and rebuilds node-pty for it. `npm run dev` serves the window's code from a dev server that reloads when you save. `npm start` builds Termi into `out/` and runs that build.
 
 On Ubuntu 23.10 and later, the development copy of Electron needs an AppArmor profile to start its sandbox when you run it from a normal terminal (VS Code's terminal works without one). `npm run setup:apparmor` checks, and changes nothing: it names the Electron binary and the profile it would write, and says whether the restriction is on. To install the profile, once per checkout:
 

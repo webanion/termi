@@ -33,7 +33,7 @@ These rules are what keep a page that shows untrusted terminal output from reach
 
 | Command | What it does |
 | --- | --- |
-| `npm ci` | Install, and rebuild node-pty for Electron. |
+| `npm ci` | Install, download Electron, and rebuild node-pty for it. |
 | `npm run dev` | Run Termi with the page on a dev server that reloads on save. |
 | `npm start` | Build into `out/` and run the build. |
 | `npm run build` | Build main, preload, renderer and the MCP server into `out/`. |

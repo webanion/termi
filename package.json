@@ -47,7 +47,7 @@
     "icons": "bash scripts/buildIcons.sh",
     "setup:apparmor": "node scripts/devAppArmor.mjs",
     "rebuild": "electron-rebuild -f -w node-pty",
-    "postinstall": "electron-rebuild -f -w node-pty",
+    "postinstall": "node node_modules/electron/install.js && electron-rebuild -f -w node-pty",
     "dist:mac": "npm run build && electron-builder --mac --arm64 --x64 --publish never",
     "dist:linux": "npm run build && electron-builder --linux --x64 --publish never"
   },
