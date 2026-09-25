@@ -1,9 +1,10 @@
 import logo from '../../assets/logo.svg';
-import { modKey, openCommandDialog, openTab } from './appStore';
+import { openCommandDialog, openTab } from './appStore';
 import { useAppState } from './useAppState';
+import { shortcutLabel } from '../shared/shortcuts';
 
 export function EmptyState({ hidden }: { hidden: boolean }) {
-  const info = useAppState((s) => s.info);
+  const platform = useAppState((s) => s.info.platform);
   return (
     <div className="empty-state" id="empty-state" hidden={hidden}>
       <img src={logo} alt="Termi logo" className="empty-logo" />
@@ -11,7 +12,7 @@ export function EmptyState({ hidden }: { hidden: boolean }) {
       <p>No terminals are running.</p>
       <div className="empty-actions">
         <button className="btn primary" id="empty-new-terminal" onClick={() => openTab()}>
-          New terminal <kbd>{modKey(info)}T</kbd>
+          New terminal <kbd>{shortcutLabel('new-terminal', platform)}</kbd>
         </button>
         <button className="btn" id="empty-new-command" onClick={() => openCommandDialog()}>
           Save a command

@@ -110,7 +110,6 @@ function updateTab(id: number, change: (tab: TabState) => TabState): void {
 // ---------- Reading ----------
 
 export const isMac = (info: AppInfo) => info.platform === 'darwin';
-export const modKey = (info: AppInfo) => (isMac(info) ? '⌘' : 'Ctrl+');
 
 function tabById(id: number | null): TabState | undefined {
   return state.tabs.find((t) => t.id === id);

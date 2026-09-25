@@ -3,8 +3,11 @@ import { CommandList } from './CommandList';
 import { SidebarIcon } from './Icons';
 import { StatsFooter } from './StatsFooter';
 import { TerminalList } from './TerminalList';
+import { useAppState } from './useAppState';
+import { shortcutLabel } from '../shared/shortcuts';
 
 export function Sidebar() {
+  const platform = useAppState((s) => s.info.platform);
   return (
     <aside className="sidebar" id="sidebar">
       <div className="sidebar-head drag" onDoubleClick={(event) => zoomFromHeader(event.target)}>
@@ -12,7 +15,7 @@ export function Sidebar() {
         <button
           className="icon-btn no-drag"
           id="hide-sidebar"
-          title="Hide sidebar (⌘B)"
+          title={`Hide sidebar (${shortcutLabel('toggle-sidebar', platform)})`}
           aria-label="Hide sidebar"
           onClick={toggleSidebar}
         >
