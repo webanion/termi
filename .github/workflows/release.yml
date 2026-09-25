@@ -276,11 +276,24 @@ jobs:
             exit 1
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
+      # The notes end with everyone whose commits are in the release, as @mentions, which GitHub
+      # shows as the release's contributors. The commits are those since the latest release, or
+      # all of them for the first one. Bots are left out.
       - name: Write the notes and the checksums
         env:
           VERSION: ${{ steps.check.outputs.version }}
         run: |
           node scripts/changelog.mjs notes "$VERSION" > "$RUNNER_TEMP/notes.md"
+          previous="$(gh release view --json tagName --jq .tagName 2>/dev/null || true)"
+          if [ -n "$previous" ]; then
+            logins="$(gh api "repos/$GITHUB_REPOSITORY/compare/$previous...$SHA" --jq '.commits[].author.login // empty')"
+          else
+            logins="$(gh api --paginate "repos/$GITHUB_REPOSITORY/commits?sha=$SHA&per_page=100" --jq '.[].author.login // empty')"
+          fi
+          people="$(printf '%s\n' "$logins" | grep -v -e '^$' -e '\[bot\]$' | sort -f -u | sed 's/^/@/' | paste -sd ' ' - || true)"
+          if [ -n "$people" ]; then
+            printf '\n### Contributors\n\n%s\n' "$people" >> "$RUNNER_TEMP/notes.md"
+          fi
           cd "$RUNNER_TEMP/packages"
           sha256sum -- * > SHA256SUMS
           cat SHA256SUMS
