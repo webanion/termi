@@ -7,8 +7,8 @@ name: CI
 # Written in this repository by hand for now. It keeps the shape and the job names of the
 # shared gm-libs workflows, so swapping it for them later is mechanical.
 #
-# macOS minutes count ten times Linux minutes against a private repository's allowance, so the
-# macOS job never packages. Packaging happens in release.yml alone.
+# Neither job packages, so a pull request's check stays short on both platforms. Packaging
+# happens in release.yml alone.
 
 on:
   push:

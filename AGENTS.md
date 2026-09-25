@@ -56,6 +56,8 @@ These rules are what keep a page that shows untrusted terminal output from reach
 
 ## Conventions
 
+The full conventions are in [CONTRIBUTING](.github/CONTRIBUTING.md). The short version:
+
 - Branches `<handle>/<type>/<kebab-title>`, cut from a fresh `main`, with the type one of `feat`, `fix`, `refactor`, `chore`, `docs` or `test`.
 - One-line Conventional Commits, `type(scope): description`, with the type matching the branch.
 - Pull requests merge with a merge commit. Never force push, and never rewrite `main`.

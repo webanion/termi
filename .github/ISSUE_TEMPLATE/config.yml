@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/JawadAhbab/termi/security/advisories/new
+    about: Privately, to the maintainers. Never in an issue.
