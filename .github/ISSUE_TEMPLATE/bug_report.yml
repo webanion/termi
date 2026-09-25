@@ -1,0 +1,60 @@
+name: Bug report
+description: Something in Termi does not work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: A security problem goes to the maintainers privately, never here. [SECURITY](https://github.com/JawadAhbab/termi/security/policy) says how.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen
+      value: |
+        1.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Termi version
+      description: About Termi on macOS. On Linux, the version in the name of the file you installed, or `dpkg -s termi` for the deb. package.json when running from source.
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installed from
+      options:
+        - dmg
+        - zip
+        - deb
+        - AppImage
+        - source
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: The macOS version and chip, or the Linux distribution, desktop, and Wayland or X11.
+      placeholder: macOS 26 on Apple silicon, or Ubuntu 24.04 with GNOME on Wayland
+    validations:
+      required: true
+  - type: input
+    id: shell
+    attributes:
+      label: Shell
+      description: The value of `$SHELL`.
+      placeholder: /bin/zsh
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else
+      description: A screenshot or a recording helps. Leave out anything private that shows in a terminal, such as paths, host names and tokens.
