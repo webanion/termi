@@ -2,6 +2,23 @@
 
 Every release of Termi, newest first. Each section is written by `scripts/changelog.mjs` from the Conventional Commits since the release before it, and is that version's GitHub Release notes.
 
+## v0.1.1 (2026-09-25)
+
+[Compare with v0.1.0](https://github.com/webanion/termi/compare/v0.1.0...v0.1.1)
+
+### Fixes
+
+- **linux:** install the icon at every size the icon theme looks in ([694243b](https://github.com/webanion/termi/commit/694243bf0aefb409fc7b4f74adb373ca29449a6c), [#38](https://github.com/webanion/termi/pull/38))
+
+### Documentation
+
+- **readme:** correct the text size keys, the macOS first launch, and state there is no telemetry ([21e7ef2](https://github.com/webanion/termi/commit/21e7ef2df4323d50b6581a2c26198f0f18405ad2), [#37](https://github.com/webanion/termi/pull/37))
+- **readme:** link the product site at termi.webanion.com ([9cb43bb](https://github.com/webanion/termi/commit/9cb43bb34904292c4b4383305d90b947996ed183), [#36](https://github.com/webanion/termi/pull/36))
+
+### Other
+
+- **release:** credit the contributors in the release notes ([26397e9](https://github.com/webanion/termi/commit/26397e96d24ba6b5a3f716d0f35e43299cfa056b), [#35](https://github.com/webanion/termi/pull/35))
+
 ## v0.1.0 (2026-09-25)
 
 ### Features

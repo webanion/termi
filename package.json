@@ -2,7 +2,7 @@
   "name": "termi",
   "productName": "Termi",
   "desktopName": "termi.desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A terminal for macOS and Linux with saved commands that open several terminals side by side, and auto-start.",
   "main": "out/main/main.js",
   "author": "Jawad Ahbab",
