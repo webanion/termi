@@ -71,7 +71,7 @@ npm run dist:linux  # AppImage and deb for x64, on Linux
 
 Both write to `_releases/<version>/`. The macOS builds are not signed.
 
-The logo is flat: one solid color, with no gradients or shadows. To change it, edit `assets/logo.svg` and `assets/logo-mark.svg`, which is the same logo without the outer padding, then run `npm run icons`. It needs `rsvg-convert` (`brew install librsvg` on macOS, `sudo apt install librsvg2-bin` on Ubuntu). The `.icns` also needs `iconutil`, which only macOS has, so elsewhere the script writes the PNGs and leaves the committed `icon.icns` as it is.
+The logo is flat: one solid color, with no gradients or shadows. To change it, edit `assets/logo.svg` and `assets/logo-mark.svg`, which is the same logo without the outer padding, then run `npm run icons`. It needs `rsvg-convert` (`brew install librsvg` on macOS, `sudo apt install librsvg2-bin` on Ubuntu). The `.icns` also needs `iconutil`, which only macOS has, so elsewhere the script writes the PNGs and leaves the committed `icon.icns` as it is. The PNGs include the Linux icon set in `assets/icons/`, one per size from 16 to 512, which the Linux packages install into the system icon theme.
 
 ## Releases
 
