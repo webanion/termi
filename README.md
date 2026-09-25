@@ -23,7 +23,7 @@ A terminal app for macOS and Linux with a warm dark theme, saved commands that o
 
 Download a release from [termi.webanion.com](https://termi.webanion.com) or [Releases](https://github.com/webanion/termi/releases). Each release has a `SHA256SUMS` file to check the downloads against.
 
-**macOS.** `Termi-<version>-mac-arm64.dmg` for Apple silicon or `Termi-<version>-mac-x64.dmg` for Intel, or the `.zip` of either. Open it and drag Termi to Applications. The builds are not signed yet, so the first time, right-click Termi and choose **Open**, or run `xattr -dr com.apple.quarantine /Applications/Termi.app`.
+**macOS.** `Termi-<version>-mac-arm64.dmg` for Apple silicon or `Termi-<version>-mac-x64.dmg` for Intel, or the `.zip` of either. Open it and drag Termi to Applications. The builds are not signed yet, so macOS blocks the first launch. On macOS 15 and later, open System Settings, Privacy & Security, and choose **Open Anyway** next to the message about Termi. On earlier versions, right-click Termi and choose **Open**. On any version, `xattr -dr com.apple.quarantine /Applications/Termi.app` clears the block.
 
 **Linux.** On Debian and Ubuntu, install the deb with `sudo apt install ./Termi-<version>-linux-amd64.deb`. It sets up Chromium's sandbox, including an AppArmor profile on Ubuntu 24.04 and later. Elsewhere, use `Termi-<version>-linux-x86_64.AppImage`: make it executable with `chmod +x` and run it. On Ubuntu 23.10 and later an AppImage cannot bring its own AppArmor profile, so use the deb there.
 
@@ -91,7 +91,7 @@ Releases are made by the Release workflow in GitHub Actions, never by hand. Run 
 | Show or hide the sidebar | ⌘B | Ctrl+Shift+B |
 | Copy and paste | ⌘C and ⌘V | Ctrl+Shift+C and Ctrl+Shift+V |
 | Full screen | ⌃⌘F | F11 |
-| Text size | ⌘+, ⌘- and ⌘0 | Ctrl+=, Ctrl+- and Ctrl+0 |
+| Text size | ⌘=, ⌘- and ⌘0 | Ctrl+=, Ctrl+- and Ctrl+0 |
 | Open a link | ⌘ click | Ctrl+click |
 | Command palette | ⇧⌘P | Ctrl+Shift+P |
 | Keyboard shortcuts | ⌘/ | Ctrl+Shift+/ |
@@ -137,6 +137,8 @@ Set `TERMI_USER_DATA` to point the app and the MCP server at another folder, for
 Bug reports, ideas and pull requests are welcome. [CONTRIBUTING](.github/CONTRIBUTING.md) covers everything from branch names to what a pull request needs, and [AGENTS.md](AGENTS.md) describes the code's layout and the rules that keep the page away from the shell. Issues labelled [good first issue](https://github.com/webanion/termi/labels/good%20first%20issue) are a place to start. Everyone taking part follows the [Code of Conduct](.github/CODE_OF_CONDUCT.md).
 
 ## Security
+
+Termi collects nothing and sends nothing: no telemetry, no analytics and no update check. The only network traffic it causes is a link you open and whatever you run in its terminals.
 
 Report a vulnerability privately, never in an issue. [SECURITY](.github/SECURITY.md) says how and what counts.
 
