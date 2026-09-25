@@ -8,12 +8,12 @@ Termi is an Electron terminal app: xterm.js in the window, shells through node-p
 
 | Path | What lives there |
 | --- | --- |
-| `src/main/` | The main process. `main.ts` is the app lifecycle, `window.ts` the window and its navigation rules, `menu.ts` the menu, `ipc.ts` every IPC handler with its sender and input checks, `ptyManager.ts` the shells, `settings.ts` the settings store, plus `windowState.ts`, `systemStats.ts` and `jsonFile.ts`. |
+| `src/main/` | The main process. `main.ts` is the app lifecycle, `window.ts` the window and its navigation rules, `menu.ts` the menu, `ipc.ts` every IPC handler with its sender and input checks, `ptyManager.ts` the shells, `settings.ts` the settings store, `shortcuts.ts` the keys main takes before the page on Linux and the actions they run, plus `windowState.ts`, `systemStats.ts` and `jsonFile.ts`. |
 | `src/preload/` | `preload.ts` builds `window.termi` from the channels in `src/shared/ipc.ts`. |
 | `src/renderer/` | The window's page, in React. `main.tsx` starts the store and renders `App.tsx`. `appStore.ts` holds the state, every action and the IPC listeners, and components read it with `useAppState`. `terminalRuntime.ts` owns each pane's xterm terminal and shell, outside React. Components are PascalCase `.tsx` files, and `styles/` holds the stylesheet, one file per section, imported in order by `main.tsx`. |
 | `src/mcp/` | The MCP server. `server.ts` is the entry and dispatch, `jsonRpc.ts` the stdio transport, `tools.ts` the tools, `docs.ts` and `docs.md` the guide, `settingsFile.ts` where it finds the settings. |
-| `src/shared/` | Code every process loads: `types.ts`, `ipc.ts` (the IPC contract), `settings.ts` (the settings file's schema, version, migrations and update checks), `savedCommands.ts` (the saved command rules) and `layouts.ts`. |
-| `scripts/` | Build helpers, such as `buildIcons.sh`. |
+| `src/shared/` | Code every process loads: `types.ts`, `ipc.ts` (the IPC contract), `settings.ts` (the settings file's schema, version, migrations and update checks), `savedCommands.ts` (the saved command rules), `shortcuts.ts` (every shortcut's keys for macOS and Linux, their labels, and the key matcher) and `layouts.ts`. |
+| `scripts/` | Build helpers, such as `buildIcons.sh`, the changelog tool, and `devAppArmor.mjs`. |
 | `assets/` | Logo sources and icons, also used by electron-builder. |
 | `out/` | Build output, not tracked. |
 
@@ -40,7 +40,8 @@ These rules are what keep a page that shows untrusted terminal output from reach
 | `npm run typecheck` | TypeScript for both projects, node (`tsconfig.node.json`) and web (`tsconfig.web.json`). |
 | `npm run lint` | ESLint, including the import rules above. |
 | `npm run format:check` | Prettier. `npm run format` fixes it. |
-| `npm run test:scripts` | The tests for the scripts in `scripts/`, such as the changelog tool, run with `node --test`. |
+| `npm run test:scripts` | The tests for the scripts in `scripts/`, such as the changelog tool and the AppArmor script, run with `node --test`. |
+| `npm run setup:apparmor` | On Ubuntu 23.10 and later, reports whether the development Electron needs an AppArmor profile. With `-- --execute`, installs it with `sudo`. |
 | `npm test` | Unit tests, with Vitest: `tests/unit/`, in Node, and in jsdom for the renderer. |
 | `npm run test:integration` | Builds, then tests the MCP server over stdio and `PtyManager` with real shells: `tests/integration/`. |
 | `npm run smoke` | Builds, then drives the built app through Playwright's Electron driver: `tests/e2e/`. It opens a window. On Linux without a display, run it under `xvfb-run -a`. |
@@ -77,4 +78,5 @@ The full conventions are in [CONTRIBUTING](.github/CONTRIBUTING.md). The short v
 ## Known platform issues
 
 - In automated runs, stop Termi by pid: its shells first, then its main process. A scripted close asks for confirmation while a program is still running in a terminal.
-- On Ubuntu 23.10 and later, the development Electron needs an AppArmor profile to start its sandbox outside VS Code (#8).
+- On Ubuntu 23.10 and later, the development Electron needs an AppArmor profile to start its sandbox outside VS Code. `npm run setup:apparmor -- --execute` installs one for the checkout.
+- On Linux, a shortcut is never a plain Ctrl+letter, since those belong to the shell. Add a shortcut to `src/shared/shortcuts.ts`, never as a bare accelerator in the menu.
