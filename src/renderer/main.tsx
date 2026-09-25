@@ -9,6 +9,7 @@ import './styles/sidebar.css';
 import './styles/stats.css';
 import './styles/terminals.css';
 import './styles/dialog.css';
+import './styles/help.css';
 import { init } from './appStore';
 import { App } from './App';
 

@@ -4,7 +4,13 @@ import type { Settings, TermiApi } from '../../../src/shared/types';
 
 const noop = () => {};
 const subscribe = () => noop;
-const settings: Settings = { commands: [], sidebarWidth: 232, sidebarHidden: false, fontSize: 13 };
+const settings: Settings = {
+  commands: [],
+  sidebarWidth: 232,
+  sidebarHidden: false,
+  fontSize: 13,
+  guideSeen: true,
+};
 
 const api: TermiApi = {
   info: async () => ({ platform: 'linux', version: '0.1.0', home: '/home/test' }),

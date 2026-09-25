@@ -32,6 +32,12 @@ const MAC_BEFORE: Record<string, string> = {
   'toggle-fullscreen': 'Control+Command+F',
 };
 
+// Shortcuts added after the table, with the keys macOS gives them.
+const MAC_ADDED: Record<string, string> = {
+  'show-shortcuts': 'Cmd+/',
+  'command-palette': 'Cmd+Shift+P',
+};
+
 const ALIASES: Record<string, string> = {
   CmdOrCtrl: 'Cmd',
   CommandOrControl: 'Cmd',
@@ -92,9 +98,10 @@ describe('the shortcut table', () => {
   });
 
   it('keeps the macOS keys the menu had before', () => {
-    expect(Object.keys(MAC_BEFORE).sort()).toEqual([...SHORTCUT_ACTIONS].sort());
+    const expected = { ...MAC_BEFORE, ...MAC_ADDED };
+    expect(Object.keys(expected).sort()).toEqual([...SHORTCUT_ACTIONS].sort());
     for (const action of SHORTCUT_ACTIONS) {
-      expect(combo(SHORTCUTS[action].mac), action).toBe(combo(MAC_BEFORE[action] ?? ''));
+      expect(combo(SHORTCUTS[action].mac), action).toBe(combo(expected[action] ?? ''));
     }
   });
 
@@ -125,10 +132,21 @@ describe('shortcutLabel', () => {
     expect(shortcutLabel('select-terminal-0', 'linux')).toBe('Alt+1');
     expect(shortcutLabel('next-terminal', 'linux')).toBe('Ctrl+Page Down');
     expect(shortcutLabel('prev-terminal', 'linux')).toBe('Ctrl+Page Up');
+    expect(shortcutLabel('show-shortcuts', 'linux')).toBe('Ctrl+Shift+/');
+    expect(shortcutLabel('show-shortcuts', 'darwin')).toBe('⌘/');
+    expect(shortcutLabel('command-palette', 'darwin')).toBe('⇧⌘P');
   });
 });
 
 describe('matchShortcut', () => {
+  it('matches Ctrl+Shift+/ by its key, whatever it types with Shift', () => {
+    const input = press('?', 'Slash', { control: true, shift: true });
+    expect(matchShortcut(input, false)).toBe('show-shortcuts');
+    expect(matchShortcut(press('P', 'KeyP', { control: true, shift: true }), false)).toBe(
+      'command-palette',
+    );
+  });
+
   it('matches Ctrl+Shift+T by the letter it types', () => {
     expect(matchShortcut(press('T', 'KeyT', { control: true, shift: true }), false)).toBe(
       'new-terminal',
