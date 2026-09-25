@@ -4,6 +4,8 @@
 
 A terminal app for macOS and Linux with a warm dark theme, saved commands that open several terminals side by side, and auto-start. Built with Electron, React, xterm.js and node-pty.
 
+**[termi.webanion.com](https://termi.webanion.com)** has the downloads, the features and the shortcuts on one page.
+
 ![Termi on macOS, with a saved command running an API server, a web server, the tests in watch mode and the git log in a grid of four terminals](docs/screenshot.png)
 
 ## What it does
@@ -19,7 +21,7 @@ A terminal app for macOS and Linux with a warm dark theme, saved commands that o
 
 ## Install
 
-Download a release from [Releases](https://github.com/webanion/termi/releases). Each release has a `SHA256SUMS` file to check the downloads against.
+Download a release from [termi.webanion.com](https://termi.webanion.com) or [Releases](https://github.com/webanion/termi/releases). Each release has a `SHA256SUMS` file to check the downloads against.
 
 **macOS.** `Termi-<version>-mac-arm64.dmg` for Apple silicon or `Termi-<version>-mac-x64.dmg` for Intel, or the `.zip` of either. Open it and drag Termi to Applications. The builds are not signed yet, so the first time, right-click Termi and choose **Open**, or run `xattr -dr com.apple.quarantine /Applications/Termi.app`.
 
