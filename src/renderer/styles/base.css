@@ -1,0 +1,125 @@
+/* Termi: warm dark theme */
+:root {
+  --bg: #262624;
+  --sidebar: #1f1e1d;
+  --surface: #30302e;
+  --surface-2: #3a3936;
+  --hover: rgba(245, 240, 230, 0.055);
+  --active: rgba(245, 240, 230, 0.09);
+  --border: rgba(222, 220, 209, 0.1);
+  --border-strong: rgba(222, 220, 209, 0.18);
+  --text: #f5f4ee;
+  --text-2: #c2c0b6;
+  --muted: #8f8d85;
+  --faint: #6b6962;
+  --accent: #d97757;
+  --accent-hover: #e38a6b;
+  --accent-soft: rgba(217, 119, 87, 0.16);
+  --green: #8fbf7c;
+  --danger: #e5776b;
+
+  --head-h: 40px;
+  --sidebar-w: 232px;
+  --lights-w: 78px;
+  --radius: 6px;
+  --ui-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --serif: ui-serif, 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Monaco, 'Cascadia Mono', Consolas, monospace;
+
+  /* One timing for every animation. DURATION in theme.ts must match --dur. */
+  --dur: 220ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur: 1ms;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font: 12.5px/1.4 var(--ui-font);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* React renders into #root. It adds no box of its own, so the layout is as if it were not there. */
+#root {
+  display: contents;
+}
+
+svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Default transition for everything that changes color or fades. */
+button,
+input,
+textarea,
+.item,
+.dot,
+.cmd-state,
+.check-box,
+.stat-value {
+  transition:
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    opacity var(--dur) var(--ease);
+}
+
+/* No animation while the app first lays itself out. */
+body.preload *,
+body.preload *::before,
+body.preload *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.drag {
+  -webkit-app-region: drag;
+}
+
+.no-drag,
+.drag button,
+.drag input {
+  -webkit-app-region: no-drag;
+}
+
+.spacer {
+  flex: 1;
+}

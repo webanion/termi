@@ -1,0 +1,139 @@
+/* ---------- Header ---------- */
+
+.sidebar-head,
+.main-head {
+  height: var(--head-h);
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  gap: 4px;
+}
+
+.sidebar-head {
+  padding-left: var(--lights-w);
+  transition:
+    padding-left var(--dur) var(--ease),
+    opacity var(--dur) var(--ease);
+}
+
+.main-head {
+  position: relative;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  transition: padding-left var(--dur) var(--ease);
+}
+
+#show-sidebar {
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition:
+    width var(--dur) var(--ease),
+    opacity var(--dur) var(--ease),
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
+}
+
+body.sidebar-hidden .main-head {
+  padding-left: var(--lights-w);
+}
+
+body.sidebar-hidden #show-sidebar {
+  width: 26px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body.fullscreen {
+  --lights-w: 10px;
+}
+
+.title {
+  transition:
+    opacity var(--dur) var(--ease),
+    padding var(--dur) var(--ease);
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--text-2);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.title-logo {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+
+.title-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.title-sub {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.title-sub:not(:empty)::before {
+  content: '·';
+  margin-right: 7px;
+  color: var(--faint);
+}
+
+/* Keep the title centered and clear of the layout control. */
+.main-head.has-layout .title {
+  padding: 0 var(--layout-w, 0);
+}
+
+body.blurred .title,
+body.blurred .sidebar-head {
+  opacity: 0.6;
+}
+
+/* Layout picker for a tab with more than one terminal. */
+.layout-control {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  transform: translateY(-50%);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility var(--dur) var(--ease);
+}
+
+.layout-control.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.layout-control .icon-btn {
+  width: 24px;
+  height: 22px;
+  border-radius: 5px;
+}
+
+.layout-control .icon-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.75;
+}
+
+.layout-control .icon-btn.on {
+  background: var(--active);
+  color: var(--accent);
+}

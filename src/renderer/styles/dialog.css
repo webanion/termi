@@ -1,0 +1,261 @@
+/* ---------- Dialog ---------- */
+
+.dialog {
+  width: min(440px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.dialog::backdrop {
+  background: rgba(15, 14, 13, 0.55);
+}
+
+.dialog[open] {
+  animation: pop var(--dur) var(--ease);
+}
+
+.dialog[open]::backdrop {
+  animation: fade-in var(--dur) var(--ease);
+}
+
+.dialog.closing {
+  animation: pop-out var(--dur) var(--ease) forwards;
+}
+
+.dialog.closing::backdrop {
+  animation: fade-out var(--dur) var(--ease) forwards;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+@keyframes pop-out {
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+}
+
+.dialog-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dialog-logo {
+  width: 24px;
+  height: 24px;
+}
+
+.dialog h2 {
+  margin: 0;
+  font: 400 19px var(--serif);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.field-label {
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.field-hint {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.field-row {
+  display: flex;
+  gap: 6px;
+}
+
+.field-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.dialog input[type='text'],
+.dialog textarea {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: 12.5px/1.45 var(--ui-font);
+  user-select: text;
+}
+
+.dialog textarea,
+.dialog input[name='cwd'] {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.dialog textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.dialog input::placeholder,
+.dialog textarea::placeholder {
+  color: var(--faint);
+}
+
+.dialog input:focus,
+.dialog textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.check input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.check-box {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+}
+
+.check input:checked + .check-box {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.check input:checked + .check-box::after {
+  animation: fade-in var(--dur) var(--ease);
+  content: '';
+  width: 4px;
+  height: 8px;
+  margin-top: -2px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.check input:focus-visible + .check-box {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.check-title {
+  display: block;
+  font-weight: 500;
+}
+
+.term-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.term-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  animation: fade-in var(--dur) var(--ease);
+}
+
+.term-field textarea {
+  flex: 1;
+  min-width: 0;
+}
+
+.term-fields.multi textarea {
+  min-height: 0;
+}
+
+.term-field-num {
+  flex: none;
+  width: 12px;
+  padding-top: 8px;
+  font: 11px var(--mono);
+  color: var(--faint);
+  text-align: right;
+}
+
+.term-field .icon-btn {
+  margin-top: 6px;
+}
+
+/* One terminal looks like the plain command box it used to be. */
+.term-fields:not(.multi) .term-field-num,
+.term-fields:not(.multi) .icon-btn {
+  display: none;
+}
+
+.add-term {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.add-term svg {
+  width: 12px;
+  height: 12px;
+}
+
+.add-term:hover {
+  border-color: var(--accent);
+  color: var(--text-2);
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
