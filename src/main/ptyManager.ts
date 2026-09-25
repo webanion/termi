@@ -136,11 +136,13 @@ export class PtyManager {
   }
 
   // Report the name of the program running in the foreground of each terminal.
+  // On Linux node-pty gives its full path, such as /usr/bin/zsh, so keep only
+  // the base name, which is what macOS reports and what shellName holds.
   pollTitles(): void {
     for (const [id, entry] of this.ptys) {
       let title: string;
       try {
-        title = entry.proc.process;
+        title = path.basename(entry.proc.process);
       } catch {
         continue;
       }
