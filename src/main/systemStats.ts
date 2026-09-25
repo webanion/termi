@@ -14,12 +14,12 @@ interface CpuTimes {
   total: number;
 }
 
-interface Memory {
+export interface Memory {
   used: number;
   total: number;
 }
 
-interface NetworkBytes {
+export interface NetworkBytes {
   rx: number;
   tx: number;
 }
@@ -43,64 +43,78 @@ function cpuTimes(): CpuTimes {
   return { idle, total };
 }
 
+// Memory in use from `vm_stat` on macOS: app memory, wired and compressed, the same parts
+// Activity Monitor adds up.
+export function parseVmStat(out: string, total: number): Memory {
+  const pageSize = Number(/page size of (\d+)/.exec(out)?.[1] || 4096);
+  const pages = (label: string) => Number(new RegExp(`${label}:\\s+(\\d+)`).exec(out)?.[1] || 0);
+  const used =
+    (pages('Anonymous pages') -
+      pages('Pages purgeable') +
+      pages('Pages wired down') +
+      pages('Pages occupied by compressor')) *
+    pageSize;
+  return { used: Math.min(total, Math.max(0, used)), total };
+}
+
+// Memory in use from /proc/meminfo on Linux, or null when it has no MemAvailable line.
+export function parseMeminfo(out: string, total: number): Memory | null {
+  const available = Number(/MemAvailable:\s+(\d+)/.exec(out)?.[1]) * 1024;
+  return available ? { used: total - available, total } : null;
+}
+
+// Bytes received and sent on real interfaces, from `netstat -ibn` on macOS.
+export function parseNetstat(out: string): NetworkBytes {
+  let rx = 0;
+  let tx = 0;
+  for (const line of out.split('\n')) {
+    if (!line.includes('<Link#')) continue;
+    const cols = line.trim().split(/\s+/);
+    if (SKIP_INTERFACE.test(cols[0] ?? '')) continue;
+    // Counted from the right, because the Address column can be empty.
+    rx += Number(cols[cols.length - 5]) || 0;
+    tx += Number(cols[cols.length - 2]) || 0;
+  }
+  return { rx, tx };
+}
+
+// Bytes received and sent on real interfaces, from /proc/net/dev on Linux.
+export function parseProcNetDev(out: string): NetworkBytes {
+  let rx = 0;
+  let tx = 0;
+  for (const line of out.split('\n').slice(2)) {
+    const [name = '', data] = line.split(':');
+    if (!data || SKIP_INTERFACE.test(name.trim())) continue;
+    const cols = data.trim().split(/\s+/);
+    rx += Number(cols[0]) || 0;
+    tx += Number(cols[8]) || 0;
+  }
+  return { rx, tx };
+}
+
+// Bytes per second between two readings. Counters can reset when an interface goes down, which
+// would give a negative speed, so a drop counts as zero.
+export function speed(before: number, after: number, seconds: number): number {
+  return Math.max(0, after - before) / seconds;
+}
+
 // Returns { used, total } in bytes. "Used" matches what Activity Monitor and `free` report,
 // not total minus free, because the system keeps free memory busy as file cache.
 async function memory(): Promise<Memory> {
   const total = os.totalmem();
-
-  if (process.platform === 'darwin') {
-    const out = await run('/usr/bin/vm_stat', []);
-    const pageSize = Number(/page size of (\d+)/.exec(out)?.[1] || 4096);
-    const pages = (label: string) => Number(new RegExp(`${label}:\\s+(\\d+)`).exec(out)?.[1] || 0);
-    // App memory + wired + compressed, the same parts Activity Monitor adds up.
-    const used =
-      (pages('Anonymous pages') -
-        pages('Pages purgeable') +
-        pages('Pages wired down') +
-        pages('Pages occupied by compressor')) *
-      pageSize;
-    return { used: Math.min(total, Math.max(0, used)), total };
-  }
-
+  if (process.platform === 'darwin') return parseVmStat(await run('/usr/bin/vm_stat', []), total);
   if (process.platform === 'linux') {
-    const out = await fs.readFile('/proc/meminfo', 'utf8');
-    const available = Number(/MemAvailable:\s+(\d+)/.exec(out)?.[1]) * 1024;
-    if (available) return { used: total - available, total };
+    const parsed = parseMeminfo(await fs.readFile('/proc/meminfo', 'utf8'), total);
+    if (parsed) return parsed;
   }
-
   return { used: total - os.freemem(), total };
 }
 
 // Returns total bytes received and sent on real network interfaces, or null when unknown.
 async function networkBytes(): Promise<NetworkBytes | null> {
-  let rx = 0;
-  let tx = 0;
-
-  if (process.platform === 'darwin') {
-    const out = await run('/usr/sbin/netstat', ['-ibn']);
-    for (const line of out.split('\n')) {
-      if (!line.includes('<Link#')) continue;
-      const cols = line.trim().split(/\s+/);
-      if (SKIP_INTERFACE.test(cols[0] ?? '')) continue;
-      // Counted from the right, because the Address column can be empty.
-      rx += Number(cols[cols.length - 5]) || 0;
-      tx += Number(cols[cols.length - 2]) || 0;
-    }
-    return { rx, tx };
-  }
-
-  if (process.platform === 'linux') {
-    const out = await fs.readFile('/proc/net/dev', 'utf8');
-    for (const line of out.split('\n').slice(2)) {
-      const [name = '', data] = line.split(':');
-      if (!data || SKIP_INTERFACE.test(name.trim())) continue;
-      const cols = data.trim().split(/\s+/);
-      rx += Number(cols[0]) || 0;
-      tx += Number(cols[8]) || 0;
-    }
-    return { rx, tx };
-  }
-
+  if (process.platform === 'darwin') return parseNetstat(await run('/usr/sbin/netstat', ['-ibn']));
+  if (process.platform === 'linux')
+    return parseProcNetDev(await fs.readFile('/proc/net/dev', 'utf8'));
   return null;
 }
 
@@ -152,9 +166,8 @@ export class SystemStats {
       let down: number | null = null;
       let up: number | null = null;
       if (net && this.lastNet) {
-        // Counters can reset when an interface goes down, which would give a negative speed.
-        down = Math.max(0, net.rx - this.lastNet.rx) / seconds;
-        up = Math.max(0, net.tx - this.lastNet.tx) / seconds;
+        down = speed(this.lastNet.rx, net.rx, seconds);
+        up = speed(this.lastNet.tx, net.tx, seconds);
       }
       this.lastNet = net;
 
