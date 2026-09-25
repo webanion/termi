@@ -1,7 +1,9 @@
-# Weekly update pull requests for npm packages and for the actions the workflows pin by SHA.
+# Monthly update pull requests for npm packages and for the actions the workflows pin by SHA.
+# Every minor and patch update of an npm package arrives in one pull request, and every action
+# update in another, so a month brings about two. A major version gets a pull request of its own,
+# since a new Electron, node-pty, React or xterm.js major needs a run of the app to review.
 # Commit subjects come out as chore(deps), chore(deps-dev) or chore(ci), so the commit check
-# passes and the changelog files them under Other. Each runtime dependency gets its own pull
-# request, since Electron, node-pty, React and xterm.js each need a run of the app to review.
+# passes and the changelog files them under Other.
 #
 # Some majors cannot land on their own, so they are held here rather than opened as pull requests
 # that fail npm ci. Remove a rule once what it waits for has shipped.
@@ -16,7 +18,7 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     open-pull-requests-limit: 5
     commit-message:
       prefix: chore
@@ -32,13 +34,13 @@ updates:
       - dependency-name: '@vitejs/plugin-react'
         update-types: ['version-update:semver-major']
     groups:
-      dev-dependencies:
-        dependency-type: development
+      minor-and-patch:
+        patterns: ['*']
         update-types: [minor, patch]
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     commit-message:
       prefix: chore(ci)
     groups:
