@@ -1,6 +1,7 @@
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
 import prettier from 'eslint-config-prettier';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 const NODE = {
   group: ['node:*', 'fs', 'fs/*', 'path', 'os', 'child_process', 'readline', 'node-pty'],
@@ -16,7 +17,7 @@ export default [
     ignores: ['out/**', '_releases/**', 'node_modules/**'],
   },
   {
-    files: ['**/*.ts'],
+    files: ['**/*.{ts,tsx}'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
@@ -39,8 +40,12 @@ export default [
     },
   },
   {
-    files: ['src/renderer/**/*.ts'],
+    files: ['src/renderer/**/*.{ts,tsx}'],
     rules: { 'no-restricted-imports': ['error', { patterns: [NODE, ELECTRON] }] },
+  },
+  {
+    files: ['src/renderer/**/*.{ts,tsx}'],
+    ...reactHooks.configs.flat['recommended-latest'],
   },
   // Shared code is loaded by every process, the sandboxed renderer included.
   {
