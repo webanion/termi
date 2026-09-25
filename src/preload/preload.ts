@@ -1,13 +1,14 @@
-const { contextBridge, ipcRenderer } = require('electron');
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
+import type { TermiApi, Unsubscribe } from '../shared/types';
 
 // Subscribe to a channel and return a function that removes the listener.
-function listen(channel, callback) {
-  const handler = (_event, ...args) => callback(...args);
+function listen<A extends unknown[]>(channel: string, callback: (...args: A) => void): Unsubscribe {
+  const handler = (_event: IpcRendererEvent, ...args: unknown[]) => callback(...(args as A));
   ipcRenderer.on(channel, handler);
   return () => ipcRenderer.removeListener(channel, handler);
 }
 
-contextBridge.exposeInMainWorld('termi', {
+const api: TermiApi = {
   info: () => ipcRenderer.invoke('app:info'),
 
   settings: {
@@ -41,4 +42,6 @@ contextBridge.exposeInMainWorld('termi', {
   },
 
   onMenuAction: (callback) => listen('menu:action', callback),
-});
+};
+
+contextBridge.exposeInMainWorld('termi', api);
