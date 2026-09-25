@@ -22,7 +22,7 @@ npm run dev
 
 `npm install` also rebuilds node-pty for Electron. `npm run dev` serves the window's code from a dev server that reloads when you save. `npm start` builds Termi into `out/` and runs that build.
 
-Termi is written in TypeScript and built with electron-vite. Before you open a pull request, run:
+Termi is written in TypeScript, with a React renderer, and built with electron-vite. Before you open a pull request, run:
 
 ```sh
 npm run typecheck
