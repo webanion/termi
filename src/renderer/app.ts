@@ -3,6 +3,8 @@ import { FitAddon } from '@xterm/addon-fit';
 import { WebglAddon } from '@xterm/addon-webgl';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import '@xterm/xterm/css/xterm.css';
+import { LAYOUTS, type Layout } from '../shared/layouts';
+import { MAX_TERMINALS } from '../shared/savedCommands';
 import type {
   AppInfo,
   PtyCreated,
@@ -55,35 +57,8 @@ const ICONS = {
   close: '<svg viewBox="0 0 24 24"><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>',
 };
 
-const MAX_PANES = 4;
+const MAX_PANES = MAX_TERMINALS;
 const PANE_AREAS = ['a', 'b', 'c', 'd'];
-
-interface Layout {
-  id: string;
-  label: string;
-  areas: string[];
-}
-
-// Layouts for a tab with more than one terminal. Each string is one grid row, and each
-// letter is one terminal, in order. The first layout in each list is the default.
-const LAYOUTS: Record<number, Layout[]> = {
-  2: [
-    { id: 'columns', label: 'Side by side', areas: ['a b'] },
-    { id: 'rows', label: 'Stacked', areas: ['a', 'b'] },
-  ],
-  3: [
-    { id: 'main-left', label: 'Large on the left', areas: ['a b', 'a c'] },
-    { id: 'main-top', label: 'Large on top', areas: ['a a', 'b c'] },
-    { id: 'columns', label: 'Side by side', areas: ['a b c'] },
-    { id: 'rows', label: 'Stacked', areas: ['a', 'b', 'c'] },
-  ],
-  4: [
-    { id: 'grid', label: 'Grid', areas: ['a b', 'c d'] },
-    { id: 'main-left', label: 'Large on the left', areas: ['a b', 'a c', 'a d'] },
-    { id: 'columns', label: 'Side by side', areas: ['a b c d'] },
-    { id: 'rows', label: 'Stacked', areas: ['a', 'b', 'c', 'd'] },
-  ],
-};
 
 interface Pane {
   id: number | null;

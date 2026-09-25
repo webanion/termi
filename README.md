@@ -62,7 +62,7 @@ whole tab. To close one terminal, use the × in its pane header, or type `exit`.
 
 ## MCP server
 
-`src/mcp/server.ts` is an MCP server for the saved commands. An AI assistant such as Claude Code can use it to list, add, and edit them. `npm run build` bundles it into `out/main/mcpServer.js`, which runs on plain Node over stdio and has no dependencies.
+`src/mcp/` is an MCP server for the saved commands. An AI assistant such as Claude Code can use it to list, add, and edit them. `npm run build` bundles it into `out/main/mcpServer.js`, which runs on plain Node over stdio and has no dependencies.
 
 | Tool | What it does |
 | --- | --- |

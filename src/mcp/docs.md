@@ -79,7 +79,7 @@ Add a fourth terminal: list first, then `{ "target": "Shop", "terminals": ["npm 
 
 ## Setup and problems
 
-- Source: `src/mcp/server.ts` (the server) and `src/mcp/docs.md` (this guide). `npm run build` bundles both into `out/main/mcpServer.js`, which runs on plain Node with no dependencies.
+- Source: `src/mcp/` (the server, with `server.ts` as its entry, and this guide, `docs.md`) and the saved command rules and settings schema in `src/shared/`. `npm run build` bundles them into `out/main/mcpServer.js`, which runs on plain Node with no dependencies.
 - Register it with Claude Code for all projects, after `npm run build`: `claude mcp add termi --scope user -- node /path/to/termi/out/main/mcpServer.js`
 - Check it: `claude mcp get termi`. A new server or a change to the server needs a new Claude Code session.
 - Set `TERMI_USER_DATA` to use another data folder, for example for tests. The app reads the same variable.
