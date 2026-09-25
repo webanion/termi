@@ -1,7 +1,7 @@
 {
   "name": "termi",
   "productName": "Termi",
-  "version": "1.2.0",
+  "version": "0.1.0",
   "description": "A terminal app with a warm dark theme, saved commands, and auto-start.",
   "main": "out/main/main.js",
   "author": "Jawad Ahbab",
