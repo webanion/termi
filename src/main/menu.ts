@@ -1,4 +1,5 @@
 import { app, Menu, type MenuItemConstructorOptions } from 'electron';
+import { actionLabel, type HelpAction } from '../shared/appActions';
 import type { SendEvent } from '../shared/ipc';
 import { SHORTCUT_ACTIONS, shortcutAccelerator, type ShortcutAction } from '../shared/shortcuts';
 import { runShortcut } from './shortcuts';
@@ -22,10 +23,16 @@ function unregistered(items: MenuItemConstructorOptions[]): MenuItemConstructorO
 
 // The menu's own items only tell the renderer what to do.
 export function buildMenu(send: SendEvent): void {
-  const item = (label: string, name: ShortcutAction): MenuItemConstructorOptions => ({
-    label,
+  const item = (name: ShortcutAction): MenuItemConstructorOptions => ({
+    id: name,
+    label: actionLabel(name),
     accelerator: keys(name),
     click: () => runShortcut(name, send),
+  });
+  const help = (name: HelpAction): MenuItemConstructorOptions => ({
+    id: name,
+    label: actionLabel(name),
+    click: () => send('menu:action', name),
   });
   // macOS keeps these roles' own keys, which the table repeats. Other systems show the table's.
   const roleItem = (
@@ -62,10 +69,10 @@ export function buildMenu(send: SendEvent): void {
     {
       label: 'Shell',
       submenu: [
-        item('New Terminal', 'new-terminal'),
-        item('New Saved Command…', 'new-command'),
+        item('new-terminal'),
+        item('new-command'),
         { type: 'separator' },
-        item('Close Terminal', 'close-terminal'),
+        item('close-terminal'),
         ...(isMac
           ? []
           : [
@@ -85,17 +92,19 @@ export function buildMenu(send: SendEvent): void {
         roleItem('paste', 'paste'),
         { role: 'selectAll' },
         { type: 'separator' },
-        item('Clear Buffer', 'clear'),
+        item('clear'),
       ],
     },
     {
       label: 'View',
       submenu: [
-        item('Toggle Sidebar', 'toggle-sidebar'),
+        item('command-palette'),
         { type: 'separator' },
-        item('Bigger Text', 'font-bigger'),
-        item('Smaller Text', 'font-smaller'),
-        item('Default Text Size', 'font-reset'),
+        item('toggle-sidebar'),
+        { type: 'separator' },
+        item('font-bigger'),
+        item('font-smaller'),
+        item('font-reset'),
         { type: 'separator' },
         roleItem('togglefullscreen', 'toggle-fullscreen'),
         ...(app.isPackaged
@@ -112,14 +121,23 @@ export function buildMenu(send: SendEvent): void {
         { role: 'minimize' },
         { role: 'zoom' },
         { type: 'separator' },
-        item('Next Terminal', 'next-terminal'),
-        item('Previous Terminal', 'prev-terminal'),
-        item('Next Pane', 'next-pane'),
-        item('Previous Pane', 'prev-pane'),
+        item('next-terminal'),
+        item('prev-terminal'),
+        item('next-pane'),
+        item('prev-pane'),
         { type: 'separator' },
-        ...SHORTCUT_ACTIONS.filter((name) => name.startsWith('select-terminal-')).map((name, i) =>
-          item(`Terminal ${i + 1}`, name),
-        ),
+        ...SHORTCUT_ACTIONS.filter((name) => name.startsWith('select-terminal-')).map(item),
+      ],
+    },
+    {
+      label: 'Help',
+      role: 'help',
+      submenu: [
+        help('show-guide'),
+        item('show-shortcuts'),
+        { type: 'separator' },
+        help('report-issue'),
+        help('release-notes'),
       ],
     },
   ];
