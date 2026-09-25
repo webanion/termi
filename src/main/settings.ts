@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
-import { readJson, writeJson } from './json-file';
+import { readJson, writeJson } from './jsonFile';
 import type { SavedCommand, Settings, StoredCommand } from '../shared/types';
 
 type StoredSettings = Omit<Settings, 'commands'> & { commands: StoredCommand[] };

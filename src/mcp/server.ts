@@ -9,7 +9,7 @@
 import os from 'os';
 import path from 'path';
 import readline from 'readline';
-import { readJson, writeJson } from '../main/json-file';
+import { readJson, writeJson } from '../main/jsonFile';
 import { version } from '../../package.json';
 import guideText from './docs.md?raw';
 import type { SavedCommand, StoredCommand } from '../shared/types';

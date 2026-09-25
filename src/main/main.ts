@@ -10,10 +10,10 @@ import {
   clipboard,
   type MenuItemConstructorOptions,
 } from 'electron';
-import { loadWindowState, trackWindowState } from './window-state';
+import { loadWindowState, trackWindowState } from './windowState';
 import { getSettings, updateSettings, watchSettings } from './settings';
-import { PtyManager } from './pty-manager';
-import { SystemStats } from './system-stats';
+import { PtyManager } from './ptyManager';
+import { SystemStats } from './systemStats';
 import type { PtyCreateOptions, Settings } from '../shared/types';
 
 const isMac = process.platform === 'darwin';

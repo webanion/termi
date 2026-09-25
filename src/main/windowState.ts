@@ -1,6 +1,6 @@
 import path from 'path';
 import { app, screen, type BrowserWindow, type Rectangle } from 'electron';
-import { readJson, writeJson } from './json-file';
+import { readJson, writeJson } from './jsonFile';
 
 interface SavedWindowState extends Partial<Rectangle> {
   isMaximized?: boolean;
