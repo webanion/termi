@@ -1,9 +1,20 @@
-const path = require('path');
-const { app, BrowserWindow, Menu, ipcMain, dialog, shell, nativeImage, clipboard } = require('electron');
-const { loadWindowState, trackWindowState } = require('./window-state');
-const { getSettings, updateSettings, watchSettings } = require('./settings');
-const { PtyManager } = require('./pty-manager');
-const { SystemStats } = require('./system-stats');
+import path from 'path';
+import {
+  app,
+  BrowserWindow,
+  Menu,
+  ipcMain,
+  dialog,
+  shell,
+  nativeImage,
+  clipboard,
+  type MenuItemConstructorOptions,
+} from 'electron';
+import { loadWindowState, trackWindowState } from './window-state';
+import { getSettings, updateSettings, watchSettings } from './settings';
+import { PtyManager } from './pty-manager';
+import { SystemStats } from './system-stats';
+import type { PtyCreateOptions, Settings } from '../shared/types';
 
 const isMac = process.platform === 'darwin';
 const ASSETS = path.join(__dirname, '..', '..', 'assets');
@@ -14,19 +25,19 @@ app.setName('Termi');
 // Lets tests and development runs keep their data apart from the real app.
 if (process.env.TERMI_USER_DATA) app.setPath('userData', process.env.TERMI_USER_DATA);
 
-let mainWindow = null;
-let ptys = null;
-let stats = null;
+let mainWindow: BrowserWindow | null = null;
+let ptys: PtyManager;
+let stats: SystemStats;
 let quitConfirmed = false;
 
-function sendToRenderer(channel, ...args) {
+function sendToRenderer(channel: string, ...args: unknown[]): void {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, ...args);
 }
 
-function createWindow() {
+function createWindow(): void {
   const state = loadWindowState();
 
-  mainWindow = new BrowserWindow({
+  const win = new BrowserWindow({
     x: state.x,
     y: state.y,
     width: state.width,
@@ -40,7 +51,10 @@ function createWindow() {
     // macOS keeps its real traffic lights, placed inside our own header.
     // Other systems get a frameless window and the header draws them.
     ...(isMac
-      ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 14, y: (HEADER_HEIGHT - 16) / 2 } }
+      ? {
+          titleBarStyle: 'hidden' as const,
+          trafficLightPosition: { x: 14, y: (HEADER_HEIGHT - 16) / 2 },
+        }
       : { frame: false }),
     webPreferences: {
       preload: path.join(__dirname, '..', 'preload', 'preload.js'),
@@ -49,42 +63,49 @@ function createWindow() {
       sandbox: true,
     },
   });
+  mainWindow = win;
 
-  if (state.isMaximized) mainWindow.maximize();
-  if (state.isFullScreen) mainWindow.setFullScreen(true);
-  trackWindowState(mainWindow);
+  if (state.isMaximized) win.maximize();
+  if (state.isFullScreen) win.setFullScreen(true);
+  trackWindowState(win);
 
-  mainWindow.once('ready-to-show', () => mainWindow.show());
-  mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+  win.once('ready-to-show', () => win.show());
+  // `npm run dev` serves the renderer with hot reload. Everything else loads the built files.
+  const devUrl = process.env.ELECTRON_RENDERER_URL;
+  if (!app.isPackaged && devUrl) win.loadURL(devUrl);
+  else win.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
 
   const sendWindowState = () =>
     sendToRenderer('window:state', {
-      isFullScreen: mainWindow.isFullScreen(),
-      isMaximized: mainWindow.isMaximized(),
-      isFocused: mainWindow.isFocused(),
+      isFullScreen: win.isFullScreen(),
+      isMaximized: win.isMaximized(),
+      isFocused: win.isFocused(),
     });
-  for (const event of ['enter-full-screen', 'leave-full-screen', 'maximize', 'unmaximize', 'focus', 'blur']) {
-    mainWindow.on(event, sendWindowState);
-  }
+  win.on('enter-full-screen', sendWindowState);
+  win.on('leave-full-screen', sendWindowState);
+  win.on('maximize', sendWindowState);
+  win.on('unmaximize', sendWindowState);
+  win.on('focus', sendWindowState);
+  win.on('blur', sendWindowState);
 
   // Sample system stats only while someone can see them.
-  mainWindow.on('show', () => stats.start());
-  mainWindow.on('restore', () => stats.start());
-  mainWindow.on('hide', () => stats.stop());
-  mainWindow.on('minimize', () => stats.stop());
+  win.on('show', () => stats.start());
+  win.on('restore', () => stats.start());
+  win.on('hide', () => stats.stop());
+  win.on('minimize', () => stats.stop());
 
   // Open links from the terminal in the default browser, never in the app.
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+  win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url)) shell.openExternal(url);
     return { action: 'deny' };
   });
-  mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
+  win.webContents.on('will-navigate', (event) => event.preventDefault());
 
-  mainWindow.on('close', (event) => {
+  win.on('close', (event) => {
     if (quitConfirmed) return;
     const busy = ptys.busyCount();
     if (busy === 0) return;
-    const choice = dialog.showMessageBoxSync(mainWindow, {
+    const choice = dialog.showMessageBoxSync(win, {
       type: 'warning',
       buttons: ['Quit', 'Cancel'],
       defaultId: 0,
@@ -99,18 +120,18 @@ function createWindow() {
     else quitConfirmed = true;
   });
 
-  mainWindow.on('closed', () => {
+  win.on('closed', () => {
     mainWindow = null;
     stats.stop();
   });
 }
 
-function menuAction(action) {
+function menuAction(action: string) {
   return () => sendToRenderer('menu:action', action);
 }
 
-function buildMenu() {
-  const template = [
+function buildMenu(): void {
+  const template: MenuItemConstructorOptions[] = [
     ...(isMac
       ? [
           {
@@ -133,17 +154,30 @@ function buildMenu() {
               { type: 'separator' },
               { role: 'quit' },
             ],
-          },
+          } satisfies MenuItemConstructorOptions,
         ]
       : []),
     {
       label: 'Shell',
       submenu: [
         { label: 'New Terminal', accelerator: 'CmdOrCtrl+T', click: menuAction('new-terminal') },
-        { label: 'New Saved Command…', accelerator: 'CmdOrCtrl+Shift+N', click: menuAction('new-command') },
+        {
+          label: 'New Saved Command…',
+          accelerator: 'CmdOrCtrl+Shift+N',
+          click: menuAction('new-command'),
+        },
         { type: 'separator' },
-        { label: 'Close Terminal', accelerator: 'CmdOrCtrl+W', click: menuAction('close-terminal') },
-        ...(isMac ? [] : [{ type: 'separator' }, { role: 'quit' }]),
+        {
+          label: 'Close Terminal',
+          accelerator: 'CmdOrCtrl+W',
+          click: menuAction('close-terminal'),
+        },
+        ...(isMac
+          ? []
+          : [
+              { type: 'separator' } as const,
+              { role: 'quit' } satisfies MenuItemConstructorOptions,
+            ]),
       ],
     },
     {
@@ -163,14 +197,23 @@ function buildMenu() {
     {
       label: 'View',
       submenu: [
-        { label: 'Toggle Sidebar', accelerator: 'CmdOrCtrl+B', click: menuAction('toggle-sidebar') },
+        {
+          label: 'Toggle Sidebar',
+          accelerator: 'CmdOrCtrl+B',
+          click: menuAction('toggle-sidebar'),
+        },
         { type: 'separator' },
         { label: 'Bigger Text', accelerator: 'CmdOrCtrl+=', click: menuAction('font-bigger') },
         { label: 'Smaller Text', accelerator: 'CmdOrCtrl+-', click: menuAction('font-smaller') },
         { label: 'Default Text Size', accelerator: 'CmdOrCtrl+0', click: menuAction('font-reset') },
         { type: 'separator' },
         { role: 'togglefullscreen' },
-        ...(app.isPackaged ? [] : [{ role: 'toggleDevTools' }, { role: 'reload' }]),
+        ...(app.isPackaged
+          ? []
+          : [
+              { role: 'toggleDevTools' } satisfies MenuItemConstructorOptions,
+              { role: 'reload' } satisfies MenuItemConstructorOptions,
+            ]),
       ],
     },
     {
@@ -179,11 +222,27 @@ function buildMenu() {
         { role: 'minimize' },
         { role: 'zoom' },
         { type: 'separator' },
-        { label: 'Next Terminal', accelerator: 'CmdOrCtrl+Shift+]', click: menuAction('next-terminal') },
-        { label: 'Previous Terminal', accelerator: 'CmdOrCtrl+Shift+[', click: menuAction('prev-terminal') },
+        {
+          label: 'Next Terminal',
+          accelerator: 'CmdOrCtrl+Shift+]',
+          click: menuAction('next-terminal'),
+        },
+        {
+          label: 'Previous Terminal',
+          accelerator: 'CmdOrCtrl+Shift+[',
+          click: menuAction('prev-terminal'),
+        },
         // Ctrl+[ is Escape in a terminal, so other systems add Alt.
-        { label: 'Next Pane', accelerator: isMac ? 'Cmd+]' : 'Ctrl+Alt+]', click: menuAction('next-pane') },
-        { label: 'Previous Pane', accelerator: isMac ? 'Cmd+[' : 'Ctrl+Alt+[', click: menuAction('prev-pane') },
+        {
+          label: 'Next Pane',
+          accelerator: isMac ? 'Cmd+]' : 'Ctrl+Alt+]',
+          click: menuAction('next-pane'),
+        },
+        {
+          label: 'Previous Pane',
+          accelerator: isMac ? 'Cmd+[' : 'Ctrl+Alt+[',
+          click: menuAction('prev-pane'),
+        },
         { type: 'separator' },
         ...Array.from({ length: 9 }, (_, i) => ({
           label: `Terminal ${i + 1}`,
@@ -196,7 +255,7 @@ function buildMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
-function registerIpc() {
+function registerIpc(): void {
   ipcMain.handle('app:info', () => ({
     version: app.getVersion(),
     platform: process.platform,
@@ -204,22 +263,27 @@ function registerIpc() {
   }));
 
   ipcMain.handle('settings:get', () => getSettings());
-  ipcMain.handle('settings:update', (_event, patch) => updateSettings(patch));
+  ipcMain.handle('settings:update', (_event, patch: Partial<Settings>) => updateSettings(patch));
 
-  ipcMain.handle('pty:create', (_event, options) => ptys.create(options));
-  ipcMain.on('pty:write', (_event, id, data) => ptys.write(id, data));
-  ipcMain.on('pty:resize', (_event, id, cols, rows) => ptys.resize(id, cols, rows));
-  ipcMain.on('pty:kill', (_event, id) => ptys.kill(id));
+  ipcMain.handle('pty:create', (_event, options: PtyCreateOptions) => ptys.create(options));
+  ipcMain.on('pty:write', (_event, id: number, data: string) => ptys.write(id, data));
+  ipcMain.on('pty:resize', (_event, id: number, cols: number, rows: number) =>
+    ptys.resize(id, cols, rows),
+  );
+  ipcMain.on('pty:kill', (_event, id: number) => ptys.kill(id));
 
-  ipcMain.on('clipboard:write', (_event, text) => {
+  ipcMain.on('clipboard:write', (_event, text: unknown) => {
     if (typeof text === 'string' && text) clipboard.writeText(text);
   });
 
-  ipcMain.handle('dialog:pick-folder', async (_event, defaultPath) => {
-    const result = await dialog.showOpenDialog(mainWindow, {
+  ipcMain.handle('dialog:pick-folder', async (_event, defaultPath?: string) => {
+    const options: Electron.OpenDialogOptions = {
       properties: ['openDirectory', 'createDirectory'],
       defaultPath: defaultPath || app.getPath('home'),
-    });
+    };
+    const result = mainWindow
+      ? await dialog.showOpenDialog(mainWindow, options)
+      : await dialog.showOpenDialog(options);
     return result.canceled ? null : result.filePaths[0];
   });
 

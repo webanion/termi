@@ -1,9 +1,12 @@
-const fs = require('fs');
-const path = require('path');
-const { app } = require('electron');
-const { readJson, writeJson } = require('./json-file');
+import fs from 'fs';
+import path from 'path';
+import { app } from 'electron';
+import { readJson, writeJson } from './json-file';
+import type { SavedCommand, Settings, StoredCommand } from '../shared/types';
 
-const DEFAULTS = {
+type StoredSettings = Omit<Settings, 'commands'> & { commands: StoredCommand[] };
+
+const DEFAULTS: Settings = {
   // Saved commands: { id, name, terminals: [{ command }], cwd, autoStart, layout }
   commands: [],
   sidebarWidth: 232,
@@ -11,35 +14,39 @@ const DEFAULTS = {
   fontSize: 13,
 };
 
-let cache = null;
+let cache: Settings | null = null;
 
 // A saved command used to have one `command`. Now it has a list of up to 4 terminals.
-function upgradeCommand(cmd) {
-  if (Array.isArray(cmd.terminals)) return cmd;
+function upgradeCommand(cmd: StoredCommand): SavedCommand {
+  if (Array.isArray(cmd.terminals)) return cmd as SavedCommand;
   const { command = '', ...rest } = cmd;
   return { ...rest, terminals: [{ command }] };
 }
 
-function settingsFile() {
+function settingsFile(): string {
   return path.join(app.getPath('userData'), 'settings.json');
 }
 
-function loadSettings() {
-  const settings = { ...DEFAULTS, ...readJson(settingsFile(), {}) };
-  settings.commands = settings.commands.map(upgradeCommand);
-  return settings;
+function loadSettings(): Settings {
+  const stored: StoredSettings = {
+    ...DEFAULTS,
+    ...readJson<Partial<StoredSettings>>(settingsFile(), {}),
+  };
+  return { ...stored, commands: stored.commands.map(upgradeCommand) };
 }
 
-function getSettings() {
+export function getSettings(): Settings {
   if (!cache) cache = loadSettings();
   return cache;
 }
 
 // Merge a partial update into the settings and save them to disk.
 // Start from the file, not the cache, so a change from the MCP server is not lost.
-function updateSettings(patch) {
+export function updateSettings(patch: Partial<Settings> | null | undefined): Settings {
   const allowed = Object.keys(DEFAULTS);
-  const clean = Object.fromEntries(Object.entries(patch || {}).filter(([key]) => allowed.includes(key)));
+  const clean = Object.fromEntries(
+    Object.entries(patch || {}).filter(([key]) => allowed.includes(key)),
+  ) as Partial<Settings>;
   cache = { ...loadSettings(), ...clean };
   writeJson(settingsFile(), cache);
   return cache;
@@ -47,9 +54,9 @@ function updateSettings(patch) {
 
 // Call onChange with the new settings when another program (the MCP server) changes the file.
 // Watch the folder, because each write replaces the file with a new one.
-function watchSettings(onChange) {
+export function watchSettings(onChange: (settings: Settings) => void): void {
   const file = settingsFile();
-  let timer = null;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     fs.watch(path.dirname(file), (_event, name) => {
       if (name !== path.basename(file)) return;
@@ -65,5 +72,3 @@ function watchSettings(onChange) {
     // Without a watcher, outside changes show after the next start.
   }
 }
-
-module.exports = { getSettings, updateSettings, watchSettings };

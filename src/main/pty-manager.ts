@@ -1,18 +1,29 @@
-const os = require('os');
-const fs = require('fs');
-const path = require('path');
-const pty = require('node-pty');
+import os from 'os';
+import fs from 'fs';
+import path from 'path';
+import * as pty from 'node-pty';
+import type { PtyCreateOptions, PtyCreated } from '../shared/types';
 
 const FLUSH_MS = 8; // group output into batches, so fast output does not flood IPC
 const TITLE_POLL_MS = 1000;
 
-function defaultShell() {
+type Send = (channel: string, ...args: unknown[]) => void;
+
+interface PtyEntry {
+  proc: pty.IPty;
+  buffer: string;
+  timer: ReturnType<typeof setTimeout> | null;
+  title: string;
+  shellName: string;
+}
+
+function defaultShell(): string {
   if (process.platform === 'win32') return process.env.COMSPEC || 'powershell.exe';
   return process.env.SHELL || (process.platform === 'darwin' ? '/bin/zsh' : '/bin/bash');
 }
 
 // Expand "~" and fall back to the home folder when the path does not exist.
-function resolveCwd(cwd) {
+function resolveCwd(cwd: string | undefined): string {
   const home = os.homedir();
   if (!cwd || !cwd.trim()) return home;
   const expanded = cwd.trim().replace(/^~(?=$|[\\/])/, home);
@@ -24,28 +35,29 @@ function resolveCwd(cwd) {
   return home;
 }
 
-function shellEnv() {
-  const env = { ...process.env };
+function shellEnv(): Record<string, string> {
+  const env: Record<string, string | undefined> = { ...process.env };
   // Apps opened from Finder have no locale, which breaks Unicode in the shell.
   if (!env.LANG) env.LANG = 'en_US.UTF-8';
   env.TERM = 'xterm-256color';
   env.COLORTERM = 'truecolor';
   env.TERM_PROGRAM = 'Termi';
   delete env.ELECTRON_RUN_AS_NODE;
-  return env;
+  return env as Record<string, string>;
 }
 
-class PtyManager {
-  constructor(send) {
-    this.send = send; // (channel, ...args) => void
-    this.ptys = new Map(); // id -> { proc, buffer, timer, title, shellName }
-    this.nextId = 1;
+export class PtyManager {
+  private readonly ptys = new Map<number, PtyEntry>();
+  private nextId = 1;
+  private readonly poller: ReturnType<typeof setInterval>;
+
+  constructor(private readonly send: Send) {
     this.poller = setInterval(() => this.pollTitles(), TITLE_POLL_MS);
   }
 
   // Start a shell. When `command` is set, type it into the shell after the
   // shell prints its first output, so the user keeps a shell when it ends.
-  create({ cols = 80, rows = 24, cwd, command } = {}) {
+  create({ cols = 80, rows = 24, cwd, command }: PtyCreateOptions = {}): PtyCreated {
     const id = this.nextId++;
     const shell = defaultShell();
     const args = process.platform === 'win32' ? [] : ['-l'];
@@ -58,7 +70,7 @@ class PtyManager {
     });
 
     const shellName = path.basename(shell).replace(/\.exe$/i, '');
-    const entry = { proc, buffer: '', timer: null, title: shellName, shellName };
+    const entry: PtyEntry = { proc, buffer: '', timer: null, title: shellName, shellName };
     this.ptys.set(id, entry);
 
     let pendingCommand = command && command.trim() ? command : null;
@@ -88,10 +100,10 @@ class PtyManager {
     return { id, pid: proc.pid, title: shellName };
   }
 
-  flush(id) {
+  flush(id: number): void {
     const entry = this.ptys.get(id);
     if (!entry) return;
-    clearTimeout(entry.timer);
+    if (entry.timer) clearTimeout(entry.timer);
     entry.timer = null;
     if (entry.buffer) {
       this.send('pty:data', id, entry.buffer);
@@ -99,11 +111,11 @@ class PtyManager {
     }
   }
 
-  write(id, data) {
+  write(id: number, data: string): void {
     this.ptys.get(id)?.proc.write(data);
   }
 
-  resize(id, cols, rows) {
+  resize(id: number, cols: number, rows: number): void {
     const entry = this.ptys.get(id);
     if (!entry || cols < 1 || rows < 1) return;
     try {
@@ -113,7 +125,7 @@ class PtyManager {
     }
   }
 
-  kill(id) {
+  kill(id: number): void {
     const entry = this.ptys.get(id);
     if (!entry) return;
     try {
@@ -124,9 +136,9 @@ class PtyManager {
   }
 
   // Report the name of the program running in the foreground of each terminal.
-  pollTitles() {
+  pollTitles(): void {
     for (const [id, entry] of this.ptys) {
-      let title;
+      let title: string;
       try {
         title = entry.proc.process;
       } catch {
@@ -140,7 +152,7 @@ class PtyManager {
   }
 
   // Terminals where a program other than the shell is running.
-  busyCount() {
+  busyCount(): number {
     let count = 0;
     for (const entry of this.ptys.values()) {
       const name = (entry.title || '').replace(/^-/, '');
@@ -149,10 +161,8 @@ class PtyManager {
     return count;
   }
 
-  killAll() {
+  killAll(): void {
     clearInterval(this.poller);
     for (const id of this.ptys.keys()) this.kill(id);
   }
 }
-
-module.exports = { PtyManager };
