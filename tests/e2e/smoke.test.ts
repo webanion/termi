@@ -122,23 +122,42 @@ describe('Termi', () => {
   });
 
   // Other systems take the shortcuts in main, before xterm, and leave it every plain Ctrl+letter.
+  // Keys go in through Electron's own input, because Playwright's key presses skip the handler
+  // main uses for them.
   it.runIf(process.platform !== 'darwin')(
     'takes Ctrl+Shift+T from the terminal, and leaves Ctrl+W to the shell',
     async () => {
+      const press = (keyCode: string, modifiers: string[]) =>
+        app.evaluate(
+          ({ BrowserWindow }, key) => {
+            const [win] = BrowserWindow.getAllWindows();
+            if (!win) throw new Error('No window to press keys in');
+            const contents = win.webContents;
+            const event = { keyCode: key.keyCode, modifiers: key.modifiers } as const;
+            contents.sendInputEvent({ ...event, type: 'keyDown' } as Electron.KeyboardInputEvent);
+            contents.sendInputEvent({ ...event, type: 'keyUp' } as Electron.KeyboardInputEvent);
+          },
+          { keyCode, modifiers },
+        );
       const count = () => page.locator('#terminal-list .item').count();
       const before = await count();
       await page.locator('.tab-view.active .xterm-helper-textarea').first().focus();
-      await page.keyboard.press('Control+Shift+T');
+      await press('T', ['control', 'shift']);
       await until(async () => (await count()) === before + 1);
 
-      // Ctrl+W deletes the word before the cursor instead of closing the tab.
+      // The new shell has to be reading its line before Ctrl+W means anything to it.
       await page.locator('.tab-view.active .xterm-helper-textarea').first().focus();
+      await page.keyboard.type(`echo ready > '${marker(6)}'`);
+      await page.keyboard.press('Enter');
+      await until(() => fs.existsSync(marker(6)));
+
+      // Ctrl+W deletes the word before the cursor instead of closing the tab.
       await page.keyboard.type('echo kept dropped');
-      await page.keyboard.press('Control+W');
-      await page.keyboard.type(`> '${marker(6)}'`);
+      await press('W', ['control']);
+      await page.keyboard.type(`> '${marker(7)}'`);
       await page.keyboard.press('Enter');
       await until(
-        () => fs.existsSync(marker(6)) && fs.readFileSync(marker(6), 'utf8').trim() === 'kept',
+        () => fs.existsSync(marker(7)) && fs.readFileSync(marker(7), 'utf8').trim() === 'kept',
       );
       expect(await count()).toBe(before + 1);
     },
