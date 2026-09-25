@@ -35,8 +35,15 @@ npm run test:scripts
 ## Build the app
 
 ```sh
-npm run dist        # dmg and zip in _releases/<version>/
+npm run dist:mac    # dmg and zip for arm64 and x64, on a Mac
+npm run dist:linux  # AppImage and deb for x64, on Linux
 ```
+
+Both write to `_releases/<version>/`. The macOS builds are not signed.
+
+## Releases
+
+Releases are made by the Release workflow in GitHub Actions, never by hand. Run it from `main` and choose the bump. It opens a pull request from `release/v<version>` with the version bumped and a `CHANGELOG.md` section written from the commits since the last release. Merging that pull request runs CI on the merge commit, builds the macOS and Linux packages, then tags `v<version>` and publishes the GitHub Release with the packages and a `SHA256SUMS` file. The changelog groups commits by their Conventional Commits type, so every commit subject has to follow it, and CI checks that on each pull request.
 
 The logo is flat: one solid color, with no gradients or shadows. To change it, edit `assets/logo.svg`
 (and `assets/logo-mark.svg`, which is the same logo without the outer padding), then run `npm run icons`.

@@ -1,0 +1,112 @@
+name: CI
+
+# The gate every pull request and every push to main passes, on GitHub-hosted runners for both
+# platforms Termi supports, and the check release.yml runs on a release pull request's merge
+# commit before anything is packaged or tagged.
+#
+# Written in this repository by hand for now. It keeps the shape and the job names of the
+# shared gm-libs workflows, so swapping it for them later is mechanical.
+#
+# macOS minutes count ten times Linux minutes against a private repository's allowance, so the
+# macOS job only installs, checks and builds. Packaging happens in release.yml alone.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call:
+    inputs:
+      ref:
+        description: The commit to check out. release.yml passes the release pull request's merge commit
+        type: string
+        default: ''
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ inputs.ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Things that are never legitimate here, checked before anything installs or runs: env files
+  # in git, eval or new Function in source, and an em dash in any tracked text.
+  hygiene:
+    name: Source hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Check the source
+        run: |
+          status=0
+          envs=$(git ls-files | grep -E '(^|/)\.env($|\.)' | grep -vE '\.env\.example$' || true)
+          if [ -n "$envs" ]; then
+            echo "::error::Env files are committed: $envs"
+            status=1
+          fi
+          dynamic=$(git grep -nE '(^|[^[:alnum:]_])eval[[:space:]]*\(|new[[:space:]]+Function[[:space:]]*\(' -- 'src/**' 'scripts/**' || true)
+          if [ -n "$dynamic" ]; then
+            echo "::error::eval or new Function in source:"
+            echo "$dynamic"
+            status=1
+          fi
+          # The em dash is written as its UTF-8 bytes, so this file does not match itself.
+          dashes=$(LC_ALL=C git grep -nI $'\xe2\x80\x94' || true)
+          if [ -n "$dashes" ]; then
+            echo "::error::An em dash in tracked text. Use a comma, or a full stop between two sentences:"
+            echo "$dashes"
+            status=1
+          fi
+          exit "$status"
+
+  build:
+    name: Gate (${{ matrix.os }})
+    needs: hygiene
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # Also rebuilds node-pty against Electron's headers, which proves the native build on
+      # each platform.
+      - run: npm ci --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Format
+        run: npm run format:check
+      - name: Script tests
+        run: npm run test:scripts
+      - name: Build
+        run: npm run build
+
+  # Every commit a pull request brings becomes a line in the next release's changelog, grouped
+  # by its conventional type, so a subject that does not parse is refused here. Pull requests
+  # only, and not on the closed event release.yml runs the gate from.
+  commits:
+    name: Conventional commits
+    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: .nvmrc
+      - name: Check commit subjects
+        env:
+          BASE: ${{ github.base_ref }}
+        run: node scripts/changelog.mjs lint "origin/$BASE..HEAD"

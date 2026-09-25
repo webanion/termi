@@ -1,0 +1,316 @@
+name: Release
+
+# A release in two phases, run by hand. Nothing here runs on a schedule or on a push.
+#
+#   1. Actions, Release, Run workflow on main, choosing the bump. This opens a pull request from
+#      release/v<version> with package.json and package-lock.json bumped and a new CHANGELOG.md
+#      section written by scripts/changelog.mjs from the conventional commits since the last
+#      release. Read it there, and edit the changelog on that branch if a line needs it.
+#      A version in package.json that has no release yet, such as the first 0.1.0, is released
+#      as it is and the bump is not applied.
+#   2. Merge it with a merge commit. The CI gate runs on the merge commit, then the app is
+#      packaged on GitHub-hosted runners: dmg and zip for macOS on arm64 and x64, AppImage and
+#      deb for Linux on x64. Only when all of that is green is v<version> tagged on the merge
+#      commit and the GitHub Release made, with the changelog section as its notes and the
+#      packages and SHA256SUMS as its assets. A red job leaves no tag and no release. The release
+#      branch is deleted either way.
+#
+# The release pull request is opened with GITHUB_TOKEN, which needs the repository setting
+# "Allow GitHub Actions to create and approve pull requests". GitHub parks the CI run of a pull
+# request that token opens until a person approves it, and fails that run when the pull request
+# merges unapproved, so the parked run is deleted (clear-parked-runs); the gate runs on the merge.
+#
+# macOS builds are not signed or notarized. That needs an Apple Developer ID in secrets first.
+#
+# Written in this repository by hand for now, in the shape of the shared gm-libs release, so it
+# can be swapped for it later.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump. Below 1.0, minor is the breaking one.'
+        required: true
+        default: patch
+        type: choice
+        options: [patch, minor, major, prepatch, preminor, premajor, prerelease]
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+# One release at a time, never cancelled halfway.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  open-release-pr:
+    if: github.event_name == 'workflow_dispatch'
+    name: Open the release pull request
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      sha: ${{ steps.pr.outputs.sha }}
+    steps:
+      - name: Only from main, with a known bump
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          if [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "::error::Run Release from main, not ${GITHUB_REF_NAME}."
+            exit 1
+          fi
+          case "$BUMP" in
+            patch | minor | major | prepatch | preminor | premajor | prerelease) ;;
+            *) echo "::error::Unknown bump: $BUMP"; exit 1 ;;
+          esac
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: .nvmrc
+      # What the commits since the last release call for, read before the bump, so the pull
+      # request can say when the choice looks too small.
+      - name: Suggest a bump
+        id: suggest
+        run: echo "result=$(node scripts/changelog.mjs suggest)" >> "$GITHUB_OUTPUT"
+      - name: Choose the version
+        id: version
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          current="$(node -p "require('./package.json').version")"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$current" >/dev/null; then
+            npm version "$BUMP" --no-git-tag-version --preid rc >/dev/null
+            echo "applied=$BUMP" >> "$GITHUB_OUTPUT"
+          else
+            echo "applied=none" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Write the changelog section
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: node scripts/changelog.mjs write "$VERSION" > "$RUNNER_TEMP/section.md"
+      - name: Open the pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          APPLIED: ${{ steps.version.outputs.applied }}
+          BUMP: ${{ inputs.bump }}
+          SUGGESTED: ${{ steps.suggest.outputs.result }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null; then
+            echo "::error::v$VERSION is already released."
+            exit 1
+          fi
+          branch="release/v$VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add package.json package-lock.json CHANGELOG.md
+          git commit -m "chore: release v$VERSION"
+          git push origin "$branch"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          {
+            if [ "$APPLIED" = none ]; then
+              echo "Release **v$VERSION**, the version package.json already has. It has no release yet, so the \`$BUMP\` bump was not applied."
+            else
+              echo "Release **v$VERSION** (\`$BUMP\`)."
+            fi
+            echo
+            case "$APPLIED:$SUGGESTED" in
+              patch:minor | patch:major | minor:major)
+                echo "> **The commits call for a \`$SUGGESTED\`.** Below 1.0 a breaking change is a \`minor\`. Close this and run Release again unless you are sure."
+                echo ;;
+            esac
+            echo "Merge it with a merge commit. That runs the CI gate on the merge commit, packages Termi for macOS and Linux, then tags \`v$VERSION\` and makes the GitHub Release with the section below as its notes."
+            echo
+            echo "The changelog can be edited on this branch before merging, and a push to it runs CI as usual. The CI run of this pull request as opened is removed unrun: GitHub holds a run of a pull request opened by GITHUB_TOKEN for approval and fails it on merge, and the gate this release needs runs on the merge commit."
+            echo
+            echo "---"
+            echo
+            cat "$RUNNER_TEMP/section.md"
+          } > "$RUNNER_TEMP/body.md"
+          gh pr create --base main --head "$branch" --title "chore: release v$VERSION" --body-file "$RUNNER_TEMP/body.md"
+
+  # GitHub parks a run of each pull_request workflow for a pull request GITHUB_TOKEN opened, until
+  # a person with write access approves it, and fails it when the pull request merges unapproved.
+  # Nothing ever runs in it, and the gate runs on the merge commit, so it is deleted here.
+  clear-parked-runs:
+    needs: open-release-pr
+    name: Clear the parked CI run
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Delete the release commit's runs that wait for approval
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ needs.open-release-pr.outputs.sha }}
+        run: |
+          runs="repos/$GITHUB_REPOSITORY/actions/runs"
+          parked='.workflow_runs[] | select((.conclusion == "action_required" or .status == "action_required") and .actor.login == "github-actions[bot]") | .id'
+          deleted=0
+          deadline=$((SECONDS + 120))
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            if ! ids="$(gh api "$runs?head_sha=$SHA&event=pull_request&per_page=100" --jq "$parked" 2>"$RUNNER_TEMP/error")"; then
+              echo "::warning::Could not list the runs of $SHA: $(cat "$RUNNER_TEMP/error")"
+              exit 0
+            fi
+            if [ -z "$ids" ] && [ "$deleted" -gt 0 ]; then
+              exit 0
+            fi
+            for id in $ids; do
+              if ! gh api -X DELETE "$runs/$id" 2>"$RUNNER_TEMP/error"; then
+                echo "::warning::Could not delete run $id: $(cat "$RUNNER_TEMP/error")"
+                exit 0
+              fi
+              echo "Deleted the CI run GitHub parked on the release pull request; the gate runs on the merge commit." >> "$GITHUB_STEP_SUMMARY"
+              deleted=$((deleted + 1))
+            done
+            sleep 5
+          done
+          if [ "$deleted" -eq 0 ]; then
+            echo "::notice::No run of $SHA waited for approval within two minutes."
+          fi
+
+  # The same gate every pull request passes, on the exact merge commit.
+  gate:
+    if: >
+      github.event_name == 'pull_request'
+      && github.event.pull_request.merged == true
+      && startsWith(github.event.pull_request.head.ref, 'release/v')
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+  package:
+    needs: gate
+    name: Package (${{ matrix.os }})
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            script: dist:mac
+            count: 4 # dmg and zip, arm64 and x64
+          - os: ubuntu-latest
+            script: dist:linux
+            count: 2 # AppImage and deb, x64
+    runs-on: ${{ matrix.os }}
+    env:
+      # No signing identity yet: build unsigned instead of searching the keychain for one.
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Package
+        run: npm run ${{ matrix.script }}
+      - name: Collect the packages
+        env:
+          COUNT: ${{ matrix.count }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          mkdir -p "$RUNNER_TEMP/packages"
+          find "_releases/$version" -maxdepth 1 -type f \
+            \( -name '*.dmg' -o -name '*.zip' -o -name '*.AppImage' -o -name '*.deb' \) \
+            -exec cp {} "$RUNNER_TEMP/packages/" \;
+          ls -l "$RUNNER_TEMP/packages"
+          found="$(find "$RUNNER_TEMP/packages" -type f | wc -l | tr -d ' ')"
+          if [ "$found" -ne "$COUNT" ]; then
+            echo "::error::Expected $COUNT packages for v$version, found $found."
+            exit 1
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: packages-${{ matrix.os }}
+          path: ${{ runner.temp }}/packages/*
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    needs: package
+    name: Tag and release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      SHA: ${{ github.event.pull_request.merge_commit_sha }}
+      BRANCH: ${{ github.event.pull_request.head.ref }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: packages-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/packages
+      - name: Check the version and the tag
+        id: check
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "$BRANCH" != "release/v$version" ]; then
+            echo "::error::$BRANCH was merged, but package.json on the merge commit says $version."
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null; then
+            echo "::error::v$version is already released. A version is released once."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Write the notes and the checksums
+        env:
+          VERSION: ${{ steps.check.outputs.version }}
+        run: |
+          node scripts/changelog.mjs notes "$VERSION" > "$RUNNER_TEMP/notes.md"
+          cd "$RUNNER_TEMP/packages"
+          sha256sum -- * > SHA256SUMS
+          cat SHA256SUMS
+      # gh creates the tag on the merge commit together with the release, so there is never a
+      # tag without its release and its packages. --latest keeps the old 1.x releases, while
+      # they exist, from sorting above a 0.x release as the latest one.
+      - name: Tag and release
+        env:
+          VERSION: ${{ steps.check.outputs.version }}
+        run: |
+          flags=(--latest)
+          case "$VERSION" in *-*) flags=(--prerelease) ;; esac
+          gh release create "v$VERSION" "$RUNNER_TEMP"/packages/* --target "$SHA" \
+            --title "v$VERSION" --notes-file "$RUNNER_TEMP/notes.md" "${flags[@]}"
+          echo "Released v$VERSION." >> "$GITHUB_STEP_SUMMARY"
+
+  delete-branch:
+    needs: [gate, package, release]
+    if: >
+      always()
+      && github.event_name == 'pull_request'
+      && github.event.pull_request.merged == true
+      && startsWith(github.event.pull_request.head.ref, 'release/v')
+    name: Delete the release branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Delete it
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$BRANCH" || true
