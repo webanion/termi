@@ -3,19 +3,21 @@
 // and reads and writes the same settings.json as the app. A running Termi watches that file,
 // so changes show in the sidebar right away.
 //
-// Run it with plain Node: `node src/mcp/server.js`. It has no dependencies.
+// Build it with `npm run build`, then run it with plain Node: `node out/main/mcpServer.js`.
+// It has no runtime dependencies.
 
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
-const readline = require('readline');
-const { readJson, writeJson } = require('../main/json-file');
-const { version } = require('../../package.json');
+import os from 'os';
+import path from 'path';
+import readline from 'readline';
+import { readJson, writeJson } from '../main/json-file';
+import { version } from '../../package.json';
+import guideText from './docs.md?raw';
+import type { SavedCommand, StoredCommand } from '../shared/types';
 
 const MAX_TERMINALS = 4;
 // Layouts per terminal count. The first one is the default.
-// Keep in step with LAYOUTS in src/renderer/app.js.
-const LAYOUTS = {
+// Keep in step with LAYOUTS in src/renderer/app.ts.
+const LAYOUTS: Record<number, { id: string; label: string }[]> = {
   2: [
     { id: 'columns', label: 'Side by side' },
     { id: 'rows', label: 'Stacked' },
@@ -33,43 +35,50 @@ const LAYOUTS = {
     { id: 'rows', label: 'Stacked' },
   ],
 };
-const LAYOUT_IDS = Object.fromEntries(Object.entries(LAYOUTS).map(([count, list]) => [count, list.map((l) => l.id)]));
+const LAYOUT_IDS: Record<number, string[]> = Object.fromEntries(
+  Object.entries(LAYOUTS).map(([count, list]) => [count, list.map((l) => l.id)]),
+);
 const DOCS_URI = 'termi://docs';
-const DOCS_FILE = path.join(__dirname, 'docs.md');
 const PROTOCOL_VERSIONS = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05'];
 
 // ---------- Settings file ----------
 
 // The same folder Electron uses for app.getPath('userData') with the app name "Termi".
-function userDataDir() {
+function userDataDir(): string {
   if (process.env.TERMI_USER_DATA) return process.env.TERMI_USER_DATA;
   const home = os.homedir();
-  if (process.platform === 'darwin') return path.join(home, 'Library', 'Application Support', 'Termi');
-  if (process.platform === 'win32') return path.join(process.env.APPDATA || path.join(home, 'AppData', 'Roaming'), 'Termi');
+  if (process.platform === 'darwin')
+    return path.join(home, 'Library', 'Application Support', 'Termi');
+  if (process.platform === 'win32')
+    return path.join(process.env.APPDATA || path.join(home, 'AppData', 'Roaming'), 'Termi');
   return path.join(process.env.XDG_CONFIG_HOME || path.join(home, '.config'), 'Termi');
 }
 
 const SETTINGS_FILE = path.join(userDataDir(), 'settings.json');
 
+type SettingsFile = Record<string, unknown> & { commands: SavedCommand[] };
+
 // A saved command used to have one `command`. Now it has a list of terminals.
-function upgradeCommand(cmd) {
-  if (Array.isArray(cmd.terminals)) return cmd;
+function upgradeCommand(cmd: StoredCommand): SavedCommand {
+  if (Array.isArray(cmd.terminals)) return cmd as SavedCommand;
   const { command = '', ...rest } = cmd;
   return { ...rest, terminals: [{ command }] };
 }
 
-function readSettings() {
-  const settings = readJson(SETTINGS_FILE, {});
-  settings.commands = (Array.isArray(settings.commands) ? settings.commands : []).map(upgradeCommand);
-  return settings;
+function readSettings(): SettingsFile {
+  const settings = readJson<Record<string, unknown>>(SETTINGS_FILE, {});
+  const stored = Array.isArray(settings.commands) ? (settings.commands as StoredCommand[]) : [];
+  return { ...settings, commands: stored.map(upgradeCommand) };
 }
 
 // ---------- Saved commands ----------
 
 class ToolError extends Error {}
 
-// The same kind of id as uid() in src/renderer/app.js.
-function newId(taken) {
+type ToolArgs = Record<string, unknown>;
+
+// The same kind of id as uid() in src/renderer/app.ts.
+function newId(taken: Set<string>): string {
   let id;
   do id = Math.random().toString(36).slice(2, 10);
   while (taken.has(id));
@@ -77,44 +86,56 @@ function newId(taken) {
 }
 
 // Find a saved command by id, or by name when no id matches.
-function findCommand(commands, target) {
+function findCommand(commands: SavedCommand[], target: unknown): SavedCommand {
   const key = String(target ?? '').trim();
   if (!key) throw new ToolError('Give the id or the name of the saved command.');
   const byId = commands.find((c) => c.id === key);
   if (byId) return byId;
   const byName = commands.filter((c) => c.name.toLowerCase() === key.toLowerCase());
-  if (byName.length === 1) return byName[0];
-  if (byName.length > 1) throw new ToolError(`More than one saved command is named "${key}". Use its id instead.`);
-  throw new ToolError(`No saved command has the id or name "${key}". Call list_saved_commands to see them.`);
+  if (byName.length === 1) return byName[0] as SavedCommand;
+  if (byName.length > 1)
+    throw new ToolError(`More than one saved command is named "${key}". Use its id instead.`);
+  throw new ToolError(
+    `No saved command has the id or name "${key}". Call list_saved_commands to see them.`,
+  );
 }
 
 // Check a saved command with the same rules as the dialog in the app.
-function validate(cmd) {
+function validate(cmd: SavedCommand): void {
   if (!cmd.name) throw new ToolError('The name must not be empty.');
   if (!cmd.terminals.length) throw new ToolError('A saved command needs at least 1 terminal.');
-  if (cmd.terminals.length > MAX_TERMINALS) throw new ToolError(`A saved command can have at most ${MAX_TERMINALS} terminals.`);
-  if (!cmd.terminals[0].command) throw new ToolError('The first terminal needs a command. Later terminals can be empty (a plain shell).');
+  if (cmd.terminals.length > MAX_TERMINALS)
+    throw new ToolError(`A saved command can have at most ${MAX_TERMINALS} terminals.`);
+  if (!cmd.terminals[0]?.command)
+    throw new ToolError(
+      'The first terminal needs a command. Later terminals can be empty (a plain shell).',
+    );
   if (cmd.layout !== undefined) {
     const ids = LAYOUT_IDS[cmd.terminals.length];
-    if (!ids) throw new ToolError('A layout only applies to a saved command with 2 to 4 terminals.');
-    if (!ids.includes(cmd.layout)) throw new ToolError(`For ${cmd.terminals.length} terminals, the layout must be one of: ${ids.join(', ')}.`);
+    if (!ids)
+      throw new ToolError('A layout only applies to a saved command with 2 to 4 terminals.');
+    if (!ids.includes(cmd.layout))
+      throw new ToolError(
+        `For ${cmd.terminals.length} terminals, the layout must be one of: ${ids.join(', ')}.`,
+      );
   }
 }
 
-function cleanTerminals(value) {
+function cleanTerminals(value: unknown): { command: string }[] {
   if (!Array.isArray(value)) throw new ToolError('"terminals" must be a list of command strings.');
-  return value.map((command) => {
-    if (typeof command !== 'string') throw new ToolError('Each item in "terminals" must be a string.');
+  return value.map((command: unknown) => {
+    if (typeof command !== 'string')
+      throw new ToolError('Each item in "terminals" must be a string.');
     return { command: command.trim() };
   });
 }
 
-function cleanString(value, field) {
+function cleanString(value: unknown, field: string): string {
   if (typeof value !== 'string') throw new ToolError(`"${field}" must be a string.`);
   return value.trim();
 }
 
-function describe(cmd) {
+function describe(cmd: SavedCommand) {
   return {
     id: cmd.id,
     name: cmd.name,
@@ -130,9 +151,9 @@ function listCommands() {
   return { settingsFile: SETTINGS_FILE, commands: commands.map(describe) };
 }
 
-function addCommand(args) {
+function addCommand(args: ToolArgs) {
   const settings = readSettings();
-  const cmd = {
+  const cmd: SavedCommand = {
     id: newId(new Set(settings.commands.map((c) => c.id))),
     name: cleanString(args.name ?? '', 'name'),
     terminals: cleanTerminals(args.terminals ?? []),
@@ -145,10 +166,10 @@ function addCommand(args) {
   return { added: describe(cmd) };
 }
 
-function editCommand(args) {
+function editCommand(args: ToolArgs) {
   const settings = readSettings();
   const current = findCommand(settings.commands, args.target);
-  const next = { ...current };
+  const next: SavedCommand = { ...current };
   if (args.name !== undefined) next.name = cleanString(args.name, 'name');
   if (args.terminals !== undefined) next.terminals = cleanTerminals(args.terminals);
   if (args.cwd !== undefined) next.cwd = cleanString(args.cwd, 'cwd');
@@ -170,7 +191,28 @@ function editCommand(args) {
 
 // ---------- Tools ----------
 
-const terminalsSchema = {
+interface SchemaProperty {
+  type: string;
+  description: string;
+  minItems?: number;
+  maxItems?: number;
+  items?: { type: string };
+}
+
+interface Tool {
+  name: string;
+  description: string;
+  inputSchema: {
+    type: 'object';
+    properties: Record<string, SchemaProperty>;
+    required?: string[];
+    additionalProperties: false;
+  };
+  annotations: Record<string, string | boolean>;
+  run: (args: ToolArgs) => unknown;
+}
+
+const terminalsSchema: SchemaProperty = {
   type: 'array',
   minItems: 1,
   maxItems: MAX_TERMINALS,
@@ -180,7 +222,7 @@ const terminalsSchema = {
     'The first command must not be empty. An empty string for a later item opens a plain shell. ' +
     'A command can have more than one line.',
 };
-const layoutSchema = {
+const layoutSchema: SchemaProperty = {
   type: 'string',
   description:
     'How a tab with more than one terminal is split. ' +
@@ -190,7 +232,7 @@ const layoutSchema = {
     ' Leave it out to use the first (default) layout.',
 };
 
-const TOOLS = [
+const TOOLS: Tool[] = [
   {
     name: 'list_saved_commands',
     description:
@@ -210,14 +252,25 @@ const TOOLS = [
       properties: {
         name: { type: 'string', description: 'The name shown in the sidebar and on the tab.' },
         terminals: terminalsSchema,
-        cwd: { type: 'string', description: 'The folder the terminals start in. Leave it out to use the home folder.' },
-        autoStart: { type: 'boolean', description: 'Start this command when Termi opens. The default is false.' },
+        cwd: {
+          type: 'string',
+          description: 'The folder the terminals start in. Leave it out to use the home folder.',
+        },
+        autoStart: {
+          type: 'boolean',
+          description: 'Start this command when Termi opens. The default is false.',
+        },
         layout: layoutSchema,
       },
       required: ['name', 'terminals'],
       additionalProperties: false,
     },
-    annotations: { title: 'Add a Termi saved command', readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    annotations: {
+      title: 'Add a Termi saved command',
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+    },
     run: addCommand,
   },
   {
@@ -228,17 +281,31 @@ const TOOLS = [
     inputSchema: {
       type: 'object',
       properties: {
-        target: { type: 'string', description: 'The id of the saved command, or its exact name (not case-sensitive).' },
+        target: {
+          type: 'string',
+          description: 'The id of the saved command, or its exact name (not case-sensitive).',
+        },
         name: { type: 'string', description: 'A new name.' },
         terminals: terminalsSchema,
-        cwd: { type: 'string', description: 'A new working folder. An empty string means the home folder.' },
+        cwd: {
+          type: 'string',
+          description: 'A new working folder. An empty string means the home folder.',
+        },
         autoStart: { type: 'boolean', description: 'Start this command when Termi opens.' },
-        layout: { ...layoutSchema, description: `${layoutSchema.description} An empty string resets it to the default.` },
+        layout: {
+          ...layoutSchema,
+          description: `${layoutSchema.description} An empty string resets it to the default.`,
+        },
       },
       required: ['target'],
       additionalProperties: false,
     },
-    annotations: { title: 'Edit a Termi saved command', readOnlyHint: false, destructiveHint: true, idempotentHint: true },
+    annotations: {
+      title: 'Edit a Termi saved command',
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+    },
     run: editCommand,
   },
   {
@@ -256,21 +323,29 @@ const TOOLS = [
 // ---------- Docs ----------
 
 // The guide in docs.md, then a reference built from the code, so the reference is always current.
-function docsText() {
-  const guide = fs.readFileSync(DOCS_FILE, 'utf8').trimEnd();
+function docsText(): string {
+  const guide = guideText.trimEnd();
 
   const layouts = Object.entries(LAYOUTS).flatMap(([count, list]) =>
-    list.map((l, index) => `| ${count} | \`${l.id}\` | ${l.label}${index === 0 ? ' (default)' : ''} |`)
+    list.map(
+      (l, index) => `| ${count} | \`${l.id}\` | ${l.label}${index === 0 ? ' (default)' : ''} |`,
+    ),
   );
 
   const tools = TOOLS.map((tool) => {
     const { properties, required = [] } = tool.inputSchema;
     const params = Object.entries(properties).map(([name, schema]) => {
-      const type = schema.type === 'array' ? `${schema.items.type}[]` : schema.type;
+      const type = schema.type === 'array' ? `${schema.items?.type}[]` : schema.type;
       const need = required.includes(name) ? 'required' : 'optional';
       return `- \`${name}\` (${type}, ${need}): ${schema.description}`;
     });
-    return [`### \`${tool.name}\``, '', tool.description, '', ...(params.length ? params : ['No parameters.'])].join('\n');
+    return [
+      `### \`${tool.name}\``,
+      '',
+      tool.description,
+      '',
+      ...(params.length ? params : ['No parameters.']),
+    ].join('\n');
   });
 
   return [
@@ -300,7 +375,8 @@ const RESOURCES = [
     uri: DOCS_URI,
     name: 'termi-docs',
     title: 'Termi MCP guide',
-    description: 'How the Termi MCP server works: saved commands, rules, layouts, live sync, setup, and tools.',
+    description:
+      'How the Termi MCP server works: saved commands, rules, layouts, live sync, setup, and tools.',
     mimeType: 'text/markdown',
   },
 ];
@@ -314,40 +390,66 @@ const INSTRUCTIONS =
 
 // ---------- JSON-RPC over stdio ----------
 
-function send(message) {
+type RequestId = string | number;
+
+interface Request {
+  id?: RequestId | null;
+  method?: string;
+  params?: Record<string, unknown>;
+}
+
+type Reply = { result: unknown } | { error: { code: number; message: string } };
+
+function send(message: Record<string, unknown>): void {
   process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', ...message })}\n`);
 }
 
-function callTool(params) {
+function callTool(params: Request['params']): Reply {
   const tool = TOOLS.find((t) => t.name === params?.name);
   if (!tool) return { error: { code: -32602, message: `Unknown tool: ${params?.name}` } };
   try {
-    const result = tool.run(params.arguments || {});
-    if (typeof result === 'string') return { result: { content: [{ type: 'text', text: result }] } };
-    return { result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }], structuredContent: result } };
+    const result = tool.run((params?.arguments as ToolArgs) || {});
+    if (typeof result === 'string')
+      return { result: { content: [{ type: 'text', text: result }] } };
+    return {
+      result: {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        structuredContent: result,
+      },
+    };
   } catch (error) {
-    const text = error instanceof ToolError ? error.message : `Termi could not do that: ${error.message}`;
+    const text =
+      error instanceof ToolError
+        ? error.message
+        : `Termi could not do that: ${(error as Error).message}`;
     return { result: { content: [{ type: 'text', text }], isError: true } };
   }
 }
 
-function readResource(params) {
+function readResource(params: Request['params']): Reply {
   const resource = RESOURCES.find((r) => r.uri === params?.uri);
   if (!resource) return { error: { code: -32002, message: `Resource not found: ${params?.uri}` } };
   try {
-    return { result: { contents: [{ uri: resource.uri, mimeType: resource.mimeType, text: docsText() }] } };
+    return {
+      result: { contents: [{ uri: resource.uri, mimeType: resource.mimeType, text: docsText() }] },
+    };
   } catch (error) {
-    return { error: { code: -32603, message: `Could not read the docs: ${error.message}` } };
+    return {
+      error: { code: -32603, message: `Could not read the docs: ${(error as Error).message}` },
+    };
   }
 }
 
-function handle(request) {
+function handle(request: Request): Reply {
   switch (request.method) {
     case 'initialize': {
       const asked = request.params?.protocolVersion;
       return {
         result: {
-          protocolVersion: PROTOCOL_VERSIONS.includes(asked) ? asked : PROTOCOL_VERSIONS[0],
+          protocolVersion:
+            typeof asked === 'string' && PROTOCOL_VERSIONS.includes(asked)
+              ? asked
+              : PROTOCOL_VERSIONS[0],
           capabilities: { tools: {}, resources: {} },
           serverInfo: { name: 'termi', title: 'Termi', version },
           instructions: INSTRUCTIONS,
@@ -374,9 +476,9 @@ function handle(request) {
 const input = readline.createInterface({ input: process.stdin });
 input.on('line', (line) => {
   if (!line.trim()) return;
-  let request;
+  let request: Request;
   try {
-    request = JSON.parse(line);
+    request = JSON.parse(line) as Request;
   } catch {
     send({ id: null, error: { code: -32700, message: 'Parse error' } });
     return;

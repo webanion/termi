@@ -54,9 +54,7 @@ A running Termi watches the file. After a change from this server:
 - a change to the terminals, folder, or layout applies the next time the command starts. A running tab keeps its
   terminals.
 
-The watcher is in the app source (`src/main/settings.js`). A packaged build made before the MCP server was added
-does not have it. That build shows changes only after a restart, and its next save can overwrite them. Rebuild it
-with `npm run dist`.
+The watcher is in the app source (`src/main/settings.ts`). A packaged build made before the MCP server was added does not have it. That build shows changes only after a restart, and its next save can overwrite them. Rebuild it with `npm run dist`.
 
 ## What the server cannot do
 
@@ -81,10 +79,8 @@ Add a fourth terminal: list first, then `{ "target": "Shop", "terminals": ["npm 
 
 ## Setup and problems
 
-- Source: `src/mcp/server.js` (the server) and `src/mcp/docs.md` (this guide). Plain Node, no dependencies.
-- Register it with Claude Code for all projects:
-  `claude mcp add termi --scope user -- node /path/to/termi/src/mcp/server.js`
+- Source: `src/mcp/server.ts` (the server) and `src/mcp/docs.md` (this guide). `npm run build` bundles both into `out/main/mcpServer.js`, which runs on plain Node with no dependencies.
+- Register it with Claude Code for all projects, after `npm run build`: `claude mcp add termi --scope user -- node /path/to/termi/out/main/mcpServer.js`
 - Check it: `claude mcp get termi`. A new server or a change to the server needs a new Claude Code session.
 - Set `TERMI_USER_DATA` to use another data folder, for example for tests. The app reads the same variable.
-- Test it by hand. Each line on stdin is one JSON-RPC message:
-  `echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"list_saved_commands","arguments":{}}}' | node src/mcp/server.js`
+- Test it by hand. Each line on stdin is one JSON-RPC message: `echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"list_saved_commands","arguments":{}}}' | node out/main/mcpServer.js`
