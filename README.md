@@ -28,9 +28,13 @@ Termi is written in TypeScript, with a React renderer, and built with electron-v
 npm run typecheck
 npm run lint
 npm run format:check
-npm run build
 npm run test:scripts
+npm test                  # unit tests
+npm run test:integration  # the MCP server and real shells, after a build
+npm run smoke             # the built app, end to end
 ```
+
+The tests use a temporary data folder, never your real settings. `npm run smoke` opens a Termi window for a few seconds. On Linux without a display, run it as `xvfb-run -a npm run smoke`.
 
 ## Build the app
 

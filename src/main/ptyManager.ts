@@ -23,7 +23,7 @@ function defaultShell(): string {
 }
 
 // Expand "~" and fall back to the home folder when the path does not exist.
-function resolveCwd(cwd: string | undefined): string {
+export function resolveCwd(cwd: string | undefined): string {
   const home = os.homedir();
   if (!cwd || !cwd.trim()) return home;
   const expanded = cwd.trim().replace(/^~(?=$|[\\/])/, home);
@@ -35,7 +35,7 @@ function resolveCwd(cwd: string | undefined): string {
   return home;
 }
 
-function shellEnv(): Record<string, string> {
+export function shellEnv(): Record<string, string> {
   const env: Record<string, string | undefined> = { ...process.env };
   // Apps opened from Finder have no locale, which breaks Unicode in the shell.
   if (!env.LANG) env.LANG = 'en_US.UTF-8';

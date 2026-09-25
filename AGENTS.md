@@ -41,6 +41,9 @@ These rules are what keep a page that shows untrusted terminal output from reach
 | `npm run lint` | ESLint, including the import rules above. |
 | `npm run format:check` | Prettier. `npm run format` fixes it. |
 | `npm run test:scripts` | The tests for the scripts in `scripts/`, such as the changelog tool, run with `node --test`. |
+| `npm test` | Unit tests, with Vitest: `tests/unit/`, in Node, and in jsdom for the renderer. |
+| `npm run test:integration` | Builds, then tests the MCP server over stdio and `PtyManager` with real shells: `tests/integration/`. |
+| `npm run smoke` | Builds, then drives the built app through Playwright's Electron driver: `tests/e2e/`. It opens a window. On Linux without a display, run it under `xvfb-run -a`. |
 | `npm run dist:mac` | Build and package the macOS app: dmg and zip, arm64 and x64. |
 | `npm run dist:linux` | Build and package the Linux app: AppImage and deb, x64. |
 | `node out/main/mcpServer.js` | The MCP server, after a build. |
@@ -49,7 +52,7 @@ These rules are what keep a page that shows untrusted terminal output from reach
 
 ## Before a pull request
 
-`typecheck`, `lint`, `format:check`, `test:scripts` and `build` pass, which is what CI (`.github/workflows/ci.yml`) runs on Linux and macOS for every pull request, along with a check that every commit subject is a Conventional Commit. Then run the app, in development and as a build, and say in the pull request what you checked and on which platform, macOS or Linux. The test suite arrives with #4.
+`typecheck`, `lint`, `format:check`, `test:scripts`, `test`, `build`, `test:integration` and `smoke` pass, which is what CI (`.github/workflows/ci.yml`) runs on Linux and macOS for every pull request, along with a check that every commit subject is a Conventional Commit. Then run the app, in development and as a build, and say in the pull request what you checked and on which platform, macOS or Linux. A change comes with its tests: a module gets unit tests, and a bug fix gets the case that used to fail. Every test uses a temporary `TERMI_USER_DATA`.
 
 ## Conventions
 

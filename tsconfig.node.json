@@ -24,6 +24,13 @@
     "src/main/**/*",
     "src/preload/**/*",
     "src/mcp/**/*",
-    "src/shared/**/*"
+    "src/shared/**/*",
+    "vitest.config.ts",
+    "vitest.integration.config.ts",
+    "vitest.smoke.config.ts",
+    "tests/unit/shared/**/*",
+    "tests/unit/main/**/*",
+    "tests/integration/**/*",
+    "tests/e2e/**/*"
   ]
 }

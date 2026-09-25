@@ -8,7 +8,7 @@ name: CI
 # shared gm-libs workflows, so swapping it for them later is mechanical.
 #
 # macOS minutes count ten times Linux minutes against a private repository's allowance, so the
-# macOS job only installs, checks and builds. Packaging happens in release.yml alone.
+# macOS job never packages. Packaging happens in release.yml alone.
 
 on:
   push:
@@ -89,8 +89,31 @@ jobs:
         run: npm run format:check
       - name: Script tests
         run: npm run test:scripts
+      - name: Unit tests
+        run: npm test
       - name: Build
         run: npm run build
+      # The built MCP server over stdio, and real shells through node-pty.
+      - name: Integration tests
+        run: npm run test:integration
+      # The Electron binary the smoke test launches, downloaded once per version.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/electron
+            ~/Library/Caches/electron
+          key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      # Ubuntu 24.04 restricts unprivileged user namespaces, which Chromium's sandbox needs. Lift
+      # the restriction on the runner, so the smoke test runs the app sandboxed as users do,
+      # rather than with --no-sandbox. The runner has no display, so it runs under Xvfb.
+      - name: Smoke test (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          xvfb-run -a npm run smoke
+      - name: Smoke test (macOS)
+        if: runner.os == 'macOS'
+        run: npm run smoke
 
   # Every commit a pull request brings becomes a line in the next release's changelog, grouped
   # by its conventional type, so a subject that does not parse is refused here. Pull requests
