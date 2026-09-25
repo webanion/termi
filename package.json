@@ -3,11 +3,11 @@
   "productName": "Termi",
   "desktopName": "termi.desktop",
   "version": "0.1.0",
-  "description": "A terminal app with a warm dark theme, saved commands, and auto-start.",
+  "description": "A terminal for macOS and Linux with saved commands that open several terminals side by side, and auto-start.",
   "main": "out/main/main.js",
   "author": "Jawad Ahbab",
   "license": "MIT",
-  "homepage": "https://github.com/webanion/termi#readme",
+  "homepage": "https://termi.webanion.com",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/webanion/termi.git"
