@@ -28,7 +28,9 @@
   --radius: 6px;
   --ui-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --serif: ui-serif, 'Iowan Old Style', Georgia, 'Times New Roman', serif;
-  --mono: ui-monospace, 'SF Mono', Menlo, Monaco, 'Cascadia Mono', Consolas, monospace;
+  --mono:
+    ui-monospace, 'SF Mono', Menlo, Monaco, 'Cascadia Mono', Consolas, 'DejaVu Sans Mono',
+    'Ubuntu Mono', 'Noto Sans Mono', 'Liberation Mono', monospace;
 
   /* One timing for every animation. DURATION in theme.ts must match --dur. */
   --dur: 220ms;

@@ -7,7 +7,8 @@ export const SIDEBAR_MAX = 420;
 export const SIDEBAR_DEFAULT = 232;
 
 export const TERMINAL_FONT =
-  "ui-monospace, 'SF Mono', Menlo, Monaco, 'Cascadia Mono', Consolas, monospace";
+  "ui-monospace, 'SF Mono', Menlo, Monaco, 'Cascadia Mono', Consolas, " +
+  "'DejaVu Sans Mono', 'Ubuntu Mono', 'Noto Sans Mono', 'Liberation Mono', monospace";
 
 export const THEME: ITheme = {
   background: '#262624',
