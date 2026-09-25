@@ -1,7 +1,7 @@
 {
   "name": "termi",
   "productName": "Termi",
-  "version": "1.2.0",
+  "version": "0.1.0",
   "description": "A terminal app with a warm dark theme, saved commands, and auto-start.",
   "main": "out/main/main.js",
   "author": "Jawad Ahbab",
@@ -19,6 +19,7 @@
     "lint:fix": "eslint \"src/**/*.ts\" electron.vite.config.ts --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "test:scripts": "node --test \"scripts/*.test.mjs\"",
     "icons": "bash scripts/buildIcons.sh",
     "rebuild": "electron-rebuild -f -w node-pty",
     "postinstall": "electron-rebuild -f -w node-pty",
