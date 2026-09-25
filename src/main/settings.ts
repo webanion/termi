@@ -2,37 +2,17 @@ import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
 import { readJson, writeJson } from './jsonFile';
-import type { SavedCommand, Settings, StoredCommand } from '../shared/types';
+import { readSettingsFile, type SettingsFile } from '../shared/settings';
+import type { Settings } from '../shared/types';
 
-type StoredSettings = Omit<Settings, 'commands'> & { commands: StoredCommand[] };
-
-const DEFAULTS: Settings = {
-  // Saved commands: { id, name, terminals: [{ command }], cwd, autoStart, layout }
-  commands: [],
-  sidebarWidth: 232,
-  sidebarHidden: false,
-  fontSize: 13,
-};
-
-let cache: Settings | null = null;
-
-// A saved command used to have one `command`. Now it has a list of up to 4 terminals.
-function upgradeCommand(cmd: StoredCommand): SavedCommand {
-  if (Array.isArray(cmd.terminals)) return cmd as SavedCommand;
-  const { command = '', ...rest } = cmd;
-  return { ...rest, terminals: [{ command }] };
-}
+let cache: SettingsFile | null = null;
 
 function settingsFile(): string {
   return path.join(app.getPath('userData'), 'settings.json');
 }
 
-function loadSettings(): Settings {
-  const stored: StoredSettings = {
-    ...DEFAULTS,
-    ...readJson<Partial<StoredSettings>>(settingsFile(), {}),
-  };
-  return { ...stored, commands: stored.commands.map(upgradeCommand) };
+function loadSettings(): SettingsFile {
+  return readSettingsFile(readJson<unknown>(settingsFile(), null));
 }
 
 export function getSettings(): Settings {
@@ -40,14 +20,10 @@ export function getSettings(): Settings {
   return cache;
 }
 
-// Merge a partial update into the settings and save them to disk.
-// Start from the file, not the cache, so a change from the MCP server is not lost.
-export function updateSettings(patch: Partial<Settings> | null | undefined): Settings {
-  const allowed = Object.keys(DEFAULTS);
-  const clean = Object.fromEntries(
-    Object.entries(patch || {}).filter(([key]) => allowed.includes(key)),
-  ) as Partial<Settings>;
-  cache = { ...loadSettings(), ...clean };
+// Merge an update into the settings and save them to disk. The update has been checked by the
+// IPC handler. Start from the file, not the cache, so a change from the MCP server is not lost.
+export function updateSettings(patch: Partial<Settings>): Settings {
+  cache = { ...loadSettings(), ...patch };
   writeJson(settingsFile(), cache);
   return cache;
 }
