@@ -6,6 +6,24 @@
   "main": "out/main/main.js",
   "author": "Jawad Ahbab",
   "license": "MIT",
+  "homepage": "https://github.com/JawadAhbab/termi#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JawadAhbab/termi.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JawadAhbab/termi/issues"
+  },
+  "keywords": [
+    "terminal",
+    "terminal-emulator",
+    "electron",
+    "xterm",
+    "node-pty",
+    "mcp",
+    "macos",
+    "linux"
+  ],
   "private": true,
   "engines": {
     "node": ">=24"
