@@ -1,0 +1,79 @@
+/* ---------- System stats ---------- */
+
+.sidebar-foot {
+  flex: none;
+  display: grid;
+  /* Bars on the left take the free space. Speeds on the right get a fixed width, so the bars do not jump. */
+  grid-template-columns: minmax(0, 1fr) 64px;
+  gap: 7px 10px;
+  padding: 9px 12px 10px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.stat svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  color: var(--faint);
+}
+
+.stat-value {
+  flex: none;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+/* Same width for CPU and RAM values, so both bars end at the same place. */
+.stat:not(.net) .stat-value {
+  width: 27px;
+  text-align: right;
+}
+
+.stat.net .stat-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-bar {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.stat-bar > span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition:
+    width var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.stat.high .stat-bar > span {
+  background: var(--danger);
+}
+
+#stat-down svg {
+  color: var(--green);
+}
+
+#stat-up svg {
+  color: var(--accent);
+}

@@ -10,7 +10,7 @@ Termi is an Electron terminal app: xterm.js in the window, shells through node-p
 | --- | --- |
 | `src/main/` | The main process. `main.ts` is the app lifecycle, `window.ts` the window and its navigation rules, `menu.ts` the menu, `ipc.ts` every IPC handler with its sender and input checks, `ptyManager.ts` the shells, `settings.ts` the settings store, plus `windowState.ts`, `systemStats.ts` and `jsonFile.ts`. |
 | `src/preload/` | `preload.ts` builds `window.termi` from the channels in `src/shared/ipc.ts`. |
-| `src/renderer/` | The window's page. It moves to React in #11. |
+| `src/renderer/` | The window's page, in React. `main.tsx` starts the store and renders `App.tsx`. `appStore.ts` holds the state, every action and the IPC listeners, and components read it with `useAppState`. `terminalRuntime.ts` owns each pane's xterm terminal and shell, outside React. Components are PascalCase `.tsx` files, and `styles/` holds the stylesheet, one file per section, imported in order by `main.tsx`. |
 | `src/mcp/` | The MCP server. `server.ts` is the entry and dispatch, `jsonRpc.ts` the stdio transport, `tools.ts` the tools, `docs.ts` and `docs.md` the guide, `settingsFile.ts` where it finds the settings. |
 | `src/shared/` | Code every process loads: `types.ts`, `ipc.ts` (the IPC contract), `settings.ts` (the settings file's schema, version, migrations and update checks), `savedCommands.ts` (the saved command rules) and `layouts.ts`. |
 | `scripts/` | Build helpers, such as `buildIcons.sh`. |
@@ -24,7 +24,8 @@ These rules are what keep a page that shows untrusted terminal output from reach
 - The renderer runs sandboxed with context isolation and reaches main only through `window.termi`. Never turn on `nodeIntegration`, turn off `sandbox` or `contextIsolation`, loosen the CSP in `index.html`, or expose `ipcRenderer` to the page.
 - Every IPC channel is declared in `src/shared/ipc.ts`. A new channel goes there first, then gets its handler in `src/main/ipc.ts` and its method in the preload. The types make a mismatch fail the typecheck.
 - Main treats what the renderer sends as untrusted. `src/main/ipc.ts` checks that the sender is the app's own page and validates every argument before using it.
-- Text from a terminal (titles, OSC sequences, process names) and from settings goes into the page as text, never as HTML.
+- Text from a terminal (titles, OSC sequences, process names) and from settings goes into the page as text, never as HTML. In React that means never `dangerouslySetInnerHTML`.
+- A component never starts or stops a shell. Store actions create and dispose terminal runtimes, and a pane only lends its element with `attach()` and `detach()`, so React re-rendering, remounting, or StrictMode running effects twice in development cannot spawn or kill anything.
 - `src/shared/` imports neither Node nor Electron, because the sandboxed renderer loads it. `src/mcp/` never imports Electron, because it runs under plain Node. ESLint enforces both.
 - When the shape of `settings.json` changes, bump `SETTINGS_VERSION` in `src/shared/settings.ts` and add a migration step. Keys a build does not know are kept, so an older build does not destroy a newer build's settings.
 
@@ -70,5 +71,5 @@ These rules are what keep a page that shows untrusted terminal output from reach
 
 ## Known platform issues
 
-- On Linux, every idle shell counts as busy (#9), so closing the window asks for confirmation and a scripted close does not exit. In automated runs, stop Termi by killing its shells and then its main process, by pid.
+- In automated runs, stop Termi by pid: its shells first, then its main process. A scripted close asks for confirmation while a program is still running in a terminal.
 - On Ubuntu 23.10 and later, the development Electron needs an AppArmor profile to start its sandbox outside VS Code (#8).
