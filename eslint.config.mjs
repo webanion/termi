@@ -4,7 +4,7 @@ import prettier from 'eslint-config-prettier';
 
 const NODE = {
   group: ['node:*', 'fs', 'fs/*', 'path', 'os', 'child_process', 'readline', 'node-pty'],
-  message: 'The renderer is sandboxed and has no Node. Go through window.termi.',
+  message: 'The renderer is sandboxed and has no Node, and shared code runs there too.',
 };
 const ELECTRON = {
   group: ['electron', 'electron/*'],
@@ -42,9 +42,14 @@ export default [
     files: ['src/renderer/**/*.ts'],
     rules: { 'no-restricted-imports': ['error', { patterns: [NODE, ELECTRON] }] },
   },
-  // The MCP server runs under plain Node, and shared code is loaded by every process.
+  // Shared code is loaded by every process, the sandboxed renderer included.
   {
-    files: ['src/mcp/**/*.ts', 'src/shared/**/*.ts'],
+    files: ['src/shared/**/*.ts'],
+    rules: { 'no-restricted-imports': ['error', { patterns: [NODE, ELECTRON] }] },
+  },
+  // The MCP server runs under plain Node.
+  {
+    files: ['src/mcp/**/*.ts'],
     rules: { 'no-restricted-imports': ['error', { patterns: [ELECTRON] }] },
   },
   prettier,
