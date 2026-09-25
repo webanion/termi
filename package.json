@@ -1,6 +1,7 @@
 {
   "name": "termi",
   "productName": "Termi",
+  "desktopName": "termi.desktop",
   "version": "0.1.0",
   "description": "A terminal app with a warm dark theme, saved commands, and auto-start.",
   "main": "out/main/main.js",
@@ -112,7 +113,8 @@
       "target": [
         "AppImage",
         "deb"
-      ]
+      ],
+      "syncDesktopName": true
     },
     "win": {
       "icon": "assets/icon.png"
