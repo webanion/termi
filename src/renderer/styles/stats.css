@@ -3,8 +3,8 @@
 .sidebar-foot {
   flex: none;
   display: grid;
-  /* Bars on the left take the free space. Speeds on the right get a fixed width, so the bars do not jump. */
-  grid-template-columns: minmax(0, 1fr) 64px;
+  /* Bars on the left take the free space. Speeds on the right get the width of the widest speed, so the bars do not jump. */
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 7px 10px;
   padding: 9px 12px 10px;
   border-top: 1px solid var(--border);
@@ -41,9 +41,15 @@
 
 .stat.net .stat-value {
   flex: 1 1 auto;
-  min-width: 0;
+}
+
+/* A hidden copy of the widest speed formatBytes returns, measured in the font the system uses. */
+.stat.net .stat-value::after {
+  content: '999 MB/s';
+  display: block;
+  height: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
+  visibility: hidden;
 }
 
 .stat-bar {

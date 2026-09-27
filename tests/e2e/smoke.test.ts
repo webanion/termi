@@ -230,6 +230,31 @@ describe('Termi', () => {
     },
   );
 
+  // Each kind of speed formatBytes returns, from the narrowest to the widest. It all runs in one
+  // step, so a new sample cannot replace the text while it is measured.
+  it('fits every speed in the sidebar without moving the bars', async () => {
+    const speeds = ['-', '0 B/s', '999 B/s', '9.9 KB/s', '999 KB/s', '9.9 MB/s', '999 MB/s'];
+    const result = await page.evaluate(`(() => {
+      const foot = document.querySelector('.sidebar-foot');
+      const stat = document.querySelector('#stat-up');
+      const value = stat.querySelector('.stat-value');
+      const bar = document.querySelector('#stat-cpu .stat-bar');
+      const edge = foot.getBoundingClientRect().right - parseFloat(getComputedStyle(foot).paddingRight);
+      const before = value.textContent;
+      const bars = new Set();
+      const cut = [];
+      for (const speed of ${JSON.stringify(speeds)}) {
+        value.textContent = speed;
+        bars.add(bar.getBoundingClientRect().width);
+        const outside = stat.getBoundingClientRect().right > edge + 0.5;
+        if (outside || value.scrollWidth > value.clientWidth) cut.push(speed);
+      }
+      value.textContent = before;
+      return { bars: bars.size, cut };
+    })()`);
+    expect(result).toEqual({ bars: 1, cut: [] });
+  });
+
   it('asks before quitting while a program runs', async () => {
     await page.locator('.tab-view.active .xterm-helper-textarea').first().focus();
     await page.keyboard.type('sleep 30');
