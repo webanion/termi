@@ -23,7 +23,7 @@ A terminal app for macOS and Linux with a warm dark theme, saved commands that o
 
 Download a release from [termi.webanion.com](https://termi.webanion.com) or [Releases](https://github.com/webanion/termi/releases). Each release has a `SHA256SUMS` file to check the downloads against.
 
-**macOS.** `Termi-<version>-mac-arm64.dmg` for Apple silicon or `Termi-<version>-mac-x64.dmg` for Intel, or the `.zip` of either. Open it and drag Termi to Applications. The builds are not signed yet, so macOS blocks the first launch. On macOS 15 and later, open System Settings, Privacy & Security, and choose **Open Anyway** next to the message about Termi. On earlier versions, right-click Termi and choose **Open**. On any version, `xattr -dr com.apple.quarantine /Applications/Termi.app` clears the block.
+**macOS.** `Termi-<version>-mac-arm64.dmg` for Apple silicon or `Termi-<version>-mac-x64.dmg` for Intel, or the `.zip` of either. Open it and drag Termi to Applications. The builds are not signed with an Apple Developer ID or notarized yet, so macOS blocks the first launch and says it could not verify Termi. On macOS 15 and later, open System Settings, Privacy & Security, and choose **Open Anyway** next to the message about Termi. On earlier versions, right-click Termi and choose **Open**. On any version, `xattr -dr com.apple.quarantine /Applications/Termi.app` clears the block. Termi 0.1.1 and earlier shipped with a broken signature, so macOS says Termi "is damaged and can't be opened" instead, and only the `xattr` command opens those versions.
 
 **Linux.** On Debian and Ubuntu, install the deb with `sudo apt install ./Termi-<version>-linux-amd64.deb`. It sets up Chromium's sandbox, including an AppArmor profile on Ubuntu 24.04 and later. Elsewhere, use `Termi-<version>-linux-x86_64.AppImage`: make it executable with `chmod +x` and run it. On Ubuntu 23.10 and later an AppImage cannot bring its own AppArmor profile, so use the deb there.
 
@@ -69,7 +69,7 @@ npm run dist:mac    # dmg and zip for arm64 and x64, on a Mac
 npm run dist:linux  # AppImage and deb for x64, on Linux
 ```
 
-Both write to `_releases/<version>/`. The macOS builds are not signed.
+Both write to `_releases/<version>/`. The macOS builds are signed ad hoc, not with an Apple Developer ID, and are not notarized.
 
 The logo is flat: one solid color, with no gradients or shadows. To change it, edit `assets/logo.svg` and `assets/logo-mark.svg`, which is the same logo without the outer padding, then run `npm run icons`. It needs `rsvg-convert` (`brew install librsvg` on macOS, `sudo apt install librsvg2-bin` on Ubuntu). The `.icns` also needs `iconutil`, which only macOS has, so elsewhere the script writes the PNGs and leaves the committed `icon.icns` as it is. The PNGs include the Linux icon set in `assets/icons/`, one per size from 16 to 512, which the Linux packages install into the system icon theme.
 

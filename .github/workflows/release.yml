@@ -20,7 +20,8 @@ name: Release
 # request that token opens until a person approves it, and fails that run when the pull request
 # merges unapproved, so the parked run is deleted (clear-parked-runs); the gate runs on the merge.
 #
-# macOS builds are not signed or notarized. That needs an Apple Developer ID in secrets first.
+# macOS builds are signed ad hoc (identity "-" in package.json) and are not notarized. Signing
+# with a Developer ID and notarizing need an Apple Developer ID in secrets first.
 #
 # Written in this repository by hand for now, in the shape of the shared gm-libs release, so it
 # can be swapped for it later.
@@ -206,8 +207,14 @@ jobs:
             count: 2 # AppImage and deb, x64
     runs-on: ${{ matrix.os }}
     env:
-      # No signing identity yet: build unsigned instead of searching the keychain for one.
+      # No Developer ID yet, so package.json signs ad hoc (identity "-"). Do not search the
+      # keychain for another identity.
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      # electron-builder skips all signing when it sees a pull_request event, and this workflow
+      # runs on one. This job only runs after a release pull request merges, and it holds no
+      # signing secrets, so signing here is safe. Without it the app ships with a broken
+      # signature, and macOS says it "is damaged and can't be opened".
+      CSC_FOR_PULL_REQUEST: 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -219,6 +226,19 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: Package
         run: npm run ${{ matrix.script }}
+      # A missing or broken signature makes macOS call the app damaged, so it stops the release.
+      - name: Check the macOS signatures
+        if: runner.os == 'macOS'
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          apps=("_releases/$version"/mac*/Termi.app)
+          if [ "${#apps[@]}" -ne 2 ] || [ ! -d "${apps[0]}" ]; then
+            echo "::error::Expected 2 macOS apps for v$version, found: ${apps[*]}"
+            exit 1
+          fi
+          for app in "${apps[@]}"; do
+            codesign --verify --deep --strict --verbose=2 "$app"
+          done
       - name: Collect the packages
         env:
           COUNT: ${{ matrix.count }}
