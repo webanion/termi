@@ -16,6 +16,7 @@ Termi is an Electron terminal app: xterm.js in the window, shells through node-p
 | `scripts/` | Build helpers, such as `buildIcons.sh`, the changelog tool, and `devAppArmor.mjs`. |
 | `assets/` | Logo sources and icons, also used by electron-builder. |
 | `out/` | Build output, not tracked. |
+| `.vscode/` | VS Code's workspace settings. `settings.json` applies ESLint's fixes and Prettier on save, with Prettier set per language so a personal formatter does not win, and never formats markdown. `extensions.json` recommends the two extensions. Everything else in the folder is personal and not tracked. |
 
 ## Process boundaries
 

@@ -3,6 +3,8 @@
 .idea/
 *.swp
 .vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 
 # Dependencies
 node_modules/

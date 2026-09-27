@@ -90,6 +90,8 @@ A change ships with its tests in the same pull request. A module gets unit tests
 
 Every test uses a temporary `TERMI_USER_DATA`, never real settings. CI runs lint, typecheck, format, every test layer and the build on Linux and on macOS. Red CI means no merge. A skipped test needs a linked issue that says when it comes back.
 
+Code follows Prettier and ESLint, with the repository's config. In VS Code, the tracked `.vscode/settings.json` applies ESLint's fixes and then Prettier each time you save a file, once you install the two extensions `.vscode/extensions.json` recommends. Markdown is never formatted, so a paragraph stays on one line.
+
 Gate on exit codes, never on matched output. A chain like `run-tests | grep passed && git push` reports success whenever grep finds its line, failing or not.
 
 ## Documentation moves with the code
