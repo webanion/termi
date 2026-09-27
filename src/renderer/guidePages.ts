@@ -16,7 +16,7 @@ export interface GuidePage {
 export const GUIDE_PAGES: GuidePage[] = [
   { source: terminals, tryIt: { label: 'Open a terminal', action: 'new-terminal' } },
   { source: savedCommands, tryIt: { label: 'Save a command', action: 'new-command' } },
-  { source: splitTerminals, tryIt: { label: 'Save a split command', action: 'new-command' } },
+  { source: splitTerminals, tryIt: { label: 'Split this tab', action: 'split-terminal' } },
   { source: copyingAndStats, tryIt: { label: 'Show every shortcut', action: 'show-shortcuts' } },
   { source: mcpServer },
 ];
