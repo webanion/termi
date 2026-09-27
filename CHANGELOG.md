@@ -2,6 +2,15 @@
 
 Every release of Termi, newest first. Each section is written by `scripts/changelog.mjs` from the Conventional Commits since the release before it, and is that version's GitHub Release notes.
 
+## v0.1.2 (2026-09-27)
+
+[Compare with v0.1.1](https://github.com/webanion/termi/compare/v0.1.1...v0.1.2)
+
+### Fixes
+
+- **release:** sign the macOS build and check its signature ([7d32480](https://github.com/webanion/termi/commit/7d32480aa7864463fea207190f8b965a7c884386), [#43](https://github.com/webanion/termi/pull/43))
+- **mac:** sign the app ad hoc so macOS does not call it damaged ([576d0fc](https://github.com/webanion/termi/commit/576d0fc9481ba0f83263e71a2fdec81163278283), [#43](https://github.com/webanion/termi/pull/43))
+
 ## v0.1.1 (2026-09-25)
 
 [Compare with v0.1.0](https://github.com/webanion/termi/compare/v0.1.0...v0.1.1)
