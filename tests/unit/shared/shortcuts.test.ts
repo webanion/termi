@@ -36,6 +36,7 @@ const MAC_BEFORE: Record<string, string> = {
 const MAC_ADDED: Record<string, string> = {
   'show-shortcuts': 'Cmd+/',
   'command-palette': 'Cmd+Shift+P',
+  'split-terminal': 'Cmd+D',
 };
 
 const ALIASES: Record<string, string> = {

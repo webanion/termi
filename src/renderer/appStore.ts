@@ -28,17 +28,18 @@ export interface PaneState {
   attached: boolean; // its shell is running
 }
 
-// A tab holds 1 to 4 panes. Only a saved command opens more than one.
+// A tab holds 1 to 4 panes. A saved command can open several, and a split adds one more.
 export interface TabState {
   id: number;
   name: string;
   customName: boolean;
   commandId: string | null;
+  cwd: string | undefined; // the folder the tab's shells start in, and a split's shell too
   activity: boolean;
   layout: string | null;
   panes: PaneState[];
   focusedPaneId: string | null;
-  ready: boolean; // every pane's shell is running, so the tab shows in the sidebar
+  ready: boolean; // every pane's shell has started once, so the tab shows in the sidebar
 }
 
 export interface ClosingTab {
@@ -189,7 +190,8 @@ const runtimeEvents: RuntimeEvents = {
       );
       const first = panes[0];
       const name = t.name || (first?.attached ? first.shellName : '');
-      return { ...t, panes, name, ready: panes.every((p) => p.attached) };
+      // A tab stays ready while a split's shell starts, so it does not leave the sidebar.
+      return { ...t, panes, name, ready: t.ready || panes.every((p) => p.attached) };
     });
   },
 };
@@ -219,31 +221,35 @@ export function focusIfCurrent(paneId: string): void {
   if (tab && tab.focusedPaneId === paneId) getRuntime(paneId)?.focus();
 }
 
-// `commands` has one entry per pane. An empty command opens a plain shell. Each pane's shell
-// starts when its terminal is first shown, at the size it has there.
-function createTab({ name, commands = [''], cwd, commandId, layout }: TabOptions = {}): TabState {
-  const panes = commands.slice(0, MAX_TERMINALS).map((command) => {
-    const pane: PaneState = {
-      id: `p${nextPaneId++}`,
-      command,
-      proc: '',
-      shellName: '',
-      attached: false,
-    };
-    createRuntime({
-      paneId: pane.id,
-      command,
-      cwd,
-      fontSize: state.settings.fontSize,
-      events: runtimeEvents,
-    });
-    return pane;
+// A pane and its runtime. An empty command opens a plain shell. The shell starts when the
+// pane's terminal is first shown, at the size it has there.
+function createPane(command: string, cwd: string | undefined): PaneState {
+  const pane: PaneState = {
+    id: `p${nextPaneId++}`,
+    command,
+    proc: '',
+    shellName: '',
+    attached: false,
+  };
+  createRuntime({
+    paneId: pane.id,
+    command,
+    cwd,
+    fontSize: state.settings.fontSize,
+    events: runtimeEvents,
   });
+  return pane;
+}
+
+// `commands` has one entry per pane.
+function createTab({ name, commands = [''], cwd, commandId, layout }: TabOptions = {}): TabState {
+  const panes = commands.slice(0, MAX_TERMINALS).map((command) => createPane(command, cwd));
   const tab: TabState = {
     id: nextTabId++,
     name: name || '',
     customName: Boolean(name),
     commandId: commandId || null,
+    cwd,
     activity: false,
     layout: layout || null,
     panes,
@@ -331,7 +337,7 @@ export function removePane(paneId: string): void {
     ...t,
     panes,
     focusedPaneId,
-    ready: panes.every((p) => p.attached),
+    ready: t.ready || panes.every((p) => p.attached),
   }));
   if (tab.id === state.activeId) {
     requestAnimationFrame(() => {
@@ -339,6 +345,20 @@ export function removePane(paneId: string): void {
       focusTab(tab.id);
     });
   }
+}
+
+// Add a plain shell to a tab, after its other panes, in the folder the tab started in. It
+// takes focus once it shows. A split is never saved to the tab's saved command.
+export function splitTab(id: number): void {
+  const tab = tabById(id);
+  if (!tab) return;
+  if (tab.panes.length >= MAX_TERMINALS) {
+    showToast(`A tab holds at most ${MAX_TERMINALS} terminals`);
+    return;
+  }
+  const pane = createPane('', tab.cwd);
+  updateTab(id, (t) => ({ ...t, panes: [...t.panes, pane], focusedPaneId: pane.id }));
+  if (id === state.activeId) requestAnimationFrame(() => fitTab(id));
 }
 
 export function renameTab(id: number, name: string): void {
@@ -373,8 +393,10 @@ export function setLayout(tabId: number, layoutId: string): void {
   if (!tab) return;
   updateTab(tabId, (t) => ({ ...t, layout: layoutId }));
   requestAnimationFrame(() => fitTab(tabId));
-  // Remember the layout for the next time the saved command runs.
-  if (tab.commandId && commandById(tab.commandId)) {
+  // Remember the layout for the next time the saved command runs, unless a split or a closed
+  // pane left the tab with another number of terminals than the command has.
+  const cmd = tab.commandId ? commandById(tab.commandId) : undefined;
+  if (cmd && cmd.terminals.length === tab.panes.length) {
     void saveSettings({
       commands: state.settings.commands.map((c) =>
         c.id === tab.commandId ? { ...c, layout: layoutId } : c,
@@ -559,6 +581,9 @@ function shellName(): string {
 
 const menuActions: Record<string, () => unknown> = {
   'new-terminal': () => openTab(),
+  'split-terminal': () => {
+    if (state.activeId !== null) splitTab(state.activeId);
+  },
   'new-command': () => openCommandDialog(),
   'close-terminal': () => {
     if (state.dialog) closeCommandDialog();

@@ -10,6 +10,7 @@ export interface ShortcutKeys {
 
 export const SHORTCUTS = {
   'new-terminal': { mac: 'Cmd+T', other: 'Ctrl+Shift+T' },
+  'split-terminal': { mac: 'Cmd+D', other: 'Ctrl+Shift+D' },
   'new-command': { mac: 'Cmd+Shift+N', other: 'Ctrl+Shift+N' },
   'close-terminal': { mac: 'Cmd+W', other: 'Ctrl+Shift+W' },
   clear: { mac: 'Cmd+K', other: 'Ctrl+Shift+K' },

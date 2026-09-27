@@ -1,6 +1,6 @@
 # Terminals and tabs
 
-Every terminal Termi runs is listed under Running in the sidebar. A plain terminal is one shell, in a tab of its own.
+Every terminal Termi runs is listed under Running in the sidebar. A plain terminal is one shell, in a tab of its own, until you split it.
 
 - Open one with {new-terminal}, or the + next to Running.
 - Switch to one with a click in the sidebar, or with {select-terminal-0} to {select-terminal-8}. Step through them with {prev-terminal} and {next-terminal}.

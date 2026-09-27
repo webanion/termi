@@ -8,6 +8,7 @@ export type AppAction = ShortcutAction | HelpAction;
 
 const LABELS: Record<AppAction, string> = {
   'new-terminal': 'New Terminal',
+  'split-terminal': 'Split Terminal',
   'new-command': 'New Saved Command…',
   'close-terminal': 'Close Terminal',
   clear: 'Clear Buffer',
@@ -47,6 +48,7 @@ export function actionLabel(action: AppAction): string {
 // and the palette does not list itself.
 export const PALETTE_ACTIONS: AppAction[] = [
   'new-terminal',
+  'split-terminal',
   'new-command',
   'close-terminal',
   'clear',
