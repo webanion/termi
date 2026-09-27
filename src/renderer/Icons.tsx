@@ -50,6 +50,16 @@ export const SidebarIcon = () => (
   </svg>
 );
 
+// A window split in two, with a plus in the new half.
+export const SplitIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12" />
+    <path d="M12 4l0 16" />
+    <path d="M14.5 12l3 0" />
+    <path d="M16 10.5l0 3" />
+  </svg>
+);
+
 export const FolderIcon = () => (
   <svg viewBox="0 0 24 24">
     <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />

@@ -149,6 +149,28 @@ describe('Termi', () => {
     );
   });
 
+  it('splits a plain tab from the header, and closes one of its terminals', async () => {
+    const tabs = await page.locator('#terminal-list .item').count();
+    const panes = page.locator('.tab-view.active .term-pane');
+    expect(await panes.count()).toBe(1);
+    await page.locator('#split-terminal').click();
+    await until(async () => (await panes.count()) === 2);
+    expect(await page.locator('.tab-view.active').getAttribute('style')).toContain('"a b"');
+
+    // The new terminal has focus, and takes typing once its shell has started and it shows
+    // the shell's name.
+    const added = page.locator('.tab-view.active .term-pane.focused');
+    await until(async () => ((await added.locator('.pane-name').textContent()) ?? '') !== '');
+    await added.locator('.xterm-helper-textarea').focus();
+    await page.keyboard.type(`echo split > '${marker(8)}'`);
+    await page.keyboard.press('Enter');
+    await until(() => fs.existsSync(marker(8)));
+
+    await added.locator('.pane-head .icon-btn').click();
+    await until(async () => (await panes.count()) === 1);
+    expect(await page.locator('#terminal-list .item').count()).toBe(tabs);
+  });
+
   it('lists the shortcuts and runs actions from the palette, through the menu', async () => {
     const mac = process.platform === 'darwin';
     await clickMenu('show-shortcuts');

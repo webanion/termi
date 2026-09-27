@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import logoMark from '../../assets/logo-mark.svg';
-import { focusedProc, toggleSidebar, zoomFromHeader } from './appStore';
+import { focusedProc, splitTab, toggleSidebar, zoomFromHeader } from './appStore';
 import { cx } from './cx';
-import { SidebarIcon } from './Icons';
+import { SidebarIcon, SplitIcon } from './Icons';
 import { LayoutControl } from './LayoutControl';
 import { useAppState } from './useAppState';
 import { LAYOUTS } from '../shared/layouts';
+import { MAX_TERMINALS } from '../shared/savedCommands';
 import { shortcutLabel } from '../shared/shortcuts';
 
 export function MainHeader() {
@@ -16,6 +17,8 @@ export function MainHeader() {
   const found = tabs.find((t) => t.id === activeId);
   const tab = found?.ready ? found : undefined;
   const hasLayout = Boolean(tab && LAYOUTS[tab.panes.length]);
+  const full = Boolean(tab && tab.panes.length >= MAX_TERMINALS);
+  const splitKeys = shortcutLabel('split-terminal', platform);
   const name = tab ? tab.name : 'Termi';
 
   useEffect(() => {
@@ -24,7 +27,7 @@ export function MainHeader() {
 
   return (
     <header
-      className={cx('main-head drag', hasLayout && 'has-layout')}
+      className={cx('main-head drag', tab && 'has-split', hasLayout && 'has-layout')}
       id="main-head"
       onDoubleClick={(event) => zoomFromHeader(event.target)}
     >
@@ -48,6 +51,20 @@ export function MainHeader() {
       </div>
       {/* Shows when the tab has more than one terminal. */}
       <LayoutControl tab={tab} />
+      <button
+        className={cx('icon-btn', tab && 'show')}
+        id="split-terminal"
+        title={
+          full ? `A tab holds at most ${MAX_TERMINALS} terminals` : `Split terminal (${splitKeys})`
+        }
+        aria-label="Split terminal"
+        disabled={!tab || full}
+        onClick={() => {
+          if (tab) splitTab(tab.id);
+        }}
+      >
+        <SplitIcon />
+      </button>
     </header>
   );
 }

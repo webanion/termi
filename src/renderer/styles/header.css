@@ -18,6 +18,7 @@
 }
 
 .main-head {
+  --split-w: 34px; /* the split button and the gap before it */
   position: relative;
   border-bottom: 1px solid var(--border);
   padding-right: var(--head-right);
@@ -94,9 +95,13 @@ body.fullscreen {
   color: var(--faint);
 }
 
-/* Keep the title centered and clear of the layout control. */
-.main-head.has-layout .title {
-  padding: 0 var(--layout-w, 0);
+/* Keep the title centered and clear of the split button and the layout control. */
+.main-head.has-split .title {
+  padding: 0 var(--split-w);
+}
+
+.main-head.has-split.has-layout .title {
+  padding: 0 calc(var(--split-w) + var(--layout-w, 0px));
 }
 
 body.blurred .title,
@@ -104,11 +109,38 @@ body.blurred .sidebar-head {
   opacity: 0.6;
 }
 
-/* Layout picker for a tab with more than one terminal. */
-.layout-control {
+/* Adds a terminal to the tab. It shows while a tab is on screen. */
+#split-terminal {
   position: absolute;
   top: 50%;
   right: var(--head-right);
+  transform: translateY(-50%);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility var(--dur) var(--ease),
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
+}
+
+#split-terminal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* A tab that already has the most terminals it can hold. */
+#split-terminal.show:disabled {
+  opacity: 0.4;
+  background: transparent;
+  color: var(--muted);
+}
+
+/* Layout picker for a tab with more than one terminal, left of the split button. */
+.layout-control {
+  position: absolute;
+  top: 50%;
+  right: calc(var(--head-right) + var(--split-w));
   display: flex;
   gap: 2px;
   padding: 2px;
