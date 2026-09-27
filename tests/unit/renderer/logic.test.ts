@@ -100,4 +100,14 @@ describe('formatBytes', () => {
     expect(formatBytes(20 * 1024 ** 2)).toBe('20 MB');
     expect(formatBytes(34 * 1024 ** 3, '', true)).toBe('34G');
   });
+
+  it('picks the unit after rounding, so a speed never grows past 8 characters', () => {
+    expect(formatBytes(999.4, '/s')).toBe('999 B/s');
+    expect(formatBytes(999.6, '/s')).toBe('1.0 KB/s');
+    expect(formatBytes(999.9 * 1024, '/s')).toBe('1.0 MB/s');
+    expect(formatBytes(9.94 * 1024, '/s')).toBe('9.9 KB/s');
+    expect(formatBytes(9.97 * 1024, '/s')).toBe('10 KB/s');
+    expect(formatBytes(9.97 * 1024 ** 2, '/s')).toBe('10 MB/s');
+    expect(formatBytes(999.9 * 1024 ** 2, '', true)).toBe('1.0G');
+  });
 });
