@@ -36,6 +36,7 @@ const tab = (overrides: Partial<TabState>): TabState => ({
   name: 'zsh',
   customName: false,
   commandId: null,
+  cwd: undefined,
   activity: false,
   layout: null,
   panes: [{ id: 'p1', command: '', proc: 'zsh', shellName: 'zsh', attached: true }],

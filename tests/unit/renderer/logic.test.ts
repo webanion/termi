@@ -26,6 +26,7 @@ const tab = (overrides: Partial<TabState> = {}): TabState => ({
   name: 'zsh',
   customName: false,
   commandId: null,
+  cwd: undefined,
   activity: false,
   layout: null,
   panes: [pane()],

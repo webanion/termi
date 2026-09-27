@@ -70,6 +70,7 @@ export function buildMenu(send: SendEvent): void {
       label: 'Shell',
       submenu: [
         item('new-terminal'),
+        item('split-terminal'),
         item('new-command'),
         { type: 'separator' },
         item('close-terminal'),
