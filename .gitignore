@@ -20,6 +20,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Personal Claude Code settings (the shared ones in .claude/settings.json are tracked)
+.claude/settings.local.json
+
 # Env files
 .env
 .env.*

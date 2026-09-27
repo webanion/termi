@@ -16,6 +16,7 @@ Termi is an Electron terminal app: xterm.js in the window, shells through node-p
 | `scripts/` | Build helpers, such as `buildIcons.sh`, the changelog tool, and `devAppArmor.mjs`. |
 | `assets/` | Logo sources and icons, also used by electron-builder. |
 | `out/` | Build output, not tracked. |
+| `.claude/` | Claude Code's project settings. `settings.json` runs `hooks/formatEditedFile.mjs` after Claude writes or edits a file, which applies ESLint's fixes and Prettier to that file and reports what ESLint cannot fix. `settings.local.json` is personal and not tracked. |
 
 ## Process boundaries
 
