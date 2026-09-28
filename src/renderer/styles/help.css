@@ -121,26 +121,24 @@
 .palette-body {
   display: flex;
   flex-direction: column;
+  gap: 6px;
+  padding: 6px;
 }
 
-.palette-input:focus-visible {
-  outline: none;
-}
-
-.palette-input {
+/* Beat .dialog input[type='text'] so the palette owns this field on purpose. */
+.palette .palette-input {
+  box-sizing: border-box;
   margin: 0;
-  padding: 12px 14px;
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  font: 14px var(--ui-font);
+  width: 100%;
+}
+
+.palette .palette-input:focus-visible {
   outline: none;
 }
 
 .palette-list {
   margin: 0;
-  padding: 6px;
+  padding: 0;
   list-style: none;
   max-height: min(50vh, 360px);
   overflow-y: auto;
