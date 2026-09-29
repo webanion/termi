@@ -522,10 +522,18 @@ export function setSelecting(paneId: string): void {
 }
 
 // A right-click in a pane asks main for the terminal's menu. xterm has already focused the pane
-// and, on macOS, selected the word under the mouse, so Copy acts on that word.
-export function showTerminalMenu(paneId: string): void {
+// and, on macOS, selected the word under the mouse, so Copy acts on that word. While the program
+// in the terminal takes the mouse, as tmux and vim can, xterm sends it the click, so the menu
+// stays away. xterm keeps the click from the program while Option (macOS) or Shift (other
+// systems) is held, and then the menu shows, so a click always goes to one place.
+export function showTerminalMenu(
+  paneId: string,
+  click: { altKey: boolean; shiftKey: boolean },
+): void {
   const runtime = getRuntime(paneId);
   if (!runtime) return;
+  const around = state.info.platform === 'darwin' ? click.altKey : click.shiftKey;
+  if (runtime.term.modes.mouseTrackingMode !== 'none' && !around) return;
   api.showTerminalMenu({ hasSelection: runtime.term.hasSelection(), link: runtime.hoveredLink });
 }
 

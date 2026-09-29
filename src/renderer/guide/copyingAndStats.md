@@ -2,7 +2,7 @@
 
 - Select text in a terminal to copy it. A double-click copies a word, and a triple-click copies a line.
 - {copy} and {paste} copy and paste too.
-- Right-click a terminal for Copy, Paste, Select All and Clear Buffer. On a link, the menu can also open the link or copy its address.
+- Right-click a terminal for Copy, Paste, Select All and Clear Buffer. On a link, the menu can also open the link or copy its address. While a program takes the mouse, as tmux and vim can, a right-click is the program's, and {menu-click} opens the menu.
 - {link-click} on a link opens it in your browser.
 - {font-bigger}, {font-smaller} and {font-reset} change the text size, and {toggle-sidebar} hides the sidebar.
 - {command-palette} finds any action by name, and {show-shortcuts} lists every shortcut.

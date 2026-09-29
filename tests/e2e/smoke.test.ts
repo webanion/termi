@@ -38,6 +38,21 @@ const gridAreas = () =>
 const settingsFile = () =>
   JSON.parse(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8')) as Record<string, unknown>;
 
+// The native menu cannot be clicked from Playwright, so main keeps each menu it would show, and
+// a test reads and clicks its items.
+async function recordMenus(): Promise<void> {
+  await app.evaluate(({ Menu }) => {
+    const record = globalThis as unknown as { menus: Electron.Menu[] };
+    record.menus = [];
+    Menu.prototype.popup = function (this: Electron.Menu) {
+      record.menus.push(this);
+    };
+  });
+}
+
+const menusShown = () =>
+  app.evaluate(() => (globalThis as unknown as { menus: Electron.Menu[] }).menus.length);
+
 // A menu item's click, as when it is chosen from the menu, on either platform.
 const clickMenu = (id: string) =>
   app.evaluate(({ Menu }, itemId) => {
@@ -267,18 +282,8 @@ describe('Termi', () => {
     expect(await page.locator('#terminal-list .item').count()).toBe(tabs);
   });
 
-  // The native menu cannot be clicked from Playwright, so main keeps each menu it would show, and
-  // the test clicks its items.
   it('shows the terminal menu on a right-click, and pastes through it', async () => {
-    await app.evaluate(({ Menu }) => {
-      const record = globalThis as unknown as { menus: Electron.Menu[] };
-      record.menus = [];
-      Menu.prototype.popup = function (this: Electron.Menu) {
-        record.menus.push(this);
-      };
-    });
-    const menus = () =>
-      app.evaluate(() => (globalThis as unknown as { menus: Electron.Menu[] }).menus.length);
+    await recordMenus();
     const items = () =>
       app.evaluate(() => {
         const { menus } = globalThis as unknown as { menus: Electron.Menu[] };
@@ -302,7 +307,7 @@ describe('Termi', () => {
     const corner = { x: box.width - 8, y: box.height - 8 };
 
     await screen.click({ button: 'right', position: corner });
-    await until(async () => (await menus()) === 1);
+    await until(async () => (await menusShown()) === 1);
     const shown = await items();
     expect(shown.map((i) => (i.type === 'separator' ? '-' : i.label))).toEqual([
       'Copy',
@@ -325,8 +330,44 @@ describe('Termi', () => {
 
     await choose('Select All');
     await screen.click({ button: 'right', position: corner });
-    await until(async () => (await menus()) === 2);
+    await until(async () => (await menusShown()) === 2);
     expect((await items())[0]).toMatchObject({ label: 'Copy', enabled: true });
+  });
+
+  // tmux with the mouse on, or vim with mouse=a, asks for mouse reports, and then a right-click
+  // is the program's. The key xterm holds the click back for, Option on macOS and Shift
+  // elsewhere, brings the menu back.
+  it('leaves a right-click to a program that takes the mouse', async () => {
+    await recordMenus();
+    const term = page.locator('.tab-view.active .xterm').first();
+    const screen = term.locator('.xterm-screen');
+    const box = await screen.boundingBox();
+    if (!box) throw new Error('The terminal has no size');
+    const corner = { x: box.width - 8, y: box.height - 8 };
+    const takesMouse = async () =>
+      (await term.getAttribute('class'))?.includes('enable-mouse-events') ?? false;
+
+    // cat stands in for the program, and keeps what the terminal sends it until Ctrl+D. It asks
+    // for the reports in the SGR encoding (1006), as tmux and vim do.
+    await page.locator('.tab-view.active .xterm-helper-textarea').first().focus();
+    const [on, off] = ['\\033[?1000h\\033[?1006h', '\\033[?1006l\\033[?1000l'];
+    await page.keyboard.type(`printf '${on}'; cat > '${marker(13)}'; printf '${off}'`);
+    await page.keyboard.press('Enter');
+    await until(takesMouse);
+
+    await screen.click({ button: 'right', position: corner });
+    const around = process.platform === 'darwin' ? 'Alt' : 'Shift';
+    await screen.click({ button: 'right', position: corner, modifiers: [around] });
+    // A menu for the first click would show before the one for the second.
+    await until(async () => (await menusShown()) >= 1);
+    await new Promise((r) => setTimeout(r, 300));
+    expect(await menusShown()).toBe(1);
+
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Control+D');
+    await until(async () => !(await takesMouse()));
+    // The first click reached cat as a mouse report: ESC [ <, then 2 for the right button.
+    expect(fs.readFileSync(marker(13), 'utf8')).toContain('\x1b[<2;');
   });
 
   it('types a dropped file into the terminal under the pointer, quoted for the shell', async () => {
