@@ -4,9 +4,12 @@
 import './stubTermi';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+// Activating a tab fits and focuses its terminals on the next frame, so the fake has both.
 const runtime = vi.hoisted(() => ({
   hoveredLink: null as string | null,
   term: { hasSelection: (): boolean => false, selectAll: () => {} },
+  fit: () => {},
+  focus: () => {},
 }));
 
 vi.mock('@/renderer/terminalRuntime', () => ({
