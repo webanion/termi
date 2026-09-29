@@ -20,8 +20,8 @@ vi.mock('electron', () => ({
 }));
 
 const { handleContextMenus, readTerminalContext, terminalMenuTemplate } =
-  await import('../../../src/main/contextMenu');
-const { openLink } = await import('../../../src/main/links');
+  await import('@/main/contextMenu');
+const { openLink } = await import('@/main/links');
 
 const PLATFORM = Object.getOwnPropertyDescriptor(process, 'platform');
 

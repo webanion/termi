@@ -5,7 +5,7 @@ import { openLink } from './links';
 import { loadWindowState, trackWindowState } from './windowState';
 import type { PtyManager } from './ptyManager';
 import type { SystemStats } from './systemStats';
-import type { SendEvent } from '../shared/ipc';
+import type { SendEvent } from '@/shared/ipc';
 
 const isMac = process.platform === 'darwin';
 const HEADER_HEIGHT = 40;

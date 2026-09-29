@@ -1,9 +1,9 @@
 import { clipboard, Menu, type BrowserWindow, type MenuItemConstructorOptions } from 'electron';
-import { actionLabel } from '../shared/appActions';
-import type { SendEvent } from '../shared/ipc';
-import { isRecord } from '../shared/savedCommands';
-import { shortcutAccelerator, type ShortcutAction } from '../shared/shortcuts';
-import type { TerminalContext } from '../shared/types';
+import { actionLabel } from '@/shared/appActions';
+import type { SendEvent } from '@/shared/ipc';
+import { isRecord } from '@/shared/savedCommands';
+import { shortcutAccelerator, type ShortcutAction } from '@/shared/shortcuts';
+import type { TerminalContext } from '@/shared/types';
 import { isWebLink, openLink } from './links';
 import { runShortcut } from './shortcuts';
 

@@ -6,7 +6,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../../../src/renderer/terminalRuntime', () => ({
+vi.mock('@/renderer/terminalRuntime', () => ({
   createRuntime: () => ({}),
   getRuntime: () => undefined,
   allRuntimes: () => [].values(),
@@ -35,9 +35,9 @@ async function splitInThree() {
   vi.resetModules();
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(800);
   vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(600);
-  const store = await import('../../../src/renderer/appStore');
-  const { TabView } = await import('../../../src/renderer/TabView');
-  const { useAppState } = await import('../../../src/renderer/useAppState');
+  const store = await import('@/renderer/appStore');
+  const { TabView } = await import('@/renderer/TabView');
+  const { useAppState } = await import('@/renderer/useAppState');
   await store.init();
   const tab = () => {
     const found = store.activeTab();

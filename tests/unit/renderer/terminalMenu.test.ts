@@ -9,7 +9,7 @@ const runtime = vi.hoisted(() => ({
   term: { hasSelection: (): boolean => false, selectAll: () => {} },
 }));
 
-vi.mock('../../../src/renderer/terminalRuntime', () => ({
+vi.mock('@/renderer/terminalRuntime', () => ({
   createRuntime: () => runtime,
   getRuntime: () => runtime,
   allRuntimes: () => [runtime].values(),
@@ -20,7 +20,7 @@ vi.mock('../../../src/renderer/terminalRuntime', () => ({
 
 async function start() {
   vi.resetModules();
-  const store = await import('../../../src/renderer/appStore');
+  const store = await import('@/renderer/appStore');
   await store.init();
   return store;
 }

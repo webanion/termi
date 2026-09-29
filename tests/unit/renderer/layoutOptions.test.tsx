@@ -4,8 +4,8 @@
 import { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { LayoutOptions } from '../../../src/renderer/LayoutOptions';
-import { LAYOUTS } from '../../../src/shared/layouts';
+import { LayoutOptions } from '@/renderer/LayoutOptions';
+import { LAYOUTS } from '@/shared/layouts';
 
 let container: HTMLElement;
 let root: Root;

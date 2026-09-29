@@ -5,7 +5,7 @@ import './stubTermi';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // init() opens the first terminal. The store only keeps its runtime, so no xterm is needed.
-vi.mock('../../../src/renderer/terminalRuntime', () => ({
+vi.mock('@/renderer/terminalRuntime', () => ({
   createRuntime: () => ({}),
   getRuntime: () => undefined,
   allRuntimes: () => [].values(),
@@ -18,7 +18,7 @@ vi.mock('../../../src/renderer/terminalRuntime', () => ({
 async function storeOn(platform: string) {
   vi.resetModules();
   vi.spyOn(window.termi, 'info').mockResolvedValue({ platform, version: '0.1.0', home: '/' });
-  const store = await import('../../../src/renderer/appStore');
+  const store = await import('@/renderer/appStore');
   await store.init();
   return store;
 }

@@ -6,8 +6,8 @@ import './stubTermi';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import type { RuntimeEvents } from '../../../src/renderer/terminalRuntime';
-import type { SavedCommand } from '../../../src/shared/types';
+import type { RuntimeEvents } from '@/renderer/terminalRuntime';
+import type { SavedCommand } from '@/shared/types';
 
 interface Created {
   paneId: string;
@@ -16,7 +16,7 @@ interface Created {
 
 const created = vi.hoisted(() => [] as Created[]);
 
-vi.mock('../../../src/renderer/terminalRuntime', () => ({
+vi.mock('@/renderer/terminalRuntime', () => ({
   createRuntime: (options: Created) => {
     created.push(options);
     return {};
@@ -62,9 +62,9 @@ async function renderHeader() {
     fontSize: 13,
     guideSeen: true,
   });
-  const store = await import('../../../src/renderer/appStore');
-  const { MainHeader } = await import('../../../src/renderer/MainHeader');
-  const { CommandList } = await import('../../../src/renderer/CommandList');
+  const store = await import('@/renderer/appStore');
+  const { MainHeader } = await import('@/renderer/MainHeader');
+  const { CommandList } = await import('@/renderer/CommandList');
   await store.init();
   for (const [i, runtime] of created.entries())
     runtime.events.onPtyCreated(runtime.paneId, { id: i + 1, pid: i + 1, title: 'zsh' });

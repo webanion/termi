@@ -7,7 +7,7 @@ import {
   parseProcNetDev,
   parseVmStat,
   speed,
-} from '../../../src/main/systemStats';
+} from '@/main/systemStats';
 
 const fixture = (name: string) =>
   fs.readFileSync(path.join(__dirname, '..', '..', 'fixtures', name), 'utf8');

@@ -3,9 +3,9 @@
 // terminals, as the MCP server does.
 import './stubTermi';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { SavedCommand } from '../../../src/shared/types';
+import type { SavedCommand } from '@/shared/types';
 
-vi.mock('../../../src/renderer/terminalRuntime', () => ({
+vi.mock('@/renderer/terminalRuntime', () => ({
   createRuntime: () => ({}),
   getRuntime: () => undefined,
   allRuntimes: () => [].values(),
@@ -33,7 +33,7 @@ async function startWith(commands: SavedCommand[]) {
     guideSeen: true,
   });
   const update = vi.spyOn(window.termi.settings, 'update');
-  const store = await import('../../../src/renderer/appStore');
+  const store = await import('@/renderer/appStore');
   await store.init();
   return { store, update };
 }

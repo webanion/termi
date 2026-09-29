@@ -11,6 +11,11 @@ const ELECTRON = {
   group: ['electron', 'electron/*'],
   message: 'Only the main process and the preload may import electron.',
 };
+// A path that climbs out of its folder, unless it leaves src for assets/ or package.json.
+const PARENT = {
+  regex: '^(\\.\\./)+(?!\\.\\./|assets/|package\\.json$)',
+  message: 'Import from another folder of src with @/, as in @/shared/types.',
+};
 
 export default [
   {
@@ -37,11 +42,12 @@ export default [
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       'no-eval': 'error',
       'no-new-func': 'error',
+      'no-restricted-imports': ['error', { patterns: [PARENT] }],
     },
   },
   {
     files: ['src/renderer/**/*.{ts,tsx}'],
-    rules: { 'no-restricted-imports': ['error', { patterns: [NODE, ELECTRON] }] },
+    rules: { 'no-restricted-imports': ['error', { patterns: [PARENT, NODE, ELECTRON] }] },
   },
   {
     files: ['src/renderer/**/*.{ts,tsx}'],
@@ -50,12 +56,12 @@ export default [
   // Shared code is loaded by every process, the sandboxed renderer included.
   {
     files: ['src/shared/**/*.ts'],
-    rules: { 'no-restricted-imports': ['error', { patterns: [NODE, ELECTRON] }] },
+    rules: { 'no-restricted-imports': ['error', { patterns: [PARENT, NODE, ELECTRON] }] },
   },
   // The MCP server runs under plain Node.
   {
     files: ['src/mcp/**/*.ts'],
-    rules: { 'no-restricted-imports': ['error', { patterns: [ELECTRON] }] },
+    rules: { 'no-restricted-imports': ['error', { patterns: [PARENT, ELECTRON] }] },
   },
   prettier,
 ];
