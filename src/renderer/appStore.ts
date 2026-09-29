@@ -3,7 +3,7 @@
 // main, MCP edits to the settings file), so the IPC listeners are registered here, once, in
 // init(), never in a component.
 
-import { LAYOUTS, type Layout } from '../shared/layouts';
+import { fittingLayout, layoutIds, type Layout } from '../shared/layouts';
 import { MAX_TERMINALS } from '../shared/savedCommands';
 import type { AppInfo, PtyCreated, SavedCommand, Settings, WindowState } from '../shared/types';
 import {
@@ -60,7 +60,7 @@ export interface DialogState {
   token: number; // changes on every open, so the form starts fresh
 }
 
-export type Overlay = 'guide' | 'shortcuts' | 'palette';
+export type Overlay = 'guide' | 'shortcuts' | 'palette' | 'launcher';
 
 export interface AppState {
   info: AppInfo;
@@ -70,7 +70,7 @@ export interface AppState {
   leavingId: number | null; // the tab that was active and is fading out
   closing: ClosingTab[]; // closed tabs, kept while they fade out
   dialog: DialogState | null;
-  overlay: Overlay | null; // the guide, the shortcut sheet or the command palette
+  overlay: Overlay | null; // the guide, the shortcut sheet, the command palette or the launcher
   guidePage: number;
   toast: { text: string; visible: boolean };
   sidebarDrop: boolean; // files are dragged over the sidebar
@@ -147,9 +147,7 @@ export function readyTabs(tabs: TabState[]): TabState[] {
 }
 
 export function layoutFor(tab: TabState): Layout | null {
-  const options = LAYOUTS[tab.panes.length];
-  if (!options) return null;
-  return options.find((l) => l.id === tab.layout) || options[0] || null;
+  return fittingLayout(tab.panes.length, tab.layout) ?? null;
 }
 
 export function isBusy(pane: PaneState): boolean {
@@ -483,12 +481,21 @@ export interface CommandInput {
   terminals: { command: string }[];
   cwd: string;
   autoStart: boolean;
+  layout?: string;
+}
+
+// Drop a layout that does not fit the command's number of terminals, as the MCP server does.
+function withFittingLayout(cmd: SavedCommand): SavedCommand {
+  const { layout, ...rest } = cmd;
+  return layout && layoutIds(cmd.terminals.length)?.includes(layout) ? { ...rest, layout } : rest;
 }
 
 export async function saveCommand(editingId: string | null, data: CommandInput): Promise<void> {
   const commands = editingId
-    ? state.settings.commands.map((c) => (c.id === editingId ? { ...c, ...data } : c))
-    : [...state.settings.commands, { id: uid(), ...data }];
+    ? state.settings.commands.map((c) =>
+        c.id === editingId ? withFittingLayout({ ...c, ...data }) : c,
+      )
+    : [...state.settings.commands, withFittingLayout({ id: uid(), ...data })];
   await saveSettings({ commands });
   // Keep the name of a running tab in step with its command.
   if (editingId) {
@@ -592,6 +599,7 @@ const OVERLAYS: Record<string, Overlay> = {
   'show-guide': 'guide',
   'show-shortcuts': 'shortcuts',
   'command-palette': 'palette',
+  'run-saved-command': 'launcher',
 };
 
 export function openOverlay(overlay: Overlay): void {

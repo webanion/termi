@@ -72,6 +72,7 @@ export function buildMenu(send: SendEvent): void {
         item('new-terminal'),
         item('split-terminal'),
         item('new-command'),
+        item('run-saved-command'),
         { type: 'separator' },
         item('close-terminal'),
         ...(isMac

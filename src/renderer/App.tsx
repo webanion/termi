@@ -1,4 +1,5 @@
 import { CommandDialog } from './CommandDialog';
+import { CommandLauncher } from './CommandLauncher';
 import { CommandPalette } from './CommandPalette';
 import { GuideDialog } from './GuideDialog';
 import { MainHeader } from './MainHeader';
@@ -22,6 +23,7 @@ export function App() {
       <GuideDialog />
       <ShortcutSheet />
       <CommandPalette />
+      <CommandLauncher />
     </>
   );
 }

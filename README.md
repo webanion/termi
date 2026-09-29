@@ -11,9 +11,10 @@ A terminal app for macOS and Linux with a warm dark theme, saved commands that o
 ## What it does
 
 - A sidebar with the running terminals at the top and your saved commands below.
-- A saved command can run up to 4 terminals in one tab, for example an API server, a web server and a plain shell for one project. Add them with "Add terminal" in the saved command dialog. An empty command opens a plain shell. When a tab has more than one terminal, a layout control shows on the right of the header, and Termi remembers the layout for each saved command.
+- A saved command can run up to 4 terminals in one tab, for example an API server, a web server and a plain shell for one project. Add them with "Add terminal" in the saved command dialog. An empty command opens a plain shell. Pick how the terminals are arranged under Layout in the same dialog, or with the layout control that shows on the right of the header when a tab has more than one terminal. Termi remembers the layout for each saved command.
 - Split any tab to add a plain shell to it, up to 4 terminals, with the split button on the right of the header or ⌘D (Ctrl+Shift+D on Linux). The new shell starts in the folder the tab started in. A split is not saved to a saved command, and while a split tab has more terminals than its saved command, Termi does not save its layout.
 - Saved commands can start when Termi opens (the bolt icon).
+- Press ⌘P (Ctrl+Shift+O on Linux) to run a saved command from the keyboard. A panel lists your saved commands. Type part of a name and press Enter: Termi starts the command, or goes to its tab if it is already running.
 - Select text in a terminal to copy it. A double-click copies a word, and a triple-click copies a line.
 - Drop files or folders from Finder or the file manager on a terminal to type their paths, quoted for the shell, as Terminal.app does. Nothing runs until you press Enter, and in a split tab the paths go to the terminal under the pointer. This is how a tool like Claude Code attaches a dropped image.
 - Drop a folder on the sidebar to open a new terminal in it. A dropped file opens one in the folder it is in. One drop opens up to 4 terminals.
@@ -88,6 +89,7 @@ Releases are made by the Release workflow in GitHub Actions, never by hand. Run 
 | Split terminal | ⌘D | Ctrl+Shift+D |
 | Close terminal | ⌘W | Ctrl+Shift+W |
 | New saved command | ⇧⌘N | Ctrl+Shift+N |
+| Run a saved command | ⌘P | Ctrl+Shift+O |
 | Go to terminal 1 to 9 | ⌘1 to ⌘9 | Alt+1 to Alt+9 |
 | Previous and next terminal | ⇧⌘[ and ⇧⌘] | Ctrl+Page Up and Ctrl+Page Down |
 | Previous and next pane in a split tab | ⌘[ and ⌘] | Ctrl+Alt+[ and Ctrl+Alt+] |
