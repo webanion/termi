@@ -15,6 +15,7 @@ A terminal app for macOS and Linux with a warm dark theme, saved commands that o
 - Split any tab to add a plain shell to it, up to 4 terminals, with the split button on the right of the header or ⌘D (Ctrl+Shift+D on Linux). The new shell starts in the folder the tab started in. A split is not saved to a saved command, and while a split tab has more terminals than its saved command, Termi does not save its layout.
 - Saved commands can start when Termi opens (the bolt icon).
 - Select text in a terminal to copy it. A double-click copies a word, and a triple-click copies a line.
+- Right-click a terminal for Copy, Paste, Select All and Clear Buffer. On a link, the menu can also open the link in your browser or copy its address.
 - The sidebar footer shows CPU use, memory use, and download and upload speed. Termi checks them every 1.5 seconds, and stops while the window is minimized.
 - Termi reopens at the same window position and size. If that display is gone, the window moves to the main display.
 - The header holds the system's own window controls: the traffic lights on the left on macOS, and minimize, maximize and close on the right on Linux.
