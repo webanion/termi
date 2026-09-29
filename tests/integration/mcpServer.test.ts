@@ -5,7 +5,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { SETTINGS_VERSION } from '../../src/shared/settings';
+import { SETTINGS_VERSION } from '@/shared/settings';
 
 const SERVER = path.join(__dirname, '..', '..', 'out', 'main', 'mcpServer.js');
 

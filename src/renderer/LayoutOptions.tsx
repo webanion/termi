@@ -1,7 +1,7 @@
 import type { KeyboardEvent, Ref } from 'react';
 import { cx } from './cx';
 import { LayoutIcon } from './LayoutIcon';
-import type { Layout } from '../shared/layouts';
+import type { Layout } from '@/shared/layouts';
 
 const STEPS: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
 

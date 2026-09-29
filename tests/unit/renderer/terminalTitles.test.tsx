@@ -5,12 +5,12 @@ import './stubTermi';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import type { PaneState, TabState } from '../../../src/renderer/appStore';
-import type { SavedCommand } from '../../../src/shared/types';
+import type { PaneState, TabState } from '@/renderer/appStore';
+import type { SavedCommand } from '@/shared/types';
 
 const created = vi.hoisted(() => [] as { paneId: string; command: string }[]);
 
-vi.mock('../../../src/renderer/terminalRuntime', () => ({
+vi.mock('@/renderer/terminalRuntime', () => ({
   createRuntime: (options: { paneId: string; command: string }) => {
     created.push(options);
     return {};
@@ -47,7 +47,7 @@ async function start() {
     fontSize: 13,
     guideSeen: true,
   });
-  const store = await import('../../../src/renderer/appStore');
+  const store = await import('@/renderer/appStore');
   await store.init();
   const tab = () => {
     const found = store.activeTab();
@@ -110,7 +110,7 @@ describe('the pane head', () => {
   });
 
   async function head(shown: PaneState, panes = 2) {
-    const { TerminalPane } = await import('../../../src/renderer/TerminalPane');
+    const { TerminalPane } = await import('@/renderer/TerminalPane');
     const others = Array.from({ length: panes - 1 }, (_, i) => pane({ id: `other${i}` }));
     const tab: TabState = {
       id: 1,

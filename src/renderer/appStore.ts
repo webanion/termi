@@ -3,8 +3,8 @@
 // main, MCP edits to the settings file), so the IPC listeners are registered here, once, in
 // init(), never in a component.
 
-import { fittingLayout, layoutIds, type Layout } from '../shared/layouts';
-import { MAX_TERMINALS } from '../shared/savedCommands';
+import { fittingLayout, layoutIds, type Layout } from '@/shared/layouts';
+import { MAX_TERMINALS } from '@/shared/savedCommands';
 import type {
   AppInfo,
   PtyCreated,
@@ -12,7 +12,7 @@ import type {
   SavedTerminal,
   Settings,
   WindowState,
-} from '../shared/types';
+} from '@/shared/types';
 import {
   allRuntimes,
   createRuntime,
@@ -521,6 +521,14 @@ export function setSelecting(paneId: string): void {
   selectingIn = paneId;
 }
 
+// A right-click in a pane asks main for the terminal's menu. xterm has already focused the pane
+// and, on macOS, selected the word under the mouse, so Copy acts on that word.
+export function showTerminalMenu(paneId: string): void {
+  const runtime = getRuntime(paneId);
+  if (!runtime) return;
+  api.showTerminalMenu({ hasSelection: runtime.term.hasSelection(), link: runtime.hoveredLink });
+}
+
 // ---------- Dropped files and folders ----------
 
 // A drop on a terminal types the quoted paths into it, and focuses it. In a split tab that is
@@ -752,6 +760,11 @@ const menuActions: Record<string, () => unknown> = {
     const tab = activeTab();
     const pane = tab && focusedPane(tab);
     if (pane) getRuntime(pane.id)?.term.clear();
+  },
+  'select-all': () => {
+    const tab = activeTab();
+    const pane = tab && focusedPane(tab);
+    if (pane) getRuntime(pane.id)?.term.selectAll();
   },
   'toggle-sidebar': toggleSidebar,
   'font-bigger': () => setFontSize(state.settings.fontSize + 1),

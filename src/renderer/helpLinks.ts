@@ -1,8 +1,8 @@
 // Links from the Help menu, all to the repository's pages on GitHub. The page opens them with
 // window.open, which main hands to the browser.
 
-import { REPO_URL } from '../shared/appActions';
-import type { AppInfo } from '../shared/types';
+import { REPO_URL } from '@/shared/appActions';
+import type { AppInfo } from '@/shared/types';
 
 const SYSTEMS: Record<string, string> = { darwin: 'macOS', linux: 'Linux', win32: 'Windows' };
 

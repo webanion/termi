@@ -8,9 +8,9 @@ import {
   readyTabs,
   type PaneState,
   type TabState,
-} from '../../../src/renderer/appStore';
-import { commandLabel, commandSummary } from '../../../src/renderer/commandText';
-import { formatBytes } from '../../../src/renderer/format';
+} from '@/renderer/appStore';
+import { commandLabel, commandSummary } from '@/renderer/commandText';
+import { formatBytes } from '@/renderer/format';
 
 const pane = (overrides: Partial<PaneState> = {}): PaneState => ({
   id: 'p1',

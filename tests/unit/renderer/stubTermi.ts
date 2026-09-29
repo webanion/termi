@@ -1,6 +1,6 @@
 // A stand-in for the window.termi bridge the preload gives the page, for renderer tests in jsdom.
 // Import it before anything from src/renderer, which reads window.termi when it loads.
-import type { Settings, TermiApi } from '../../../src/shared/types';
+import type { Settings, TermiApi } from '@/shared/types';
 
 const noop = () => {};
 const subscribe = () => noop;
@@ -29,6 +29,7 @@ const api: TermiApi = {
     onTitle: subscribe,
   },
   copyText: noop,
+  showTerminalMenu: noop,
   onStats: subscribe,
   pickFolder: async () => null,
   pathForFile: () => '',

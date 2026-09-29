@@ -1,8 +1,8 @@
 import { readSettings, SETTINGS_FILE, writeSettings } from './settingsFile';
 import { docsText, DOCS_URI } from './docs';
-import { layoutIds, LAYOUTS } from '../shared/layouts';
-import { keepTitles, MAX_TERMINALS, savedCommandError } from '../shared/savedCommands';
-import type { SavedCommand } from '../shared/types';
+import { layoutIds, LAYOUTS } from '@/shared/layouts';
+import { keepTitles, MAX_TERMINALS, savedCommandError } from '@/shared/savedCommands';
+import type { SavedCommand } from '@/shared/types';
 
 // An error the caller can fix, sent back as the tool's result instead of a protocol error.
 export class ToolError extends Error {}

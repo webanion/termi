@@ -5,6 +5,7 @@ import {
   isBusy,
   removePane,
   setSelecting,
+  showTerminalMenu,
   type PaneState,
   type TabState,
 } from './appStore';
@@ -43,8 +44,11 @@ export function TerminalPane({ tab, pane, area }: Props) {
       // The drop handler finds the pane under the pointer by this.
       data-pane-id={pane.id}
       style={area ? { gridArea: area } : undefined}
-      // Select to copy: the store copies the selection when the mouse press that started here ends.
-      onMouseDown={() => setSelecting(pane.id)}
+      // Select to copy: the store copies the selection when the mouse press that started here
+      // ends. Only the main button, so the word a right-click selects waits for the menu's Copy.
+      onMouseDown={(event) => {
+        if (event.button === 0) setSelecting(pane.id);
+      }}
       onFocus={() => focusPane(pane.id)}
     >
       <div className="pane-head" onClick={() => getRuntime(pane.id)?.focus()}>
@@ -68,7 +72,14 @@ export function TerminalPane({ tab, pane, area }: Props) {
           <CloseIcon />
         </button>
       </div>
-      <div className="pane-body" ref={host}></div>
+      <div
+        className="pane-body"
+        ref={host}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          showTerminalMenu(pane.id);
+        }}
+      ></div>
     </div>
   );
 }

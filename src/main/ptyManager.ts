@@ -4,8 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
 import * as pty from 'node-pty';
-import type { SendEvent } from '../shared/ipc';
-import type { PtyCreateOptions, PtyCreated } from '../shared/types';
+import type { SendEvent } from '@/shared/ipc';
+import type { PtyCreateOptions, PtyCreated } from '@/shared/types';
 
 const FLUSH_MS = 8; // group output into batches, so fast output does not flood IPC
 const TITLE_POLL_MS = 1000;

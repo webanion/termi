@@ -11,8 +11,8 @@ import { cx } from './cx';
 import { CloseIcon, FolderIcon, PlusIcon } from './Icons';
 import { LayoutOptions } from './LayoutOptions';
 import { useAppState } from './useAppState';
-import { fittingLayout, LAYOUTS } from '../shared/layouts';
-import { MAX_TERMINALS, MAX_TITLE, savedTerminal } from '../shared/savedCommands';
+import { fittingLayout, LAYOUTS } from '@/shared/layouts';
+import { MAX_TERMINALS, MAX_TITLE, savedTerminal } from '@/shared/savedCommands';
 
 interface Field {
   key: number;

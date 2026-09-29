@@ -3,7 +3,7 @@
 import './stubTermi';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../../../src/renderer/terminalRuntime', () => ({
+vi.mock('@/renderer/terminalRuntime', () => ({
   createRuntime: () => ({}),
   getRuntime: () => undefined,
   allRuntimes: () => [].values(),
@@ -23,7 +23,7 @@ async function startWith(guideSeen: boolean) {
   };
   vi.spyOn(window.termi.settings, 'get').mockResolvedValue(settings);
   const update = vi.spyOn(window.termi.settings, 'update');
-  const store = await import('../../../src/renderer/appStore');
+  const store = await import('@/renderer/appStore');
   await store.init();
   return { store, update };
 }

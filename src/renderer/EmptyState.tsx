@@ -1,7 +1,7 @@
 import logo from '../../assets/logo.svg';
 import { openCommandDialog, openTab } from './appStore';
 import { useAppState } from './useAppState';
-import { shortcutLabel } from '../shared/shortcuts';
+import { shortcutLabel } from '@/shared/shortcuts';
 
 export function EmptyState({ hidden }: { hidden: boolean }) {
   const platform = useAppState((s) => s.info.platform);

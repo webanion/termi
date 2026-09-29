@@ -7,7 +7,7 @@ import {
   shortcutAccelerator,
   shortcutLabel,
   type ShortcutInput,
-} from '../../../src/shared/shortcuts';
+} from '@/shared/shortcuts';
 
 // The accelerators the macOS menu had before the table, as written in menu.ts, and the defaults
 // of the roles that covered copy, paste and full screen.

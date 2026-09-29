@@ -4,7 +4,7 @@ import { terminalLabel } from './commandText';
 import { cx } from './cx';
 import { ReopenIcon } from './Icons';
 import { useAppState } from './useAppState';
-import { shortcutLabel } from '../shared/shortcuts';
+import { shortcutLabel } from '@/shared/shortcuts';
 
 interface Props {
   tab: TabState | undefined;

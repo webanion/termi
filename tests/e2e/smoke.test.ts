@@ -8,7 +8,7 @@ import os from 'os';
 import path from 'path';
 import { _electron, type ElectronApplication, type Page } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { SETTINGS_VERSION } from '../../src/shared/settings';
+import { SETTINGS_VERSION } from '@/shared/settings';
 
 const ROOT = path.join(__dirname, '..', '..');
 const ELECTRON = createRequire(import.meta.url)('electron') as unknown as string;
@@ -265,6 +265,68 @@ describe('Termi', () => {
     await added.locator('.pane-head .icon-btn').click();
     await until(async () => (await panes.count()) === 1);
     expect(await page.locator('#terminal-list .item').count()).toBe(tabs);
+  });
+
+  // The native menu cannot be clicked from Playwright, so main keeps each menu it would show, and
+  // the test clicks its items.
+  it('shows the terminal menu on a right-click, and pastes through it', async () => {
+    await app.evaluate(({ Menu }) => {
+      const record = globalThis as unknown as { menus: Electron.Menu[] };
+      record.menus = [];
+      Menu.prototype.popup = function (this: Electron.Menu) {
+        record.menus.push(this);
+      };
+    });
+    const menus = () =>
+      app.evaluate(() => (globalThis as unknown as { menus: Electron.Menu[] }).menus.length);
+    const items = () =>
+      app.evaluate(() => {
+        const { menus } = globalThis as unknown as { menus: Electron.Menu[] };
+        return (menus.at(-1)?.items ?? []).map(({ label, type, enabled }) => ({
+          label,
+          type,
+          enabled,
+        }));
+      });
+    const choose = (label: string) =>
+      app.evaluate((_electron, name) => {
+        const { menus } = globalThis as unknown as { menus: Electron.Menu[] };
+        const item = menus.at(-1)?.items.find((i) => i.label === name);
+        if (!item) throw new Error(`No menu item ${name}`);
+        item.click();
+      }, label);
+    const screen = page.locator('.tab-view.active .xterm-screen').first();
+    const box = await screen.boundingBox();
+    if (!box) throw new Error('The terminal has no size');
+    // The bottom right corner, below the prompt, where there is no text to select.
+    const corner = { x: box.width - 8, y: box.height - 8 };
+
+    await screen.click({ button: 'right', position: corner });
+    await until(async () => (await menus()) === 1);
+    const shown = await items();
+    expect(shown.map((i) => (i.type === 'separator' ? '-' : i.label))).toEqual([
+      'Copy',
+      'Paste',
+      '-',
+      'Select All',
+      'Clear Buffer',
+    ]);
+    // macOS selects the word under a right-click, and xterm may take the blank corner as one.
+    if (process.platform !== 'darwin') expect(shown[0]?.enabled).toBe(false);
+
+    // Two lines, which the shell runs on Enter whether or not it takes bracketed paste.
+    await app.evaluate(
+      ({ clipboard }, text) => clipboard.writeText(text),
+      `echo one > '${marker(11)}'\necho two > '${marker(12)}'`,
+    );
+    await choose('Paste');
+    await page.keyboard.press('Enter');
+    await until(() => fs.existsSync(marker(11)) && fs.existsSync(marker(12)));
+
+    await choose('Select All');
+    await screen.click({ button: 'right', position: corner });
+    await until(async () => (await menus()) === 2);
+    expect((await items())[0]).toMatchObject({ label: 'Copy', enabled: true });
   });
 
   it('types a dropped file into the terminal under the pointer, quoted for the shell', async () => {

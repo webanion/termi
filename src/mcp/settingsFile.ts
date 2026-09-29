@@ -1,7 +1,7 @@
 import os from 'os';
 import path from 'path';
-import { readJson, writeJson } from '../main/jsonFile';
-import { readSettingsFile, type SettingsFile } from '../shared/settings';
+import { readJson, writeJson } from '@/main/jsonFile';
+import { readSettingsFile, type SettingsFile } from '@/shared/settings';
 
 // The same folder Electron uses for app.getPath('userData') with the app name "Termi".
 function userDataDir(): string {

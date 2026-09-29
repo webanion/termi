@@ -50,6 +50,10 @@ There is no commit body. If a change needs explaining, the explanation belongs i
 
 When a directory already does something else consistently, follow the directory.
 
+## Imports
+
+A module imports from its own folder with `./`, and from any other folder of `src/` with `@/`, which is `src/`: `@/shared/types`, never `../shared/types`. Tests do the same, in `vi.mock()` and `await import()` too, so `@/renderer/appStore` rather than `../../../src/renderer/appStore`. Files outside `src/`, the logos in `assets/` and `package.json`, keep their relative paths. ESLint refuses a `../` import that `@/` could replace.
+
 ## Versions and releases
 
 Termi follows semantic versioning. Below 1.0 a breaking change bumps the minor version and anything else the patch. From 1.0 on, it is plain semver. Breaking means a user's existing setup stops working: a settings file that cannot be upgraded, an MCP tool removed or its contract changed, or a shortcut removed.

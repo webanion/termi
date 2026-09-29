@@ -3,7 +3,7 @@ import { CommandRow } from './CommandRow';
 import { BoltIcon, PlusIcon } from './Icons';
 import { useAppState } from './useAppState';
 import { usePresence } from './usePresence';
-import { shortcutLabel } from '../shared/shortcuts';
+import { shortcutLabel } from '@/shared/shortcuts';
 
 export function CommandList() {
   const commands = useAppState((s) => s.settings.commands);

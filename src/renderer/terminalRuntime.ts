@@ -9,7 +9,7 @@ import { WebglAddon } from '@xterm/addon-webgl';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import '@xterm/xterm/css/xterm.css';
 import { TERMINAL_FONT, THEME } from './theme';
-import type { PtyCreated } from '../shared/types';
+import type { PtyCreated } from '@/shared/types';
 
 export interface RuntimeEvents {
   onTitle: (paneId: string, title: string) => void;
@@ -36,6 +36,7 @@ export class TerminalRuntime {
   private readonly cwd: string | undefined;
   private readonly events: RuntimeEvents;
   ptyId: number | null = null;
+  hoveredLink: string | null = null; // the web link under the mouse, for the right-click menu
   private opened = false;
   private spawned = false;
   private disposed = false;
@@ -60,9 +61,15 @@ export class TerminalRuntime {
     this.term.loadAddon(this.fitAddon);
     // Links open in the browser with Cmd+click (Ctrl+click on other systems).
     this.term.loadAddon(
-      new WebLinksAddon((event, uri) => {
-        if (event.metaKey || event.ctrlKey) window.open(uri);
-      }),
+      new WebLinksAddon(
+        (event, uri) => {
+          if (event.metaKey || event.ctrlKey) window.open(uri);
+        },
+        {
+          hover: (_event, uri) => (this.hoveredLink = uri),
+          leave: () => (this.hoveredLink = null),
+        },
+      ),
     );
     this.term.onData((data) => {
       if (this.ptyId !== null) window.termi.pty.write(this.ptyId, data);

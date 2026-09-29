@@ -4,7 +4,7 @@ import {
   DEFAULT_SETTINGS,
   readSettingsFile,
   SETTINGS_VERSION,
-} from '../../../src/shared/settings';
+} from '@/shared/settings';
 
 describe('readSettingsFile', () => {
   it('gives the defaults for a missing or broken file', () => {

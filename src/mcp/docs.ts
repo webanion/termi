@@ -1,7 +1,7 @@
 import { version } from '../../package.json';
 import guideText from './docs.md?raw';
 import { SETTINGS_FILE } from './settingsFile';
-import { LAYOUTS } from '../shared/layouts';
+import { LAYOUTS } from '@/shared/layouts';
 import type { Tool } from './tools';
 
 export const DOCS_URI = 'termi://docs';

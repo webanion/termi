@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { activeTab, layoutFor, setLayout, type TabState } from './appStore';
 import { cx } from './cx';
 import { LayoutOptions } from './LayoutOptions';
-import { LAYOUTS, type Layout } from '../shared/layouts';
+import { LAYOUTS, type Layout } from '@/shared/layouts';
 
 // The layout picker for a tab with more than one terminal. When it hides, the last buttons stay
 // so they fade out with it.

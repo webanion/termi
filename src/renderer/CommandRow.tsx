@@ -12,8 +12,8 @@ import { cx } from './cx';
 import { BoltIcon, EditIcon, PlayIcon, StopIcon } from './Icons';
 import { useAppState } from './useAppState';
 import type { Presence } from './usePresence';
-import { MAX_TERMINALS } from '../shared/savedCommands';
-import type { SavedCommand } from '../shared/types';
+import { MAX_TERMINALS } from '@/shared/savedCommands';
+import type { SavedCommand } from '@/shared/types';
 
 interface Props {
   cmd: SavedCommand;
