@@ -51,6 +51,11 @@ const api: TermiApi = {
 
   pickFolder: (defaultPath) => invoke('dialog:pick-folder', defaultPath),
 
+  loginItem: {
+    get: () => invoke('login-item:get'),
+    set: (open) => invoke('login-item:set', open),
+  },
+
   // The path of a file or folder dropped on the page, read here without asking main. The page
   // cannot read it itself, since Electron removed File.path. A File that is not on disk gives ''.
   pathForFile: (file) => webUtils.getPathForFile(file),

@@ -19,6 +19,8 @@ export interface InvokeChannels {
   'settings:update': { args: [patch: Partial<Settings>]; result: Settings };
   'pty:create': { args: [options: PtyCreateOptions]; result: PtyCreated };
   'dialog:pick-folder': { args: [defaultPath?: string]; result: string | null };
+  'login-item:get': { args: []; result: boolean | null };
+  'login-item:set': { args: [open: boolean]; result: boolean | null };
   'window:get-state': { args: []; result: WindowState };
 }
 
