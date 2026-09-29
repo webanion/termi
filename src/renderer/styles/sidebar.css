@@ -164,6 +164,15 @@
   white-space: nowrap;
 }
 
+/* How many of a running saved command's terminals are open, while some are closed. */
+.item-count {
+  flex: none;
+  font-size: 10.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* The buttons always keep their space and only fade in on hover, so nothing in the row moves. */
 .item-actions {
   flex: none;

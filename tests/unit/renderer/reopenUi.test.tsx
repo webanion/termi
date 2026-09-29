@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-// The header's Reopen control: it shows while the active tab's saved command has closed
-// terminals, and its menu lists them by command, reopens one or all, and works from the keyboard.
+// A saved command's closed terminals in the page. The header's Reopen control shows while the
+// active tab has any, and its menu lists them by command, reopens one or all, and works from the
+// keyboard. The saved command's row in the sidebar says how many of its terminals are open.
 import './stubTermi';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -50,7 +51,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-// The header of a running saved command's tab, with its shells started.
+// The header and the saved commands of a running saved command's tab, with its shells started.
 async function renderHeader() {
   vi.resetModules();
   created.length = 0;
@@ -63,13 +64,21 @@ async function renderHeader() {
   });
   const store = await import('../../../src/renderer/appStore');
   const { MainHeader } = await import('../../../src/renderer/MainHeader');
+  const { CommandList } = await import('../../../src/renderer/CommandList');
   await store.init();
   for (const [i, runtime] of created.entries())
     runtime.events.onPtyCreated(runtime.paneId, { id: i + 1, pid: i + 1, title: 'zsh' });
   container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
-  act(() => root.render(<MainHeader />));
+  act(() =>
+    root.render(
+      <>
+        <MainHeader />
+        <CommandList />
+      </>,
+    ),
+  );
   const tab = () => {
     const found = store.activeTab();
     if (!found) throw new Error('No active tab');
@@ -169,5 +178,32 @@ describe('the Reopen control', () => {
     close(1);
     await act(() => store.deleteCommand(trio.id));
     expect(control()?.classList.contains('show')).toBe(false);
+  });
+});
+
+describe("the saved command's row", () => {
+  const count = () => container.querySelector('#command-list .item-count')?.textContent ?? '';
+
+  it('says how many of its terminals are open while some are closed', async () => {
+    const { store, tab, close } = await renderHeader();
+    expect(count()).toBe('');
+    close(1);
+    expect(count()).toBe('2 of 3');
+    close(2);
+    expect(count()).toBe('1 of 3');
+    act(() => store.reopenTerminals(tab().id));
+    expect(count()).toBe('');
+  });
+
+  it('only switches to the tab on a click, and reopens nothing', async () => {
+    const { store, tab, close } = await renderHeader();
+    const first = tab().id;
+    close(1);
+    act(() => store.openTab());
+    expect(store.activeTab()?.id).not.toBe(first);
+    act(() => container.querySelector<HTMLElement>('#command-list .item')?.click());
+    expect(store.activeTab()?.id).toBe(first);
+    expect(tab().panes.map((p) => p.terminal)).toEqual([0, 2]);
+    expect(count()).toBe('2 of 3');
   });
 });
