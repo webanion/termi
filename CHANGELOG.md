@@ -2,6 +2,68 @@
 
 Every release of Termi, newest first. Each section is written by `scripts/changelog.mjs` from the Conventional Commits since the release before it, and is that version's GitHub Release notes.
 
+## v0.1.3 (2026-09-29)
+
+[Compare with v0.1.2](https://github.com/webanion/termi/compare/v0.1.2...v0.1.3)
+
+### Features
+
+- **renderer:** leave text drags to the browser so text still drops into a field ([792f0c8](https://github.com/webanion/termi/commit/792f0c8e12a24b12d699ec312ff2373a1a49be26), [#67](https://github.com/webanion/termi/pull/67))
+- **e2e:** check that a saved command's closed terminal reopens in its place ([69c520a](https://github.com/webanion/termi/commit/69c520a129f601b8afb2c8820c074608f98b6a83), [#69](https://github.com/webanion/termi/pull/69))
+- **guide:** explain terminal titles ([db20773](https://github.com/webanion/termi/commit/db20773015962ccd0ff75a6b85f0f3a6baadbb52), [#70](https://github.com/webanion/termi/pull/70))
+- **dialog:** call the pane head a header in the title hint ([243d8ed](https://github.com/webanion/termi/commit/243d8ed215c892c5e2700e734045b439a6f7e6b6), [#70](https://github.com/webanion/termi/pull/70))
+- **guide:** explain how to reopen a saved command's closed terminals ([4f72ce5](https://github.com/webanion/termi/commit/4f72ce53541507c7037bd2878013979d5806576f), [#69](https://github.com/webanion/termi/pull/69))
+- **guide:** explain how to resize split terminals ([f036173](https://github.com/webanion/termi/commit/f03617374f0b29a726b8ba1be7eed893e7d397f3), [#68](https://github.com/webanion/termi/pull/68))
+- **mcp:** keep terminal titles through edits and list them ([3542537](https://github.com/webanion/termi/commit/35425376c2c613c3d6cae1e9fae0539aefd9e45a), [#70](https://github.com/webanion/termi/pull/70))
+- **terminals:** reach the resize handles with Tab before the terminals ([c3e6262](https://github.com/webanion/termi/commit/c3e6262a61840eb989a90af53e4c4ecabde76a62), [#68](https://github.com/webanion/termi/pull/68))
+- **sidebar:** show how many of a saved command's terminals are open ([4099d6c](https://github.com/webanion/termi/commit/4099d6c563b67f039c14091782cd34bd436d0216), [#69](https://github.com/webanion/termi/pull/69))
+- **renderer:** let the drop tests' terminals fit, as a real one does ([0a5ed09](https://github.com/webanion/termi/commit/0a5ed0906a80278c5daceb0668f5cbd865a03027), [#67](https://github.com/webanion/termi/pull/67))
+- **terminals:** resize split panes by dragging the line between them ([77159be](https://github.com/webanion/termi/commit/77159bec0939ef70f25be8a71857174e20292c3f), [#68](https://github.com/webanion/termi/pull/68))
+- **header:** add a Reopen menu that lists a saved command's closed terminals ([eafe8c0](https://github.com/webanion/termi/commit/eafe8c0365ef7649a7a52c555a7843b78f0b5ad4), [#69](https://github.com/webanion/termi/pull/69))
+- **renderer:** show a terminal's title in its pane head ([d6558ea](https://github.com/webanion/termi/commit/d6558ea443f148707f3b88ec5de6111ef9286f8b), [#70](https://github.com/webanion/termi/pull/70))
+- **guide:** explain dropping files and folders ([29f1bc2](https://github.com/webanion/termi/commit/29f1bc25969ffce3d2f0310f2739ef0a278cef85), [#67](https://github.com/webanion/termi/pull/67))
+- **sidebar:** open a terminal in a folder dropped on the sidebar ([5c6ce5d](https://github.com/webanion/termi/commit/5c6ce5dc3193463d6e58f5aa6b63472ab536cbea), [#67](https://github.com/webanion/termi/pull/67))
+- **dialog:** add a title field to each terminal of a saved command ([fbf5c68](https://github.com/webanion/termi/commit/fbf5c68c16ff924b19ab75293c49753a848ecf47), [#70](https://github.com/webanion/termi/pull/70))
+- **guide:** explain the layout picker in the saved command dialog ([dfb34a6](https://github.com/webanion/termi/commit/dfb34a6099d1d3b021f6775fe1317e20b73f7ab6), [#65](https://github.com/webanion/termi/pull/65))
+- **guide:** explain how to run a saved command from the keyboard ([35a3783](https://github.com/webanion/termi/commit/35a3783e8a68071202a7cbaced077c461572de80), [#66](https://github.com/webanion/termi/pull/66))
+- **renderer:** search and start saved commands from a panel on Cmd+P ([0f34425](https://github.com/webanion/termi/commit/0f34425f243fe87738e7edb91ccdd6bcd999fbb6), [#66](https://github.com/webanion/termi/pull/66))
+- **dialog:** pick the layout in the saved command dialog ([915fe76](https://github.com/webanion/termi/commit/915fe76360cabf7ac14349598545a42ac8b746c3), [#65](https://github.com/webanion/termi/pull/65))
+- **shortcuts:** add a Reopen Closed Terminals action to the menu, palette and keys ([7c47789](https://github.com/webanion/termi/commit/7c47789f788afea082de28f49c3347e89035ff24), [#69](https://github.com/webanion/termi/pull/69))
+- **renderer:** type a dropped file's path into the terminal under the pointer ([e946dea](https://github.com/webanion/termi/commit/e946dea5831f7658ac835585dae39d7239c6678a), [#67](https://github.com/webanion/termi/pull/67))
+- **terminals:** add the track math for resizing split panes ([544f35f](https://github.com/webanion/termi/commit/544f35fa11589d39724b50035d3f878113d9fe16), [#68](https://github.com/webanion/termi/pull/68))
+- **renderer:** reopen a saved command's closed terminals in their places ([422bed7](https://github.com/webanion/termi/commit/422bed70065cb392092d9fecd7b26fa6e1d69042), [#69](https://github.com/webanion/termi/pull/69))
+- **shared:** add an optional title to each terminal of a saved command ([150ccd2](https://github.com/webanion/termi/commit/150ccd2f9b409a86895e3b8227b00e93de100e27), [#70](https://github.com/webanion/termi/pull/70))
+- **header:** share the layout radio group and select a layout with the arrow keys ([ef2f4bc](https://github.com/webanion/termi/commit/ef2f4bc433eecda401f11a4f477eb15b100145d7), [#65](https://github.com/webanion/termi/pull/65))
+- **renderer:** share the command palette's search field and list ([a8db198](https://github.com/webanion/termi/commit/a8db198f9e88887623f7c3b9d831a11e6700e5e0), [#66](https://github.com/webanion/termi/pull/66))
+- **renderer:** drop a saved layout that no longer fits the number of terminals ([21ac85a](https://github.com/webanion/termi/commit/21ac85a5ef9063ca5e5dc16e33644550fa1933ca), [#65](https://github.com/webanion/termi/pull/65))
+- **preload:** give the page the path of a dropped file ([21c284b](https://github.com/webanion/termi/commit/21c284b40a98df3fc2b3e43014a8980782d6da71), [#67](https://github.com/webanion/termi/pull/67))
+- **guide:** explain the terminal right-click menu ([fa666ef](https://github.com/webanion/termi/commit/fa666ef7c7a11eb6b76502fe31e3cd341f883408), [#64](https://github.com/webanion/termi/pull/64))
+- **terminals:** show a copy and paste menu on right-click ([8e346ab](https://github.com/webanion/termi/commit/8e346ab1f4475693aa9f377c059cc96e316a2edd), [#64](https://github.com/webanion/termi/pull/64))
+- **guide:** explain how to split a tab ([b96d41b](https://github.com/webanion/termi/commit/b96d41bc511a4b9f628df21fa0eb5960ddd3490d), [#48](https://github.com/webanion/termi/pull/48))
+- **header:** add a split button next to the layout control ([627e5e0](https://github.com/webanion/termi/commit/627e5e0177153d4ad65b19b5c220d7fd9734dc2c), [#48](https://github.com/webanion/termi/pull/48))
+- **terminals:** split a tab to add a plain shell to it ([f318f51](https://github.com/webanion/termi/commit/f318f51300ed79610ae3e2927ef22cad23cedd31), [#48](https://github.com/webanion/termi/pull/48))
+
+### Fixes
+
+- **e2e:** ask for SGR mouse reports in the right-click test, as tmux and vim do ([88ffa6e](https://github.com/webanion/termi/commit/88ffa6e76a2337dd68da5f16d2e0ca24f871cb1c), [#74](https://github.com/webanion/termi/pull/74))
+- **guide:** say which right-click opens the menu over a program that takes the mouse ([1e085d0](https://github.com/webanion/termi/commit/1e085d0018fed7ce002e0a624df4471ea75f97f8), [#74](https://github.com/webanion/termi/pull/74))
+- **terminals:** leave a right-click to a program that takes the mouse ([34db0a4](https://github.com/webanion/termi/commit/34db0a482d91766799d4603780bea85ee78444cc), [#74](https://github.com/webanion/termi/pull/74))
+- **renderer:** inset the command palette search field ([849eb88](https://github.com/webanion/termi/commit/849eb88de17a5ecd7f8b3518c6426cec97878160), [#62](https://github.com/webanion/termi/pull/62))
+- **sidebar:** size the speed column for the widest speed ([ac0c08a](https://github.com/webanion/termi/commit/ac0c08a134701f577bb7167b41e586260e886d3e), [#47](https://github.com/webanion/termi/pull/47))
+- **stats:** pick the byte unit after rounding ([551d43d](https://github.com/webanion/termi/commit/551d43d62eb23a5c4f66bf950d1b80041749de6e), [#47](https://github.com/webanion/termi/pull/47))
+
+### Refactoring
+
+- import the context menu and its tests through @/ ([d840bd1](https://github.com/webanion/termi/commit/d840bd1394b9082a8932ade004cd5c6b27e6b3d9), [#72](https://github.com/webanion/termi/pull/72))
+- **lint:** refuse a ../ import that @/ could replace ([a5370c2](https://github.com/webanion/termi/commit/a5370c273330fcc35d3c61935d9961634389fd76), [#72](https://github.com/webanion/termi/pull/72))
+- import from other folders of src through @/ ([db526df](https://github.com/webanion/termi/commit/db526df423d64ad29d6412f04ed84285644eb1f6), [#72](https://github.com/webanion/termi/pull/72))
+- **build:** resolve @/ to src in the builds, the typecheck and the tests ([5a1f662](https://github.com/webanion/termi/commit/5a1f6627a7eedf704ad1862c2d2f0b614a21613c), [#72](https://github.com/webanion/termi/pull/72))
+
+### Tests
+
+- **renderer:** give the terminal menu test's fake runtime fit and focus ([c011293](https://github.com/webanion/termi/commit/c011293b2e647236a606fe1d2768d62b43f56430), [#73](https://github.com/webanion/termi/pull/73))
+- **e2e:** drop on the first pane past the resize handles ([6c0bef1](https://github.com/webanion/termi/commit/6c0bef11af0fb3e8144055e1a9a6f0d55d90be3a), [#68](https://github.com/webanion/termi/pull/68))
+
 ## v0.1.2 (2026-09-27)
 
 [Compare with v0.1.1](https://github.com/webanion/termi/compare/v0.1.1...v0.1.2)
