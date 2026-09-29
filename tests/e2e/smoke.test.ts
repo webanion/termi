@@ -243,7 +243,7 @@ describe('Termi', () => {
     await page.keyboard.type('cp ');
     await second.locator('.xterm-helper-textarea').focus();
     await until(async () => (await second.getAttribute('class'))?.includes('focused') ?? false);
-    await dragFiles('.tab-view.active .term-pane:first-child .pane-body', [dropped], ['drop']);
+    await dragFiles('.tab-view.active .term-pane .pane-body', [dropped], ['drop']);
     await until(async () => (await first.getAttribute('class'))?.includes('focused') ?? false);
 
     // The drop took focus, so the rest of the command goes to the same terminal.
