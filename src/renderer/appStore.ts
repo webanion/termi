@@ -30,6 +30,7 @@ const api = window.termi;
 export interface PaneState {
   id: string;
   command: string;
+  title?: string; // from its saved command, shown in the head in place of the command
   proc: string; // the program in the foreground
   shellName: string;
   attached: boolean; // its shell is running
@@ -77,7 +78,7 @@ export interface AppState {
 
 export interface TabOptions {
   name?: string;
-  commands?: string[];
+  terminals?: SavedTerminal[];
   cwd?: string;
   commandId?: string;
   layout?: string;
@@ -230,10 +231,11 @@ export function focusIfCurrent(paneId: string): void {
 
 // A pane and its runtime. An empty command opens a plain shell. The shell starts when the
 // pane's terminal is first shown, at the size it has there.
-function createPane(command: string, cwd: string | undefined): PaneState {
+function createPane({ command, title }: SavedTerminal, cwd: string | undefined): PaneState {
   const pane: PaneState = {
     id: `p${nextPaneId++}`,
     command,
+    ...(title ? { title } : {}),
     proc: '',
     shellName: '',
     attached: false,
@@ -248,9 +250,15 @@ function createPane(command: string, cwd: string | undefined): PaneState {
   return pane;
 }
 
-// `commands` has one entry per pane.
-function createTab({ name, commands = [''], cwd, commandId, layout }: TabOptions = {}): TabState {
-  const panes = commands.slice(0, MAX_TERMINALS).map((command) => createPane(command, cwd));
+// `terminals` has one entry per pane.
+function createTab({
+  name,
+  terminals = [{ command: '' }],
+  cwd,
+  commandId,
+  layout,
+}: TabOptions = {}): TabState {
+  const panes = terminals.slice(0, MAX_TERMINALS).map((terminal) => createPane(terminal, cwd));
   const tab: TabState = {
     id: nextTabId++,
     name: name || '',
@@ -363,7 +371,7 @@ export function splitTab(id: number): void {
     showToast(`A tab holds at most ${MAX_TERMINALS} terminals`);
     return;
   }
-  const pane = createPane('', tab.cwd);
+  const pane = createPane({ command: '' }, tab.cwd);
   updateTab(id, (t) => ({ ...t, panes: [...t.panes, pane], focusedPaneId: pane.id }));
   if (id === state.activeId) requestAnimationFrame(() => fitTab(id));
 }
@@ -426,10 +434,15 @@ function uid(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
+// Titles name the terminals of a command with more than one. With 1, the name on the tab does.
 function commandTabOptions(cmd: SavedCommand): TabOptions {
+  const titled = cmd.terminals.length > 1;
   return {
     name: cmd.name,
-    commands: cmd.terminals.map((t) => t.command),
+    terminals: cmd.terminals.map((t) => ({
+      command: t.command,
+      title: titled ? t.title?.trim() : '',
+    })),
     cwd: cmd.cwd,
     commandId: cmd.id,
     layout: cmd.layout,

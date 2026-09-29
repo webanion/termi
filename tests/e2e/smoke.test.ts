@@ -44,7 +44,12 @@ const clickMenu = (id: string) =>
 
 beforeAll(async () => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'termi-e2e-'));
-  const quad = [1, 2, 3, 4].map((n) => ({ command: `echo ${n} > '${marker(n)}'` }));
+  // Terminals 1 and 3 have a title, which their pane heads show in place of the command.
+  const titles = ['First', undefined, 'Third', undefined];
+  const quad = [1, 2, 3, 4].map((n) => ({
+    command: `echo ${n} > '${marker(n)}'`,
+    ...(titles[n - 1] ? { title: titles[n - 1] } : {}),
+  }));
   fs.writeFileSync(
     path.join(dir, 'settings.json'),
     JSON.stringify({
@@ -95,6 +100,14 @@ describe('Termi', () => {
     expect(await page.locator('.tab-view.active .term-pane').count()).toBe(4);
     expect(await page.locator('.tab-view.active').getAttribute('style')).toContain('"a b" "c d"');
     expect(await text('#title-text')).toBe('Quad');
+    const heads = page.locator('.tab-view.active .pane-name');
+    expect((await heads.allTextContents()).map((t) => t.replace(dir, '<dir>'))).toEqual([
+      'First',
+      "echo 2 > '<dir>/marker-2'",
+      'Third',
+      "echo 4 > '<dir>/marker-4'",
+    ]);
+    expect(await heads.first().getAttribute('title')).toBe(`echo 1 > '${marker(1)}'`);
   });
 
   // The file the test starts from is version 1, from before the guide, like an upgrade.
