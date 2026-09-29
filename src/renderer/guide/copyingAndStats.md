@@ -4,7 +4,7 @@
 - {copy} and {paste} copy and paste too.
 - Right-click a terminal for Copy, Paste, Select All and Clear Buffer. On a link, the menu can also open the link or copy its address. While a program takes the mouse, as tmux and vim can, a right-click is the program's, and {menu-click} opens the menu.
 - {link-click} on a link opens it in your browser.
-- {font-bigger}, {font-smaller} and {font-reset} change the text size, and {toggle-sidebar} hides the sidebar.
+- {font-bigger}, {font-smaller} and {font-reset} change the text size, and {toggle-sidebar} hides the sidebar. The settings show both, next to the cursor.
 - {command-palette} finds any action by name, and {show-shortcuts} lists every shortcut.
 
 The bottom of the sidebar shows CPU use, memory use, and download and upload speed. Termi checks them every 1.5 seconds, and stops while the window is minimized.
