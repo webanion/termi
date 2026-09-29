@@ -8,6 +8,7 @@ import os from 'os';
 import path from 'path';
 import { _electron, type ElectronApplication, type Page } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { SETTINGS_VERSION } from '../../src/shared/settings';
 
 const ROOT = path.join(__dirname, '..', '..');
 const ELECTRON = createRequire(import.meta.url)('electron') as unknown as string;
@@ -106,7 +107,7 @@ describe('Termi', () => {
     await page.keyboard.press('Escape');
     await until(async () => (await guide.getAttribute('open')) === null);
     await until(() => settingsFile().guideSeen === true);
-    expect(settingsFile().version).toBe(2);
+    expect(settingsFile().version).toBe(SETTINGS_VERSION);
   });
 
   it('sends typing through xterm to the shell', async () => {

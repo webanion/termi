@@ -4,7 +4,7 @@ import { isRecord, isSavedCommandShape } from './savedCommands';
 import type { SavedCommand, Settings, StoredCommand } from './types';
 
 // Bump this and add a step to MIGRATIONS whenever the shape of the file changes.
-export const SETTINGS_VERSION = 2;
+export const SETTINGS_VERSION = 3;
 
 export const DEFAULT_SETTINGS: Settings = {
   commands: [],
@@ -36,6 +36,8 @@ const MIGRATIONS: Record<number, (file: Record<string, unknown>) => void> = {
   1: (file) => {
     if (typeof file.guideSeen !== 'boolean') file.guideSeen = false;
   },
+  // Version 3 added an optional title to each terminal. An older file has none, and needs none.
+  2: () => {},
 };
 
 // Turn whatever settings.json held into current settings. An older file is migrated one
