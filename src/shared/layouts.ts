@@ -1,3 +1,13 @@
+import type { PaneView } from './types';
+
+// A tab with more than one terminal shows them all, split by a layout, or one at a time, as tabs.
+// The layout stays chosen while tabs show, so switching back to split finds it again.
+export const PANE_VIEWS: PaneView[] = ['split', 'tabs'];
+
+export function isPaneView(value: unknown): value is PaneView {
+  return PANE_VIEWS.includes(value as PaneView);
+}
+
 // How a tab with more than one terminal is split. Each string in `areas` is one grid row, and
 // each letter is one terminal, in order. The first layout for each count is the default.
 

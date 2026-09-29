@@ -53,7 +53,21 @@ describe('readSettingsFile', () => {
     const terminals = [{ command: 'npm run api', title: 'API' }, { command: '' }];
     const file = readSettingsFile({ version: 3, commands: [{ id: 'a', name: 'Dev', terminals }] });
     expect(file.commands[0]?.terminals).toEqual(terminals);
-    expect(SETTINGS_VERSION).toBe(3);
+  });
+
+  it('migrates a version 3 file: its commands have no view, so they split', () => {
+    const commands = [{ id: 'a', name: 'Pair', terminals: [{ command: 'ls' }, { command: '' }] }];
+    const file = readSettingsFile({ version: 3, commands, guideSeen: true });
+    expect(file.version).toBe(SETTINGS_VERSION);
+    expect(file.commands).toEqual(commands);
+  });
+
+  it('reads the view of each saved command', () => {
+    const terminals = [{ command: 'npm run api' }, { command: '' }];
+    const commands = [{ id: 'a', name: 'Dev', terminals, layout: 'rows', view: 'tabs' }];
+    const file = readSettingsFile({ version: 4, commands });
+    expect(file.commands).toEqual(commands);
+    expect(SETTINGS_VERSION).toBe(4);
   });
 
   it('keeps guideSeen once it is set', () => {

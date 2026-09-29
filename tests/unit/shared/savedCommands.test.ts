@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fittingLayout, layoutIds, LAYOUTS } from '@/shared/layouts';
+import { fittingLayout, isPaneView, layoutIds, LAYOUTS } from '@/shared/layouts';
 import {
   isSavedCommandShape,
   keepTitles,
@@ -64,6 +64,19 @@ describe('savedCommandError', () => {
       savedCommandError(command({ terminals: terminals('a', 'b', 'c', 'd'), layout: 'grid' })),
     ).toBeNull();
   });
+
+  it('needs a known view, and 2 to 4 terminals for it', () => {
+    const pair = terminals('a', 'b');
+    expect(savedCommandError(command({ terminals: pair, view: 'tabs' }))).toBeNull();
+    expect(savedCommandError(command({ terminals: pair, view: 'split' }))).toBeNull();
+    // A view keeps the layout, so switching back to split finds it.
+    expect(
+      savedCommandError(command({ terminals: pair, layout: 'rows', view: 'tabs' })),
+    ).toBeNull();
+    expect(savedCommandError(command({ view: 'tabs' }))).toMatch(/2 to 4 terminals/);
+    const odd = command({ terminals: pair, view: 'stacked' as SavedCommand['view'] });
+    expect(savedCommandError(odd)).toMatch(/must be one of: split, tabs/);
+  });
 });
 
 describe('isSavedCommandShape', () => {
@@ -79,6 +92,8 @@ describe('isSavedCommandShape', () => {
       const terminal = { command: 'a', title } as unknown as { command: string };
       expect(isSavedCommandShape(command({ terminals: [terminal] })), String(title)).toBe(false);
     }
+    expect(isSavedCommandShape(command({ view: 'tabs' }))).toBe(true);
+    expect(isSavedCommandShape({ ...command(), view: 2 })).toBe(false);
     expect(isSavedCommandShape({ name: 'x', terminals: [] })).toBe(false);
     expect(isSavedCommandShape(null)).toBe(false);
   });
@@ -127,6 +142,14 @@ describe('keepTitles', () => {
 
   it('keeps the terminals as they are when none had a title', () => {
     expect(keepTitles(terminals('a', 'b'), terminals('a', 'c'))).toEqual(terminals('a', 'c'));
+  });
+});
+
+describe('views', () => {
+  it('knows split and tabs', () => {
+    expect(isPaneView('split')).toBe(true);
+    expect(isPaneView('tabs')).toBe(true);
+    for (const value of ['grid', '', undefined, 1]) expect(isPaneView(value)).toBe(false);
   });
 });
 
