@@ -77,7 +77,7 @@ export function TerminalPane({ tab, pane, area }: Props) {
         ref={host}
         onContextMenu={(event) => {
           event.preventDefault();
-          showTerminalMenu(pane.id);
+          showTerminalMenu(pane.id, event);
         }}
       ></div>
     </div>
