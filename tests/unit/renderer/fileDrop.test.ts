@@ -6,6 +6,8 @@ import {
   carriesFiles,
   droppedItems,
   dropZone,
+  folderToOpen,
+  parentFolder,
   pasteText,
   quoteForShell,
   watchDrops,
@@ -55,6 +57,22 @@ describe('quoting a dropped path for the shell', () => {
   });
 });
 
+describe('the folder a drop on the sidebar opens', () => {
+  it('is the folder itself, or the folder a file is in', () => {
+    expect(folderToOpen({ path: '/Users/me/project', folder: true })).toBe('/Users/me/project');
+    expect(folderToOpen({ path: '/Users/me/project/a.txt', folder: false })).toBe(
+      '/Users/me/project',
+    );
+  });
+
+  it('finds the parent of any absolute path', () => {
+    expect(parentFolder('/Users/me/a b/c.png')).toBe('/Users/me/a b');
+    expect(parentFolder('/Users/me/project/')).toBe('/Users/me');
+    expect(parentFolder('/notes.txt')).toBe('/');
+    expect(parentFolder('/')).toBe('/');
+  });
+});
+
 describe('reading a drop', () => {
   it('takes only a drag that carries files', () => {
     expect(carriesFiles(null)).toBe(false);
@@ -77,7 +95,9 @@ describe('reading a drop', () => {
 });
 
 describe('the drop handler', () => {
+  const hoverSidebar = vi.fn();
   const dropOnPane = vi.fn();
+  const dropOnSidebar = vi.fn();
 
   // A drag event as the browser sends it, on `target`.
   function drag(type: string, target: EventTarget, data: DataTransfer) {
@@ -95,21 +115,23 @@ describe('the drop handler', () => {
 
   beforeAll(() => {
     document.body.innerHTML = `
+      <aside class="sidebar"><ul id="commands"><li id="command"></li></ul></aside>
       <header id="head"></header>
       <div class="term-pane" data-pane-id="p7"><div class="pane-body"><span id="inside"></span></div></div>`;
-    watchDrops({ dropOnPane }, pathForFile);
+    watchDrops({ hoverSidebar, dropOnPane, dropOnSidebar }, pathForFile);
   });
 
-  beforeEach(() => dropOnPane.mockClear());
+  beforeEach(() => vi.clearAllMocks());
 
-  it('finds the pane under the pointer', () => {
+  it('finds the pane under the pointer, or the sidebar', () => {
     expect(dropZone(el('inside'))).toEqual({ kind: 'pane', paneId: 'p7' });
+    expect(dropZone(el('command'))).toEqual({ kind: 'sidebar' });
     expect(dropZone(el('head'))).toBeNull();
     expect(dropZone(document)).toBeNull();
   });
 
   it('takes a drag everywhere, so the page never opens a dropped file', () => {
-    for (const target of [el('inside'), el('head'), document.body]) {
+    for (const target of [el('inside'), el('command'), el('head'), document.body]) {
       expect(drag('dragover', target, transfer([])).defaultPrevented).toBe(true);
       expect(drag('drop', target, transfer([{ path: '/tmp/a' }])).defaultPrevented).toBe(true);
     }
@@ -121,6 +143,7 @@ describe('the drop handler', () => {
       return data.dropEffect;
     };
     expect(over(el('inside'), transfer([]))).toBe('copy');
+    expect(over(el('command'), transfer([]))).toBe('copy');
     expect(over(el('head'), transfer([]))).toBe('none');
     expect(over(el('inside'), transfer([], ['text/plain']))).toBe('none');
   });
@@ -133,10 +156,43 @@ describe('the drop handler', () => {
     ]);
   });
 
+  it('sends a drop anywhere on the sidebar to the sidebar', () => {
+    drag('drop', el('command'), transfer([{ path: '/tmp/project', folder: true }]));
+    expect(dropOnSidebar).toHaveBeenCalledWith([{ path: '/tmp/project', folder: true }]);
+    expect(dropOnPane).not.toHaveBeenCalled();
+  });
+
   it('ignores a drop elsewhere, a text drop, and files that have no path', () => {
     drag('drop', el('head'), transfer([{ path: '/tmp/a' }]));
     drag('drop', el('inside'), transfer([{ path: 'text', kind: 'string' }], ['text/plain']));
+    drag('drop', el('command'), transfer([{ path: 'text', kind: 'string' }], ['text/plain']));
     drag('drop', el('inside'), transfer([{ path: '' }]));
     expect(dropOnPane).not.toHaveBeenCalled();
+    expect(dropOnSidebar).not.toHaveBeenCalled();
+  });
+
+  it('shows the sidebar takes files while they are over it, and only files', () => {
+    const last = () => hoverSidebar.mock.lastCall?.[0];
+    drag('dragenter', el('commands'), transfer([]));
+    expect(last()).toBe(true);
+    // Moving within the sidebar enters the next element before it leaves the last one.
+    drag('dragenter', el('command'), transfer([]));
+    drag('dragleave', el('commands'), transfer([]));
+    expect(last()).toBe(true);
+    drag('dragover', el('inside'), transfer([]));
+    expect(last()).toBe(false);
+    drag('dragover', el('command'), transfer([], ['text/plain']));
+    expect(last()).toBe(false);
+  });
+
+  it('stops showing it when the drag leaves the window or drops', () => {
+    const last = () => hoverSidebar.mock.lastCall?.[0];
+    drag('dragenter', el('command'), transfer([]));
+    expect(last()).toBe(true);
+    drag('dragleave', el('command'), transfer([]));
+    expect(last()).toBe(false);
+    drag('dragenter', el('command'), transfer([]));
+    drag('drop', el('command'), transfer([{ path: '' }]));
+    expect(last()).toBe(false);
   });
 });

@@ -223,6 +223,27 @@ describe('Termi', () => {
     await until(async () => (await panes.count()) === 1);
   });
 
+  it('opens a terminal in the folder of a file dropped on the sidebar', async () => {
+    const dropped = path.join(dir, "it's a drop.txt");
+    const count = () => page.locator('#terminal-list .item').count();
+    const dropping = async () =>
+      (await page.locator('#sidebar').getAttribute('class'))?.includes('dropping') ?? false;
+    const before = await count();
+
+    // A drop on a saved command opens a terminal too, and does not run the command.
+    await dragFiles('#command-list .item', [dropped], ['dragenter', 'dragover']);
+    await until(dropping);
+    await dragFiles('#command-list .item', [dropped], ['drop']);
+    await until(async () => !(await dropping()));
+    await until(async () => (await count()) === before + 1);
+
+    await page.locator('.tab-view.active .xterm-helper-textarea').first().focus();
+    await page.keyboard.type(`pwd > '${marker(10)}'`);
+    await page.keyboard.press('Enter');
+    await until(() => fs.existsSync(marker(10)) && fs.readFileSync(marker(10), 'utf8') !== '');
+    expect(fs.realpathSync(fs.readFileSync(marker(10), 'utf8').trim())).toBe(fs.realpathSync(dir));
+  });
+
   it('lists the shortcuts and runs actions from the palette, through the menu', async () => {
     const mac = process.platform === 'darwin';
     await clickMenu('show-shortcuts');

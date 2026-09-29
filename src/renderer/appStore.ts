@@ -15,7 +15,13 @@ import {
   runtimeForPty,
   type RuntimeEvents,
 } from './terminalRuntime';
-import { pasteText, watchDrops, type DroppedItem } from './fileDrop';
+import {
+  folderToOpen,
+  MAX_DROPPED_TABS,
+  pasteText,
+  watchDrops,
+  type DroppedItem,
+} from './fileDrop';
 import { DEFAULT_FONT_SIZE, DURATION, SIDEBAR_DEFAULT } from './theme';
 import { issueUrl, releaseNotesUrl } from './helpLinks';
 
@@ -67,6 +73,7 @@ export interface AppState {
   overlay: Overlay | null; // the guide, the shortcut sheet or the command palette
   guidePage: number;
   toast: { text: string; visible: boolean };
+  sidebarDrop: boolean; // files are dragged over the sidebar
 }
 
 export interface TabOptions {
@@ -95,6 +102,7 @@ let state: AppState = {
   overlay: null,
   guidePage: 0,
   toast: { text: '', visible: false },
+  sidebarDrop: false,
 };
 
 const listeners = new Set<() => void>();
@@ -422,6 +430,23 @@ export function dropOnPane(paneId: string, items: DroppedItem[]): void {
   runtime.focus();
 }
 
+export function hoverSidebar(over: boolean): void {
+  if (state.sidebarDrop !== over) setState({ sidebarDrop: over });
+}
+
+// A drop on the sidebar opens a terminal for each item, in the dropped folder or in the folder a
+// dropped file is in. The last one opened becomes active, and the tab keeps the shell's name.
+export function dropOnSidebar(items: DroppedItem[]): void {
+  const opening = items.slice(0, MAX_DROPPED_TABS);
+  let last: TabState | undefined;
+  for (const item of opening) last = createTab({ cwd: folderToOpen(item) });
+  if (last) activate(last.id);
+  if (items.length > opening.length)
+    showToast(
+      `Opened ${opening.length} of ${items.length}. A drop opens at most ${MAX_DROPPED_TABS}.`,
+    );
+}
+
 // ---------- Settings and saved commands ----------
 
 async function saveSettings(patch: Partial<Settings>): Promise<void> {
@@ -707,7 +732,7 @@ export async function init(): Promise<void> {
   });
 
   // Files and folders dropped anywhere in the window.
-  watchDrops({ dropOnPane }, (file) => api.pathForFile(file));
+  watchDrops({ hoverSidebar, dropOnPane, dropOnSidebar }, (file) => api.pathForFile(file));
 
   const autoStart = settings.commands.filter((c) => c.autoStart);
   if (autoStart.length) {

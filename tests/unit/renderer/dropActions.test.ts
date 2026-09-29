@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
-// What the store does with a drop: a drop on a terminal types the paths into that pane.
+// What the store does with a drop: a drop on a terminal types the paths into that pane, and a
+// drop on the sidebar opens a terminal in each folder.
 import './stubTermi';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+interface Created {
+  paneId: string;
+  cwd?: string;
+}
 
 interface FakeRuntime {
   paste: ReturnType<typeof vi.fn>;
@@ -9,11 +15,13 @@ interface FakeRuntime {
 }
 
 const runtimes = vi.hoisted(() => new Map<string, FakeRuntime>());
+const created = vi.hoisted(() => [] as Created[]);
 
 vi.mock('../../../src/renderer/terminalRuntime', () => ({
-  createRuntime: ({ paneId }: { paneId: string }) => {
+  createRuntime: (options: Created) => {
     const runtime = { paste: vi.fn(), focus: vi.fn() };
-    runtimes.set(paneId, runtime);
+    created.push(options);
+    runtimes.set(options.paneId, runtime);
     return runtime;
   },
   getRuntime: (paneId: string) => runtimes.get(paneId),
@@ -26,6 +34,7 @@ vi.mock('../../../src/renderer/terminalRuntime', () => ({
 async function start() {
   vi.resetModules();
   runtimes.clear();
+  created.length = 0;
   const store = await import('../../../src/renderer/appStore');
   await store.init();
   const tab = () => {
@@ -64,5 +73,45 @@ describe('a drop on a terminal', () => {
     store.dropOnPane(pane, []);
     store.dropOnPane('gone', [{ path: '/tmp/a', folder: false }]);
     expect(runtimes.get(pane)?.paste).not.toHaveBeenCalled();
+  });
+});
+
+describe('a drop on the sidebar', () => {
+  it('opens a terminal in each folder, and in the folder of each file', async () => {
+    const { store, tab } = await start();
+    const before = store.getState().tabs.length;
+    store.dropOnSidebar([
+      { path: '/tmp/project', folder: true },
+      { path: '/tmp/notes/todo.txt', folder: false },
+    ]);
+    const tabs = store.getState().tabs.slice(before);
+    expect(tabs.map((t) => t.cwd)).toEqual(['/tmp/project', '/tmp/notes']);
+    expect(created.slice(-2).map((c) => c.cwd)).toEqual(['/tmp/project', '/tmp/notes']);
+    // The last one is active, and each keeps the shell's name.
+    expect(tab().id).toBe(tabs[1]?.id);
+    expect(tabs.every((t) => t.name === '' && !t.customName && t.panes.length === 1)).toBe(true);
+    expect(store.getState().toast.visible).toBe(false);
+  });
+
+  it('opens at most 4, and says so', async () => {
+    const { store } = await start();
+    const before = store.getState().tabs.length;
+    const items = [1, 2, 3, 4, 5, 6].map((n) => ({ path: `/tmp/f${n}`, folder: true }));
+    store.dropOnSidebar(items);
+    const tabs = store.getState().tabs.slice(before);
+    expect(tabs.map((t) => t.cwd)).toEqual(['/tmp/f1', '/tmp/f2', '/tmp/f3', '/tmp/f4']);
+    expect(store.getState().toast).toEqual({
+      text: 'Opened 4 of 6. A drop opens at most 4.',
+      visible: true,
+    });
+  });
+
+  it('shows that it takes the drop only while files are over it', async () => {
+    const { store } = await start();
+    expect(store.getState().sidebarDrop).toBe(false);
+    store.hoverSidebar(true);
+    expect(store.getState().sidebarDrop).toBe(true);
+    store.hoverSidebar(false);
+    expect(store.getState().sidebarDrop).toBe(false);
   });
 });
