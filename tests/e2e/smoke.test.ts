@@ -116,6 +116,26 @@ describe('Termi', () => {
     await until(() => fs.existsSync(marker(5)));
   });
 
+  it("reopens a saved command's closed terminal with its command, in its place", async () => {
+    const panes = page.locator('.tab-view.active .term-pane');
+    const third = `echo 3 > '${marker(3)}'`;
+    fs.rmSync(marker(3));
+    await panes.nth(2).locator('.pane-head .icon-btn').click();
+    await until(async () => (await panes.count()) === 3);
+    await until(async () => (await text('#command-list .item-count')) === '3 of 4');
+
+    await page.locator('#reopen-control.show #reopen-terminals').click();
+    const items = page.locator('#reopen-menu [role="menuitem"]');
+    await items.first().waitFor();
+    expect(await items.allTextContents()).toEqual([third, expect.stringContaining('Reopen all')]);
+    await items.first().click();
+    await until(async () => (await panes.count()) === 4);
+    await until(() => fs.existsSync(marker(3)));
+    expect(await panes.nth(2).locator('.pane-name').textContent()).toBe(third);
+    expect(await page.locator('#reopen-control.show').count()).toBe(0);
+    expect(await page.locator('#command-list .item-count').count()).toBe(0);
+  });
+
   it("brings a background tab's output back to the page", async () => {
     await page.keyboard.type('sleep 2; echo later');
     await page.keyboard.press('Enter');
