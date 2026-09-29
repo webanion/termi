@@ -31,6 +31,7 @@ const api: TermiApi = {
   copyText: noop,
   onStats: subscribe,
   pickFolder: async () => null,
+  pathForFile: () => '',
   window: {
     minimize: noop,
     toggleMaximize: noop,

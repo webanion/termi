@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
+import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron';
 import type { EventChannels, InvokeChannels, SendChannels } from '../shared/ipc';
 import type { TermiApi, Unsubscribe } from '../shared/types';
 
@@ -49,6 +49,10 @@ const api: TermiApi = {
   onStats: (callback) => listen('stats:update', callback),
 
   pickFolder: (defaultPath) => invoke('dialog:pick-folder', defaultPath),
+
+  // The path of a file or folder dropped on the page, read here without asking main. The page
+  // cannot read it itself, since Electron removed File.path. A File that is not on disk gives ''.
+  pathForFile: (file) => webUtils.getPathForFile(file),
 
   window: {
     minimize: () => send('window:minimize'),

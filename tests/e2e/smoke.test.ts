@@ -41,6 +41,31 @@ const clickMenu = (id: string) =>
     item.click();
   }, id);
 
+// Drag events carrying files from disk, sent to the first element that matches `selector`.
+// Playwright's file chooser gives the page File objects backed by real paths, as a drop from the
+// file manager does, so the preload finds their paths.
+async function dragFiles(selector: string, files: string[], types: string[]): Promise<void> {
+  await page.evaluate(`(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.id = 'e2e-drop-files';
+    input.hidden = true;
+    document.body.append(input);
+  })()`);
+  await page.setInputFiles('#e2e-drop-files', files);
+  await page.evaluate(`(() => {
+    const input = document.getElementById('e2e-drop-files');
+    const data = new DataTransfer();
+    for (const file of input.files) data.items.add(file);
+    input.remove();
+    const target = document.querySelector(${JSON.stringify(selector)});
+    for (const type of ${JSON.stringify(types)}) {
+      target.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: data }));
+    }
+  })()`);
+}
+
 beforeAll(async () => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'termi-e2e-'));
   const quad = [1, 2, 3, 4].map((n) => ({ command: `echo ${n} > '${marker(n)}'` }));
@@ -169,6 +194,54 @@ describe('Termi', () => {
     await added.locator('.pane-head .icon-btn').click();
     await until(async () => (await panes.count()) === 1);
     expect(await page.locator('#terminal-list .item').count()).toBe(tabs);
+  });
+
+  it('types a dropped file into the terminal under the pointer, quoted for the shell', async () => {
+    const dropped = path.join(dir, "it's a drop.txt");
+    fs.writeFileSync(dropped, 'dropped\n');
+    const panes = page.locator('.tab-view.active .term-pane');
+    await page.locator('#split-terminal').click();
+    await until(async () => (await panes.count()) === 2);
+    const [first, second] = [panes.nth(0), panes.nth(1)];
+    await until(async () => ((await second.locator('.pane-name').textContent()) ?? '') !== '');
+
+    // Start a command in the first terminal, then drop on it while the second has focus.
+    await first.locator('.xterm-helper-textarea').focus();
+    await page.keyboard.type('cp ');
+    await second.locator('.xterm-helper-textarea').focus();
+    await until(async () => (await second.getAttribute('class'))?.includes('focused') ?? false);
+    await dragFiles('.tab-view.active .term-pane:first-child .pane-body', [dropped], ['drop']);
+    await until(async () => (await first.getAttribute('class'))?.includes('focused') ?? false);
+
+    // The drop took focus, so the rest of the command goes to the same terminal.
+    await page.keyboard.type(`'${marker(9)}'`);
+    await page.keyboard.press('Enter');
+    await until(() => fs.existsSync(marker(9)));
+    expect(fs.readFileSync(marker(9), 'utf8')).toBe('dropped\n');
+
+    await second.locator('.pane-head .icon-btn').click();
+    await until(async () => (await panes.count()) === 1);
+  });
+
+  it('opens a terminal in the folder of a file dropped on the sidebar', async () => {
+    const dropped = path.join(dir, "it's a drop.txt");
+    const count = () => page.locator('#terminal-list .item').count();
+    const dropping = async () =>
+      (await page.locator('#sidebar').getAttribute('class'))?.includes('dropping') ?? false;
+    const before = await count();
+
+    // A drop on a saved command opens a terminal too, and does not run the command.
+    await dragFiles('#command-list .item', [dropped], ['dragenter', 'dragover']);
+    await until(dropping);
+    await dragFiles('#command-list .item', [dropped], ['drop']);
+    await until(async () => !(await dropping()));
+    await until(async () => (await count()) === before + 1);
+
+    await page.locator('.tab-view.active .xterm-helper-textarea').first().focus();
+    await page.keyboard.type(`pwd > '${marker(10)}'`);
+    await page.keyboard.press('Enter');
+    await until(() => fs.existsSync(marker(10)) && fs.readFileSync(marker(10), 'utf8') !== '');
+    expect(fs.realpathSync(fs.readFileSync(marker(10), 'utf8').trim())).toBe(fs.realpathSync(dir));
   });
 
   it('lists the shortcuts and runs actions from the palette, through the menu', async () => {
