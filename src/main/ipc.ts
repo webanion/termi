@@ -7,12 +7,13 @@ import {
   type IpcMainEvent,
   type IpcMainInvokeEvent,
 } from 'electron';
+import { readTerminalContext, showTerminalMenu } from './contextMenu';
 import { getSettings, updateSettings } from './settings';
 import { isAppPage } from './window';
 import { cleanSettingsPatch } from '@/shared/settings';
 import { isRecord } from '@/shared/savedCommands';
 import type { PtyManager } from './ptyManager';
-import type { InvokeChannels, SendChannels } from '@/shared/ipc';
+import type { InvokeChannels, SendChannels, SendEvent } from '@/shared/ipc';
 import type { PtyCreateOptions } from '@/shared/types';
 
 // Arguments from the renderer arrive as unknown and are checked here before main uses them.
@@ -42,7 +43,11 @@ function ptyOptions(value: unknown): PtyCreateOptions {
   return { cols, rows, cwd, command };
 }
 
-export function registerIpc(ptys: PtyManager, getWindow: () => BrowserWindow | null): void {
+export function registerIpc(
+  ptys: PtyManager,
+  getWindow: () => BrowserWindow | null,
+  send: SendEvent,
+): void {
   // Only the app's own page, as the top frame of the app's window, may call main.
   const fromAppPage = (event: IpcMainEvent | IpcMainInvokeEvent): boolean => {
     const win = getWindow();
@@ -96,6 +101,12 @@ export function registerIpc(ptys: PtyManager, getWindow: () => BrowserWindow | n
 
   on('clipboard:write', (_event, text) => {
     if (typeof text === 'string' && text) clipboard.writeText(text);
+  });
+
+  on('terminal:context-menu', (_event, value) => {
+    const win = getWindow();
+    const context = readTerminalContext(value);
+    if (win && context) showTerminalMenu(win, context, send);
   });
 
   handle('dialog:pick-folder', async (_event, defaultPath) => {

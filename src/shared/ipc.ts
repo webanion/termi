@@ -8,6 +8,7 @@ import type {
   PtyCreated,
   Settings,
   StatsSample,
+  TerminalContext,
   WindowState,
 } from './types';
 
@@ -27,6 +28,7 @@ export interface SendChannels {
   'pty:resize': [id: number, cols: number, rows: number];
   'pty:kill': [id: number];
   'clipboard:write': [text: string];
+  'terminal:context-menu': [context: TerminalContext];
   'window:minimize': [];
   'window:toggle-maximize': [];
   'window:close': [];
