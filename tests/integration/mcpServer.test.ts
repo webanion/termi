@@ -110,6 +110,7 @@ describe('MCP server', () => {
         cwd: '~/code',
         autoStart: false,
         layout: 'main-top',
+        view: 'split',
       },
     ]);
 
@@ -128,6 +129,51 @@ describe('MCP server', () => {
     });
     await call('edit_saved_command', { target: 'Grid', terminals: ['a', 'b'] });
     expect(settings().commands[0].layout).toBeUndefined();
+  });
+
+  describe('views', () => {
+    it('sets tab view, keeps the layout under it, and goes back to split', async () => {
+      await call('add_saved_command', {
+        name: 'Trio',
+        terminals: ['a', 'b', 'c'],
+        layout: 'rows',
+        view: 'tabs',
+      });
+      expect(settings().commands[0]).toMatchObject({ layout: 'rows', view: 'tabs' });
+      const listed = await call('list_saved_commands');
+      expect(listed.result?.structuredContent?.commands).toMatchObject([
+        { layout: 'rows', view: 'tabs' },
+      ]);
+
+      await call('edit_saved_command', { target: 'Trio', autoStart: true });
+      expect(settings().commands[0].view).toBe('tabs');
+      const split = await call('edit_saved_command', { target: 'Trio', view: 'split' });
+      expect(split.result?.isError).toBeUndefined();
+      expect(settings().commands[0]).not.toHaveProperty('view');
+      expect(settings().commands[0].layout).toBe('rows');
+    });
+
+    it('drops the view when 1 terminal is left, and lists none for 1 terminal', async () => {
+      await call('add_saved_command', { name: 'Pair', terminals: ['a', 'b'], view: 'tabs' });
+      await call('edit_saved_command', { target: 'Pair', terminals: ['a'] });
+      expect(settings().commands[0]).not.toHaveProperty('view');
+      const listed = await call('list_saved_commands');
+      const [pair] = listed.result?.structuredContent?.commands as object[];
+      expect(pair).not.toHaveProperty('view');
+    });
+
+    it('refuses an unknown view, and tab view for 1 terminal', async () => {
+      const cases = [
+        { name: 'Odd', terminals: ['a', 'b'], view: 'grid' },
+        { name: 'One', terminals: ['a'], view: 'tabs' },
+        { name: 'Type', terminals: ['a', 'b'], view: true },
+      ];
+      for (const args of cases) {
+        const reply = await call('add_saved_command', args);
+        expect(reply.result?.isError, JSON.stringify(args)).toBe(true);
+      }
+      expect(fs.existsSync(path.join(dir, 'settings.json'))).toBe(false);
+    });
   });
 
   describe('terminal titles', () => {
@@ -163,6 +209,7 @@ describe('MCP server', () => {
           titles: ['API', 'Web', 'Shell'],
           cwd: '',
           autoStart: false,
+          view: 'split',
         },
         expect.not.objectContaining({ titles: expect.anything() }),
       ]);

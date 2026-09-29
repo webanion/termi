@@ -30,7 +30,11 @@ export function docsText(tools: Tool[]): string {
   const reference = tools.map((tool) => {
     const { properties, required = [] } = tool.inputSchema;
     const params = Object.entries(properties).map(([name, schema]) => {
-      const type = schema.type === 'array' ? `${schema.items?.type}[]` : schema.type;
+      const type = schema.enum
+        ? schema.enum.map((value) => `"${value}"`).join(' | ')
+        : schema.type === 'array'
+          ? `${schema.items?.type}[]`
+          : schema.type;
       const need = required.includes(name) ? 'required' : 'optional';
       return `- \`${name}\` (${type}, ${need}): ${schema.description}`;
     });
