@@ -3,13 +3,13 @@ import {
   focusIfCurrent,
   focusPane,
   isBusy,
+  paneName,
   removePane,
   setSelecting,
   showTerminalMenu,
   type PaneState,
   type TabState,
 } from './appStore';
-import { commandLabel } from './commandText';
 import { cx } from './cx';
 import { CloseIcon } from './Icons';
 import { getRuntime } from './terminalRuntime';
@@ -21,7 +21,7 @@ interface Props {
 }
 
 // A host for the pane's terminal, which lives in terminalRuntime.ts. The head only shows when
-// the tab has more than one pane.
+// the tab splits its panes. In tab view the tab strip names them, and only the focused one shows.
 export function TerminalPane({ tab, pane, area }: Props) {
   const host = useRef<HTMLDivElement>(null);
 
@@ -35,7 +35,7 @@ export function TerminalPane({ tab, pane, area }: Props) {
   }, [pane.id]);
 
   const split = tab.panes.length > 1;
-  const name = pane.title || commandLabel(pane.command) || pane.shellName;
+  const name = paneName(pane);
   const busy = isBusy(pane);
 
   return (

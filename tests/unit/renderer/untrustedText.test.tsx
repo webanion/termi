@@ -41,8 +41,11 @@ const tab = (overrides: Partial<TabState>): TabState => ({
   cwd: undefined,
   activity: false,
   layout: null,
+  view: 'split',
   tracks: null,
-  panes: [{ id: 'p1', command: '', proc: 'zsh', shellName: 'zsh', attached: true }],
+  panes: [
+    { id: 'p1', command: '', proc: 'zsh', shellName: 'zsh', attached: true, activity: false },
+  ],
   focusedPaneId: 'p1',
   ready: true,
   ...overrides,
@@ -62,7 +65,9 @@ describe('untrusted text stays text', () => {
   });
 
   it('in the name of the program running in a terminal', () => {
-    const panes = [{ id: 'p1', command: '', proc: PAYLOAD, shellName: 'zsh', attached: true }];
+    const panes = [
+      { id: 'p1', command: '', proc: PAYLOAD, shellName: 'zsh', attached: true, activity: false },
+    ];
     render(<TerminalRow tab={tab({ panes })} index={0} presence="present" />);
     expectText(container.querySelector('.item-meta'));
   });

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // The layouts to choose from, in the header and in the saved command dialog, work as a radio
-// group: one tab stop, and the arrow keys select the layout before or after.
+// group: one tab stop, and the arrow keys select the layout before or after. Tab view can follow
+// the layouts, as one more choice.
 import { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
@@ -15,11 +16,12 @@ beforeAll(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 });
 
-function Picker({ labeled }: { labeled?: boolean }) {
+function Picker({ labeled, tabs }: { labeled?: boolean; tabs?: boolean }) {
   const [selected, setSelected] = useState('main-top');
   return (
     <LayoutOptions
       layouts={LAYOUTS[3] ?? []}
+      tabs={tabs}
       selected={selected}
       labeled={labeled}
       onSelect={(id) => {
@@ -30,11 +32,11 @@ function Picker({ labeled }: { labeled?: boolean }) {
   );
 }
 
-function render(labeled?: boolean) {
+function render(labeled?: boolean, tabs?: boolean) {
   container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
-  act(() => root.render(<Picker labeled={labeled} />));
+  act(() => root.render(<Picker labeled={labeled} tabs={tabs} />));
 }
 
 const radios = () => [...container.querySelectorAll<HTMLButtonElement>('[role="radio"]')];
@@ -102,5 +104,25 @@ describe('LayoutOptions', () => {
     render(true);
     expect(radios()[0]?.textContent).toBe('Large on the left');
     expect(radios()[0]?.hasAttribute('title')).toBe(false);
+  });
+
+  it('offers tab view last, named Tabs, and reaches it with the arrow keys', () => {
+    render(false, true);
+    expect(radios().map((r) => r.dataset.layout)).toEqual([
+      'main-left',
+      'main-top',
+      'columns',
+      'rows',
+      'tabs',
+    ]);
+    expect(radios()[4]?.title).toBe('Tabs');
+    act(() => checked()?.focus());
+    press('ArrowLeft');
+    press('ArrowLeft');
+    expect(checked()?.dataset.layout).toBe('tabs');
+    act(() => root.unmount());
+    container.remove();
+    render(true, true);
+    expect(radios()[4]?.textContent).toBe('Tabs');
   });
 });
