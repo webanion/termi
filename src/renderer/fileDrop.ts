@@ -93,9 +93,11 @@ export function watchDrops(handlers: DropHandlers, pathForFile: (file: File) => 
     handlers.hoverSidebar(false);
   });
 
-  // Taking dragover everywhere is what stops the default, which opens a dropped file as a page.
-  // Where no drop is taken, 'none' shows that and cancels the drop.
+  // Taking a file drag's dragover everywhere is what stops the default, which opens a dropped
+  // file as a page. Where no drop is taken, 'none' shows that and cancels the drop. A text drag
+  // keeps its default, so text can still be dragged into a field.
   document.addEventListener('dragover', (event) => {
+    if (!carriesFiles(event.dataTransfer)) return;
     event.preventDefault();
     const zone = zoneFor(event);
     if (event.dataTransfer) event.dataTransfer.dropEffect = zone ? 'copy' : 'none';
@@ -103,6 +105,7 @@ export function watchDrops(handlers: DropHandlers, pathForFile: (file: File) => 
   });
 
   document.addEventListener('drop', (event) => {
+    if (!carriesFiles(event.dataTransfer)) return;
     event.preventDefault();
     entered = null;
     handlers.hoverSidebar(false);

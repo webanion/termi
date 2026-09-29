@@ -137,7 +137,15 @@ describe('the drop handler', () => {
     }
   });
 
-  it('shows a copy over a terminal, and no drop anywhere else or for text', () => {
+  it('leaves a text drag to the browser, so text can still be dragged into a field', () => {
+    for (const target of [el('inside'), el('command'), el('head')]) {
+      const text = () => transfer([{ path: 'text', kind: 'string' }], ['text/plain']);
+      expect(drag('dragover', target, text()).defaultPrevented).toBe(false);
+      expect(drag('drop', target, text()).defaultPrevented).toBe(false);
+    }
+  });
+
+  it('shows a copy over a terminal, and no drop anywhere else', () => {
     const over = (target: HTMLElement, data: DataTransfer) => {
       drag('dragover', target, data);
       return data.dropEffect;
@@ -145,7 +153,6 @@ describe('the drop handler', () => {
     expect(over(el('inside'), transfer([]))).toBe('copy');
     expect(over(el('command'), transfer([]))).toBe('copy');
     expect(over(el('head'), transfer([]))).toBe('none');
-    expect(over(el('inside'), transfer([], ['text/plain']))).toBe('none');
   });
 
   it('sends a drop on a terminal to that pane', () => {
