@@ -1,6 +1,7 @@
 import path from 'path';
 import { pathToFileURL } from 'url';
-import { app, BrowserWindow, dialog, shell } from 'electron';
+import { app, BrowserWindow, dialog } from 'electron';
+import { openLink } from './links';
 import { loadWindowState, trackWindowState } from './windowState';
 import type { PtyManager } from './ptyManager';
 import type { SystemStats } from './systemStats';
@@ -94,7 +95,7 @@ export function createWindow(ptys: PtyManager, stats: SystemStats, send: SendEve
 
   // Open links from the terminal in the default browser, never in the app.
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:\/\//.test(url)) shell.openExternal(url);
+    openLink(url);
     return { action: 'deny' };
   });
   win.webContents.on('will-navigate', (event) => event.preventDefault());
