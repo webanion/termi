@@ -17,6 +17,7 @@ import {
 } from './terminalRuntime';
 import { DEFAULT_FONT_SIZE, DURATION, SIDEBAR_DEFAULT } from './theme';
 import { issueUrl, releaseNotesUrl } from './helpLinks';
+import { layoutGrid, tracksFor, type Axis, type TrackSizes } from './paneTracks';
 
 const api = window.termi;
 
@@ -37,6 +38,7 @@ export interface TabState {
   cwd: string | undefined; // the folder the tab's shells start in, and a split's shell too
   activity: boolean;
   layout: string | null;
+  tracks: TrackSizes | null; // the sizes of a split's columns and rows, or null while equal
   panes: PaneState[];
   focusedPaneId: string | null;
   ready: boolean; // every pane's shell has started once, so the tab shows in the sidebar
@@ -252,6 +254,7 @@ function createTab({ name, commands = [''], cwd, commandId, layout }: TabOptions
     cwd,
     activity: false,
     layout: layout || null,
+    tracks: null,
     panes,
     focusedPaneId: panes[0]?.id ?? null,
     ready: false,
@@ -336,6 +339,7 @@ export function removePane(paneId: string): void {
   updateTab(tab.id, (t) => ({
     ...t,
     panes,
+    tracks: null,
     focusedPaneId,
     ready: t.ready || panes.every((p) => p.attached),
   }));
@@ -357,7 +361,12 @@ export function splitTab(id: number): void {
     return;
   }
   const pane = createPane('', tab.cwd);
-  updateTab(id, (t) => ({ ...t, panes: [...t.panes, pane], focusedPaneId: pane.id }));
+  updateTab(id, (t) => ({
+    ...t,
+    panes: [...t.panes, pane],
+    tracks: null,
+    focusedPaneId: pane.id,
+  }));
   if (id === state.activeId) requestAnimationFrame(() => fitTab(id));
 }
 
@@ -391,7 +400,7 @@ function setFontSize(size: number): void {
 export function setLayout(tabId: number, layoutId: string): void {
   const tab = tabById(tabId);
   if (!tab) return;
-  updateTab(tabId, (t) => ({ ...t, layout: layoutId }));
+  updateTab(tabId, (t) => ({ ...t, layout: layoutId, tracks: null }));
   requestAnimationFrame(() => fitTab(tabId));
   // Remember the layout for the next time the saved command runs, unless a split or a closed
   // pane left the tab with another number of terminals than the command has.
@@ -403,6 +412,18 @@ export function setLayout(tabId: number, layoutId: string): void {
       ),
     });
   }
+}
+
+// Resize the columns or the rows of a split tab. The sizes stay with the running tab, and go back
+// to equal when its layout or its number of terminals changes.
+export function resizeTracks(tabId: number, axis: Axis, sizes: number[]): void {
+  const tab = tabById(tabId);
+  const layout = tab && layoutFor(tab);
+  if (!tab || !layout) return;
+  const tracks = tracksFor(tab.tracks, layoutGrid(layout.areas));
+  if (sizes.length !== tracks[axis].length) return;
+  updateTab(tabId, (t) => ({ ...t, tracks: { ...tracks, [axis]: sizes } }));
+  if (tabId === state.activeId) requestAnimationFrame(() => fitTab(tabId));
 }
 
 export function setSelecting(paneId: string): void {

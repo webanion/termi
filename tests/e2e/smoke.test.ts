@@ -30,6 +30,10 @@ async function until(check: () => Promise<boolean> | boolean, ms = 10_000): Prom
 
 const text = (selector: string) => page.locator(selector).first().textContent();
 
+// The layout of the tab on screen, one quoted string per row of its grid.
+const gridAreas = () =>
+  page.evaluate("document.querySelector('.tab-view.active').style.gridTemplateAreas");
+
 const settingsFile = () =>
   JSON.parse(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8')) as Record<string, unknown>;
 
@@ -92,7 +96,7 @@ describe('Termi', () => {
   it('opens the auto-start command with its four terminals in its layout', async () => {
     await until(() => [1, 2, 3, 4].every((n) => fs.existsSync(marker(n))));
     expect(await page.locator('.tab-view.active .term-pane').count()).toBe(4);
-    expect(await page.locator('.tab-view.active').getAttribute('style')).toContain('"a b" "c d"');
+    expect(await gridAreas()).toBe('"a b" "c d"');
     expect(await text('#title-text')).toBe('Quad');
   });
 
@@ -155,7 +159,7 @@ describe('Termi', () => {
     expect(await panes.count()).toBe(1);
     await page.locator('#split-terminal').click();
     await until(async () => (await panes.count()) === 2);
-    expect(await page.locator('.tab-view.active').getAttribute('style')).toContain('"a b"');
+    expect(await gridAreas()).toBe('"a b"');
 
     // The new terminal has focus, and takes typing once its shell has started and it shows
     // the shell's name.
@@ -165,6 +169,35 @@ describe('Termi', () => {
     await page.keyboard.type(`echo split > '${marker(8)}'`);
     await page.keyboard.press('Enter');
     await until(() => fs.existsSync(marker(8)));
+
+    // Drag the line between the two terminals to the right. The left one grows, and its
+    // terminal is fitted to it once the drag ends. A double-click makes them equal again.
+    const widths = () =>
+      page
+        .locator('.tab-view.active .term-pane')
+        .evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width));
+    const screenWidth = () =>
+      page
+        .locator('.tab-view.active .term-pane .xterm-screen')
+        .first()
+        .evaluate((el) => el.getBoundingClientRect().width);
+    const line = page.locator('.tab-view.active .pane-resizer.vertical');
+    const box = await line.boundingBox();
+    if (!box) throw new Error('The line between the terminals does not show');
+    const before = await screenWidth();
+    const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 120, y, { steps: 6 });
+    await page.mouse.up();
+    const [left = 0, right = 0] = await widths();
+    expect(Math.abs(left - right - 240)).toBeLessThan(2);
+    await until(async () => (await screenWidth()) > before + 60);
+    await line.dblclick();
+    await until(async () => {
+      const [a = 0, b = 0] = await widths();
+      return Math.abs(a - b) < 1;
+    });
 
     await added.locator('.pane-head .icon-btn').click();
     await until(async () => (await panes.count()) === 1);

@@ -1,22 +1,36 @@
 import type { CSSProperties } from 'react';
 import { layoutFor, type TabState } from './appStore';
 import { cx } from './cx';
+import { PaneResizer } from './PaneResizer';
+import {
+  layoutGrid,
+  trackLines,
+  tracksFor,
+  trackTemplate,
+  type TrackLine,
+  type TrackSizes,
+} from './paneTracks';
 import { TerminalPane } from './TerminalPane';
 
 export type TabViewState = 'active' | 'leaving' | 'hidden';
 
 const PANE_AREAS = ['a', 'b', 'c', 'd'];
 
-// One tab. Its panes sit in a grid set for the tab's layout.
+// One tab. Its panes sit in a grid set for the tab's layout, with a handle on each line between
+// them to resize them.
 export function TabView({ tab, state }: { tab: TabState; state: TabViewState }) {
   const layout = layoutFor(tab);
   let style: CSSProperties | undefined;
+  let tracks: TrackSizes | undefined;
+  let lines: TrackLine[] = [];
   if (layout) {
-    const grid = layout.areas.map((row) => row.split(' '));
+    const grid = layoutGrid(layout.areas);
+    tracks = tracksFor(tab.tracks, grid);
+    lines = trackLines(grid);
     style = {
       gridTemplateAreas: layout.areas.map((row) => `"${row}"`).join(' '),
-      gridTemplateColumns: `repeat(${grid[0]?.length}, minmax(0, 1fr))`,
-      gridTemplateRows: `repeat(${grid.length}, minmax(0, 1fr))`,
+      gridTemplateColumns: trackTemplate(tracks.columns),
+      gridTemplateRows: trackTemplate(tracks.rows),
     };
   }
 
@@ -38,6 +52,15 @@ export function TabView({ tab, state }: { tab: TabState; state: TabViewState }) 
           area={layout ? PANE_AREAS[index] : undefined}
         />
       ))}
+      {tracks &&
+        lines.map((line) => (
+          <PaneResizer
+            key={`${line.axis} ${line.index} ${line.from}`}
+            tabId={tab.id}
+            line={line}
+            sizes={tracks[line.axis]}
+          />
+        ))}
     </div>
   );
 }

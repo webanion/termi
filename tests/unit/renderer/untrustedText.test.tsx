@@ -39,6 +39,7 @@ const tab = (overrides: Partial<TabState>): TabState => ({
   cwd: undefined,
   activity: false,
   layout: null,
+  tracks: null,
   panes: [{ id: 'p1', command: '', proc: 'zsh', shellName: 'zsh', attached: true }],
   focusedPaneId: 'p1',
   ready: true,
