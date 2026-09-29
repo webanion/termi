@@ -30,3 +30,10 @@ export const LAYOUTS: Record<number, Layout[]> = {
 export function layoutIds(count: number): string[] | undefined {
   return LAYOUTS[count]?.map((layout) => layout.id);
 }
+
+// The layout with this id when it fits the number of terminals, or else the default for that
+// number. Undefined when the number has no layouts.
+export function fittingLayout(count: number, id: string | null | undefined): Layout | undefined {
+  const options = LAYOUTS[count];
+  return options?.find((layout) => layout.id === id) ?? options?.[0];
+}
