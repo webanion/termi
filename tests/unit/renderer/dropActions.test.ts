@@ -9,9 +9,11 @@ interface Created {
   cwd?: string;
 }
 
+// Activating a tab fits and focuses its terminals on the next frame, so the fake has both.
 interface FakeRuntime {
   paste: ReturnType<typeof vi.fn>;
   focus: ReturnType<typeof vi.fn>;
+  fit: ReturnType<typeof vi.fn>;
 }
 
 const runtimes = vi.hoisted(() => new Map<string, FakeRuntime>());
@@ -19,7 +21,7 @@ const created = vi.hoisted(() => [] as Created[]);
 
 vi.mock('../../../src/renderer/terminalRuntime', () => ({
   createRuntime: (options: Created) => {
-    const runtime = { paste: vi.fn(), focus: vi.fn() };
+    const runtime = { paste: vi.fn(), focus: vi.fn(), fit: vi.fn() };
     created.push(options);
     runtimes.set(options.paneId, runtime);
     return runtime;
