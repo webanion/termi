@@ -183,11 +183,13 @@ jobs:
             echo "::notice::No run of $SHA waited for approval within two minutes."
           fi
 
-  # The same gate every pull request passes, on the exact merge commit.
+  # The same gate every pull request passes, on the exact merge commit. Only a release branch in
+  # this repository counts, since a fork can name its branch release/v too.
   gate:
     if: >
       github.event_name == 'pull_request'
       && github.event.pull_request.merged == true
+      && github.event.pull_request.head.repo.full_name == github.repository
       && startsWith(github.event.pull_request.head.ref, 'release/v')
     uses: ./.github/workflows/ci.yml
     with:
@@ -336,6 +338,7 @@ jobs:
       always()
       && github.event_name == 'pull_request'
       && github.event.pull_request.merged == true
+      && github.event.pull_request.head.repo.full_name == github.repository
       && startsWith(github.event.pull_request.head.ref, 'release/v')
     name: Delete the release branch
     runs-on: ubuntu-latest
