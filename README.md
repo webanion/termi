@@ -11,7 +11,7 @@ A terminal app for macOS and Linux with a warm dark theme, saved commands that o
 ## What it does
 
 - A sidebar with the running terminals at the top and your saved commands below.
-- A saved command can run up to 4 terminals in one tab, for example an API server, a web server and a plain shell for one project. Add them with "Add terminal" in the saved command dialog. An empty command opens a plain shell. Pick how the terminals are arranged under Layout in the same dialog, or with the layout control that shows on the right of the header when a tab has more than one terminal. Termi remembers the layout for each saved command.
+- A saved command can run up to 4 terminals in one tab, for example an API server, a web server and a plain shell for one project. Add them with "Add terminal" in the saved command dialog. An empty command opens a plain shell. Each terminal can have a title, such as API or Web, which its pane header shows in place of the command. Pick how the terminals are arranged under Layout in the same dialog, or with the layout control that shows on the right of the header when a tab has more than one terminal. Termi remembers the layout for each saved command.
 - When you close one terminal of a saved command, Reopen shows in the header. It lists the closed terminals by their command, with Reopen all, and ⇧⌘T (Ctrl+Shift+R on Linux) reopens all of them. Each one runs the command the saved command has now, in its folder, and goes back to its place in the layout. While some are closed, the saved command's row in the sidebar shows how many are open, such as 2 of 3.
 - Split any tab to add a plain shell to it, up to 4 terminals, with the split button on the right of the header or ⌘D (Ctrl+Shift+D on Linux). The new shell starts in the folder the tab started in. A split is not saved to a saved command, and while a split tab has more terminals than its saved command, Termi does not save its layout.
 - Drag the line between two terminals of a tab to resize them, and double-click the line to make them equal again. The sizes last while the tab runs, and go back to equal when the layout or the number of terminals changes.
@@ -116,9 +116,9 @@ Double-click a running terminal in the sidebar to rename it. In a tab with more 
 
 | Tool | What it does |
 | --- | --- |
-| `list_saved_commands` | Lists every saved command with its id, name, terminal commands, folder, auto-start and layout |
+| `list_saved_commands` | Lists every saved command with its id, name, terminal commands, terminal titles, folder, auto-start and layout |
 | `add_saved_command` | Adds a saved command with 1 to 4 terminals |
-| `edit_saved_command` | Changes a saved command, found by id or by name. Only the fields you give change |
+| `edit_saved_command` | Changes a saved command, found by id or by name. Only the fields you give change, and a terminal keeps its title while its command stays in the same place |
 | `get_termi_docs` | Returns the guide to the server. The same text is the `termi://docs` resource |
 
 The guide is `src/mcp/docs.md`, and the build puts it inside the server. The server adds a reference to the end of it, built from the code: the layouts, every tool and parameter, and the paths this install uses. So the reference never goes out of date.
@@ -137,7 +137,7 @@ claude mcp add termi --scope user -- node /path/to/termi/out/main/mcpServer.js
 
 Termi keeps its data in `~/Library/Application Support/Termi/` on macOS, and in `$XDG_CONFIG_HOME/Termi` on Linux, which is usually `~/.config/Termi`.
 
-- `settings.json`: the saved commands, with their terminals and layout, the sidebar width, the text size, and whether the guide has opened. It has a version number, and Termi upgrades an older file when it reads it.
+- `settings.json`: the saved commands, with their terminals, terminal titles and layout, the sidebar width, the text size, and whether the guide has opened. It has a version number, and Termi upgrades an older file when it reads it.
 - `window-state.json`: the window's position and size.
 
 Set `TERMI_USER_DATA` to point the app and the MCP server at another folder, for example for tests.

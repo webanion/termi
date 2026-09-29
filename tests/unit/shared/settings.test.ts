@@ -41,6 +41,21 @@ describe('readSettingsFile', () => {
     expect(file.fontSize).toBe(15);
   });
 
+  it('migrates a version 2 file: its terminals stay as they are, with no titles', () => {
+    const commands = [{ id: 'a', name: 'Pair', terminals: [{ command: 'ls' }, { command: '' }] }];
+    const file = readSettingsFile({ version: 2, commands, guideSeen: true });
+    expect(file.version).toBe(SETTINGS_VERSION);
+    expect(file.commands).toEqual(commands);
+    expect(file.guideSeen).toBe(true);
+  });
+
+  it('reads the title of each terminal', () => {
+    const terminals = [{ command: 'npm run api', title: 'API' }, { command: '' }];
+    const file = readSettingsFile({ version: 3, commands: [{ id: 'a', name: 'Dev', terminals }] });
+    expect(file.commands[0]?.terminals).toEqual(terminals);
+    expect(SETTINGS_VERSION).toBe(3);
+  });
+
   it('keeps guideSeen once it is set', () => {
     expect(readSettingsFile({ version: 2, commands: [], guideSeen: true }).guideSeen).toBe(true);
   });
@@ -63,6 +78,7 @@ describe('readSettingsFile', () => {
         { id: 'ok', name: 'Fine', terminals: [{ command: 'ls' }] },
         { id: 'no-name', terminals: [{ command: 'ls' }] },
         { id: 'bad-terminal', name: 'x', terminals: [{ command: 5 }] },
+        { id: 'bad-title', name: 'x', terminals: [{ command: 'ls', title: 5 }] },
         'not a command',
       ],
     });
@@ -96,6 +112,15 @@ describe('cleanSettingsPatch', () => {
 
   it('refuses an update that is not an object', () => {
     for (const patch of [null, 'x', 3, []]) expect(() => cleanSettingsPatch(patch)).toThrow();
+  });
+
+  it('accepts terminal titles, and refuses one with the wrong type', () => {
+    const commands = [
+      { id: 'a', name: 'Dev', terminals: [{ command: 'ls', title: 'List' }, { command: '' }] },
+    ];
+    expect(cleanSettingsPatch({ commands })).toEqual({ commands });
+    const bad = [{ id: 'a', name: 'Dev', terminals: [{ command: 'ls', title: 7 }] }];
+    expect(() => cleanSettingsPatch({ commands: bad })).toThrow(/commands/);
   });
 
   it('accepts saved commands whose shape is right, even if they break the rules', () => {

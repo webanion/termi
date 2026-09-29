@@ -8,6 +8,7 @@ import os from 'os';
 import path from 'path';
 import { _electron, type ElectronApplication, type Page } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { SETTINGS_VERSION } from '@/shared/settings';
 
 const ROOT = path.join(__dirname, '..', '..');
 const ELECTRON = createRequire(import.meta.url)('electron') as unknown as string;
@@ -72,7 +73,12 @@ async function dragFiles(selector: string, files: string[], types: string[]): Pr
 
 beforeAll(async () => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'termi-e2e-'));
-  const quad = [1, 2, 3, 4].map((n) => ({ command: `echo ${n} > '${marker(n)}'` }));
+  // Terminals 1 and 3 have a title, which their pane heads show in place of the command.
+  const titles = ['First', undefined, 'Third', undefined];
+  const quad = [1, 2, 3, 4].map((n) => ({
+    command: `echo ${n} > '${marker(n)}'`,
+    ...(titles[n - 1] ? { title: titles[n - 1] } : {}),
+  }));
   fs.writeFileSync(
     path.join(dir, 'settings.json'),
     JSON.stringify({
@@ -123,6 +129,14 @@ describe('Termi', () => {
     expect(await page.locator('.tab-view.active .term-pane').count()).toBe(4);
     expect(await gridAreas()).toBe('"a b" "c d"');
     expect(await text('#title-text')).toBe('Quad');
+    const heads = page.locator('.tab-view.active .pane-name');
+    expect((await heads.allTextContents()).map((t) => t.replace(dir, '<dir>'))).toEqual([
+      'First',
+      "echo 2 > '<dir>/marker-2'",
+      'Third',
+      "echo 4 > '<dir>/marker-4'",
+    ]);
+    expect(await heads.first().getAttribute('title')).toBe(`echo 1 > '${marker(1)}'`);
   });
 
   // The file the test starts from is version 1, from before the guide, like an upgrade.
@@ -135,7 +149,7 @@ describe('Termi', () => {
     await page.keyboard.press('Escape');
     await until(async () => (await guide.getAttribute('open')) === null);
     await until(() => settingsFile().guideSeen === true);
-    expect(settingsFile().version).toBe(2);
+    expect(settingsFile().version).toBe(SETTINGS_VERSION);
   });
 
   it('sends typing through xterm to the shell', async () => {
@@ -145,7 +159,7 @@ describe('Termi', () => {
     await until(() => fs.existsSync(marker(5)));
   });
 
-  it("reopens a saved command's closed terminal with its command, in its place", async () => {
+  it("reopens a saved command's closed terminal with its command and title, in its place", async () => {
     const panes = page.locator('.tab-view.active .term-pane');
     const third = `echo 3 > '${marker(3)}'`;
     fs.rmSync(marker(3));
@@ -160,7 +174,9 @@ describe('Termi', () => {
     await items.first().click();
     await until(async () => (await panes.count()) === 4);
     await until(() => fs.existsSync(marker(3)));
-    expect(await panes.nth(2).locator('.pane-name').textContent()).toBe(third);
+    const name = panes.nth(2).locator('.pane-name');
+    expect(await name.textContent()).toBe('Third');
+    expect(await name.getAttribute('title')).toBe(third);
     expect(await page.locator('#reopen-control.show').count()).toBe(0);
     expect(await page.locator('#command-list .item-count').count()).toBe(0);
   });
@@ -192,6 +208,8 @@ describe('Termi', () => {
       timeout: 10_000,
     });
     expect(mcp.stdout.toString()).toContain('Quad renamed');
+    const [quad] = settingsFile().commands as { terminals: { title?: string }[] }[];
+    expect(quad?.terminals.map((t) => t.title)).toEqual(['First', undefined, 'Third', undefined]);
     await until(async () => (await text('#command-list .item-name')) === 'Quad renamed');
     await until(async () =>
       (await page.locator('#terminal-list .item-name').allTextContents()).includes('Quad renamed'),

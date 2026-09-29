@@ -35,7 +35,7 @@ export function TerminalPane({ tab, pane, area }: Props) {
   }, [pane.id]);
 
   const split = tab.panes.length > 1;
-  const name = commandLabel(pane.command) || pane.shellName;
+  const name = pane.title || commandLabel(pane.command) || pane.shellName;
   const busy = isBusy(pane);
 
   return (
@@ -53,7 +53,11 @@ export function TerminalPane({ tab, pane, area }: Props) {
     >
       <div className="pane-head" onClick={() => getRuntime(pane.id)?.focus()}>
         <span className={`dot ${split && busy ? 'busy' : ''}`}></span>
-        <span className="pane-name" title={split ? pane.command || name : undefined}>
+        {/* A title stands in for the command, which stays in the tooltip. */}
+        <span
+          className="pane-name"
+          title={split ? pane.command || pane.shellName || name : undefined}
+        >
           {split ? name : ''}
         </span>
         <span className="pane-proc">{split && busy && pane.proc !== name ? pane.proc : ''}</span>

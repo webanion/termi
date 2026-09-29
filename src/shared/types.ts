@@ -3,6 +3,7 @@
 
 export interface SavedTerminal {
   command: string;
+  title?: string; // shown in the pane head instead of the command, for 2 or more terminals
 }
 
 export interface SavedCommand {

@@ -5,7 +5,14 @@
 
 import { fittingLayout, layoutIds, type Layout } from '@/shared/layouts';
 import { MAX_TERMINALS } from '@/shared/savedCommands';
-import type { AppInfo, PtyCreated, SavedCommand, Settings, WindowState } from '@/shared/types';
+import type {
+  AppInfo,
+  PtyCreated,
+  SavedCommand,
+  SavedTerminal,
+  Settings,
+  WindowState,
+} from '@/shared/types';
 import {
   allRuntimes,
   createRuntime,
@@ -31,6 +38,7 @@ const api = window.termi;
 export interface PaneState {
   id: string;
   command: string;
+  title?: string; // from its saved command, shown in the head in place of the command
   terminal?: number; // which of the saved command's terminals it runs, by index. A split has none.
   proc: string; // the program in the foreground
   shellName: string;
@@ -81,7 +89,7 @@ export interface AppState {
 
 export interface TabOptions {
   name?: string;
-  commands?: string[];
+  terminals?: SavedTerminal[];
   cwd?: string;
   commandId?: string;
   layout?: string;
@@ -253,10 +261,15 @@ export function focusIfCurrent(paneId: string): void {
 
 // A pane and its runtime. An empty command opens a plain shell. The shell starts when the
 // pane's terminal is first shown, at the size it has there.
-function createPane(command: string, cwd: string | undefined, terminal?: number): PaneState {
+function createPane(
+  { command, title }: SavedTerminal,
+  cwd: string | undefined,
+  terminal?: number,
+): PaneState {
   const pane: PaneState = {
     id: `p${nextPaneId++}`,
     command,
+    ...(title ? { title } : {}),
     terminal,
     proc: '',
     shellName: '',
@@ -272,12 +285,18 @@ function createPane(command: string, cwd: string | undefined, terminal?: number)
   return pane;
 }
 
-// `commands` has one entry per pane. In a saved command's tab, each pane remembers which of the
+// `terminals` has one entry per pane. In a saved command's tab, each pane remembers which of the
 // command's terminals it runs, so a closed one can be reopened.
-function createTab({ name, commands = [''], cwd, commandId, layout }: TabOptions = {}): TabState {
-  const panes = commands
+function createTab({
+  name,
+  terminals = [{ command: '' }],
+  cwd,
+  commandId,
+  layout,
+}: TabOptions = {}): TabState {
+  const panes = terminals
     .slice(0, MAX_TERMINALS)
-    .map((command, i) => createPane(command, cwd, commandId ? i : undefined));
+    .map((terminal, i) => createPane(terminal, cwd, commandId ? i : undefined));
   const tab: TabState = {
     id: nextTabId++,
     name: name || '',
@@ -392,7 +411,7 @@ export function splitTab(id: number): void {
     showToast(`A tab holds at most ${MAX_TERMINALS} terminals`);
     return;
   }
-  const pane = createPane('', tab.cwd);
+  const pane = createPane({ command: '' }, tab.cwd);
   updateTab(id, (t) => ({
     ...t,
     panes: [...t.panes, pane],
@@ -427,9 +446,11 @@ export function reopenTerminals(id: number, terminal?: number): void {
   if (!wanted.length) return;
   const room = MAX_TERMINALS - tab.panes.length;
   if (wanted.length > room) showToast(`A tab holds at most ${MAX_TERMINALS} terminals`);
+  // Each reopened terminal gets its title back, as a fresh run gives it.
+  const saved = commandTabOptions(cmd).terminals ?? [];
   const reopened = wanted
     .slice(0, Math.max(room, 0))
-    .map((c) => createPane(c.command, cmd.cwd, c.terminal));
+    .map((c) => createPane(saved[c.terminal] ?? { command: c.command }, cmd.cwd, c.terminal));
   const first = reopened[0];
   if (!first) return;
   updateTab(id, (t) => ({
@@ -547,10 +568,15 @@ function uid(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
+// Titles name the terminals of a command with more than one. With 1, the name on the tab does.
 function commandTabOptions(cmd: SavedCommand): TabOptions {
+  const titled = cmd.terminals.length > 1;
   return {
     name: cmd.name,
-    commands: cmd.terminals.map((t) => t.command),
+    terminals: cmd.terminals.map((t) => ({
+      command: t.command,
+      title: titled ? t.title?.trim() : '',
+    })),
     cwd: cmd.cwd,
     commandId: cmd.id,
     layout: cmd.layout,
@@ -570,7 +596,7 @@ export async function toggleAutoStart(cmd: SavedCommand): Promise<void> {
 
 export interface CommandInput {
   name: string;
-  terminals: { command: string }[];
+  terminals: SavedTerminal[];
   cwd: string;
   autoStart: boolean;
   layout?: string;

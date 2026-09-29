@@ -116,6 +116,22 @@ describe('reopening a closed terminal', () => {
     expect(store.closedTerminals(tab())).toEqual([]);
   });
 
+  it('gives it back its title from the saved command', async () => {
+    const titled: SavedCommand = {
+      ...trio,
+      terminals: [
+        { command: 'npm run api', title: 'API' },
+        { command: 'npm run web' },
+        { command: '' },
+      ],
+    };
+    const { store, tab, close } = await startWith([titled]);
+    close(0);
+    close(1);
+    store.reopenTerminals(tab().id);
+    expect(tab().panes.map((p) => p.title)).toEqual(['API', undefined, undefined]);
+  });
+
   it('reopens a plain shell from the saved command', async () => {
     const { store, tab, close, slots } = await startWith([trio]);
     close(2);

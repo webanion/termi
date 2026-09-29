@@ -130,6 +130,104 @@ describe('MCP server', () => {
     expect(settings().commands[0].layout).toBeUndefined();
   });
 
+  describe('terminal titles', () => {
+    const shop = {
+      id: 'shop0001',
+      name: 'Shop',
+      terminals: [
+        { command: 'npm run api', title: 'API' },
+        { command: 'npm run web', title: 'Web' },
+        { command: '', title: 'Shell' },
+      ],
+    };
+    const writeShop = () =>
+      fs.writeFileSync(
+        path.join(dir, 'settings.json'),
+        JSON.stringify({ version: SETTINGS_VERSION, commands: [shop] }),
+      );
+    const edit = async (terminals: string[]) => {
+      const reply = await call('edit_saved_command', { target: 'Shop', terminals });
+      expect(reply.result?.isError).toBeUndefined();
+      return reply.result?.structuredContent?.updated;
+    };
+
+    it('lists the titles, and leaves them out when no terminal has one', async () => {
+      writeShop();
+      await call('add_saved_command', { name: 'Plain', terminals: ['ls', ''] });
+      const listed = await call('list_saved_commands');
+      expect(listed.result?.structuredContent?.commands).toEqual([
+        {
+          id: 'shop0001',
+          name: 'Shop',
+          terminals: ['npm run api', 'npm run web', ''],
+          titles: ['API', 'Web', 'Shell'],
+          cwd: '',
+          autoStart: false,
+        },
+        expect.not.objectContaining({ titles: expect.anything() }),
+      ]);
+    });
+
+    it('keeps every title through an edit that leaves the terminals alone', async () => {
+      writeShop();
+      await call('edit_saved_command', { target: 'Shop', name: 'Shop dev', autoStart: true });
+      expect(settings().commands[0].terminals).toEqual(shop.terminals);
+    });
+
+    it('keeps the title of a terminal whose command stays in the same place', async () => {
+      writeShop();
+      const updated = await edit(['npm run api', 'npm run storefront', '', 'npm test']);
+      expect(updated).toMatchObject({ titles: ['API', '', 'Shell', ''] });
+      expect(settings().commands[0].terminals).toEqual([
+        { command: 'npm run api', title: 'API' },
+        { command: 'npm run storefront' },
+        { command: '', title: 'Shell' },
+        { command: 'npm test' },
+      ]);
+    });
+
+    it('drops the titles of terminals that moved', async () => {
+      writeShop();
+      const updated = await edit(['npm run web', '']);
+      expect(updated).not.toHaveProperty('titles');
+      expect(settings().commands[0].terminals).toEqual([
+        { command: 'npm run web' },
+        { command: '' },
+      ]);
+    });
+
+    it('drops every title when 1 terminal is left', async () => {
+      writeShop();
+      await edit(['npm run api']);
+      expect(settings().commands[0].terminals).toEqual([{ command: 'npm run api' }]);
+    });
+
+    it('does not take a title, so it writes nothing when given one', async () => {
+      writeShop();
+      const before = fs.readFileSync(path.join(dir, 'settings.json'), 'utf8');
+      const reply = await call('edit_saved_command', {
+        target: 'Shop',
+        terminals: [{ command: 'npm run api', title: 'Backend' }],
+      });
+      expect(reply.result?.isError).toBe(true);
+      expect(reply.result?.content?.[0]?.text).toMatch(/must be a string/);
+      expect(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8')).toBe(before);
+    });
+
+    it('leaves out a saved command whose title is not a string', async () => {
+      fs.writeFileSync(
+        path.join(dir, 'settings.json'),
+        JSON.stringify({
+          version: SETTINGS_VERSION,
+          commands: [shop, { id: 'bad', name: 'Bad', terminals: [{ command: 'ls', title: 3 }] }],
+        }),
+      );
+      const listed = await call('list_saved_commands');
+      const commands = listed.result?.structuredContent?.commands as { id: string }[];
+      expect(commands.map((c) => c.id)).toEqual(['shop0001']);
+    });
+  });
+
   it('refuses a name two commands share, asking for the id', async () => {
     await call('add_saved_command', { name: 'Same', terminals: ['a'] });
     await call('add_saved_command', { name: 'same', terminals: ['b'] });
