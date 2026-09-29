@@ -347,9 +347,11 @@ describe('Termi', () => {
     const takesMouse = async () =>
       (await term.getAttribute('class'))?.includes('enable-mouse-events') ?? false;
 
-    // cat stands in for the program, and keeps what the terminal sends it until Ctrl+D.
+    // cat stands in for the program, and keeps what the terminal sends it until Ctrl+D. It asks
+    // for the reports in the SGR encoding (1006), as tmux and vim do.
     await page.locator('.tab-view.active .xterm-helper-textarea').first().focus();
-    await page.keyboard.type(`printf '\\033[?1000h'; cat > '${marker(13)}'; printf '\\033[?1000l'`);
+    const [on, off] = ['\\033[?1000h\\033[?1006h', '\\033[?1006l\\033[?1000l'];
+    await page.keyboard.type(`printf '${on}'; cat > '${marker(13)}'; printf '${off}'`);
     await page.keyboard.press('Enter');
     await until(takesMouse);
 
@@ -364,8 +366,8 @@ describe('Termi', () => {
     await page.keyboard.press('Enter');
     await page.keyboard.press('Control+D');
     await until(async () => !(await takesMouse()));
-    // The first click reached cat as a mouse report: ESC [ M, then the right button.
-    expect(fs.readFileSync(marker(13), 'latin1')).toContain('\x1b[M"');
+    // The first click reached cat as a mouse report: ESC [ <, then 2 for the right button.
+    expect(fs.readFileSync(marker(13), 'utf8')).toContain('\x1b[<2;');
   });
 
   it('types a dropped file into the terminal under the pointer, quoted for the shell', async () => {
