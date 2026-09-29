@@ -21,11 +21,15 @@ export type StoredCommand = Omit<SavedCommand, 'terminals'> & {
   command?: string;
 };
 
+export type CursorStyle = 'bar' | 'block' | 'underline';
+
 export interface Settings {
   commands: SavedCommand[];
   sidebarWidth: number;
   sidebarHidden: boolean;
   fontSize: number;
+  cursorStyle: CursorStyle;
+  cursorBlink: boolean;
   guideSeen: boolean; // the guide opens by itself once, on the first launch
 }
 
@@ -90,6 +94,11 @@ export interface TermiApi {
   showTerminalMenu: (context: TerminalContext) => void;
   onStats: (callback: (sample: StatsSample) => void) => Unsubscribe;
   pickFolder: (defaultPath?: string) => Promise<string | null>;
+  // Whether Termi opens at login, or null on a system where Termi cannot set that.
+  loginItem: {
+    get: () => Promise<boolean | null>;
+    set: (open: boolean) => Promise<boolean | null>;
+  };
   pathForFile: (file: File) => string;
   window: {
     minimize: () => void;

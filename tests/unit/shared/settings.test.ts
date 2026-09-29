@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   cleanSettingsPatch,
+  clampFontSize,
   DEFAULT_SETTINGS,
   readSettingsFile,
   SETTINGS_VERSION,
@@ -53,7 +54,39 @@ describe('readSettingsFile', () => {
     const terminals = [{ command: 'npm run api', title: 'API' }, { command: '' }];
     const file = readSettingsFile({ version: 3, commands: [{ id: 'a', name: 'Dev', terminals }] });
     expect(file.commands[0]?.terminals).toEqual(terminals);
-    expect(SETTINGS_VERSION).toBe(3);
+  });
+
+  it('migrates a version 3 file: the cursor stays a blinking bar', () => {
+    const file = readSettingsFile({ version: 3, commands: [], fontSize: 15, guideSeen: true });
+    expect(file.version).toBe(SETTINGS_VERSION);
+    expect(file).toMatchObject({ cursorStyle: 'bar', cursorBlink: true, fontSize: 15 });
+    expect(SETTINGS_VERSION).toBe(4);
+  });
+
+  it('reads the cursor settings', () => {
+    const file = readSettingsFile({ version: 4, cursorStyle: 'block', cursorBlink: false });
+    expect(file).toMatchObject({ cursorStyle: 'block', cursorBlink: false });
+  });
+
+  it('gives a setting edited to a value the app cannot use its default', () => {
+    const file = readSettingsFile({
+      version: 4,
+      fontSize: 'big',
+      cursorStyle: 'beam',
+      cursorBlink: 'yes',
+      sidebarHidden: 0,
+      sidebarWidth: null,
+      guideSeen: 'no',
+    });
+    const { commands: _, ...defaults } = DEFAULT_SETTINGS;
+    expect(file).toMatchObject(defaults);
+  });
+
+  it('brings a text size edited out of the range into it, as a whole number', () => {
+    expect(readSettingsFile({ version: 4, fontSize: 100 }).fontSize).toBe(28);
+    expect(readSettingsFile({ version: 4, fontSize: 2 }).fontSize).toBe(9);
+    expect(readSettingsFile({ version: 4, fontSize: 14.4 }).fontSize).toBe(14);
+    expect(clampFontSize(Number.POSITIVE_INFINITY)).toBe(28);
   });
 
   it('keeps guideSeen once it is set', () => {
@@ -108,6 +141,19 @@ describe('cleanSettingsPatch', () => {
     expect(() => cleanSettingsPatch({ sidebarWidth: Number.NaN })).toThrow(/sidebarWidth/);
     expect(() => cleanSettingsPatch({ sidebarHidden: 'yes' })).toThrow(/sidebarHidden/);
     expect(() => cleanSettingsPatch({ guideSeen: 1 })).toThrow(/guideSeen/);
+    expect(() => cleanSettingsPatch({ cursorBlink: 'on' })).toThrow(/cursorBlink/);
+  });
+
+  it('accepts the cursor settings, and a text size from 9 to 28', () => {
+    const patch = { cursorStyle: 'underline', cursorBlink: false, fontSize: 9 };
+    expect(cleanSettingsPatch(patch)).toEqual(patch);
+    expect(cleanSettingsPatch({ fontSize: 28 })).toEqual({ fontSize: 28 });
+  });
+
+  it('refuses a text size out of the range, or not whole, and a cursor style it does not know', () => {
+    for (const fontSize of [8, 29, 13.5, Number.POSITIVE_INFINITY])
+      expect(() => cleanSettingsPatch({ fontSize }), String(fontSize)).toThrow(/fontSize/);
+    expect(() => cleanSettingsPatch({ cursorStyle: 'beam' })).toThrow(/cursorStyle/);
   });
 
   it('refuses an update that is not an object', () => {
