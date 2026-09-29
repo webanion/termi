@@ -1,5 +1,6 @@
 import { toggleSidebar, zoomFromHeader } from './appStore';
 import { CommandList } from './CommandList';
+import { cx } from './cx';
 import { SidebarIcon } from './Icons';
 import { StatsFooter } from './StatsFooter';
 import { TerminalList } from './TerminalList';
@@ -8,8 +9,9 @@ import { shortcutLabel } from '../shared/shortcuts';
 
 export function Sidebar() {
   const platform = useAppState((s) => s.info.platform);
+  const dropping = useAppState((s) => s.sidebarDrop);
   return (
-    <aside className="sidebar" id="sidebar">
+    <aside className={cx('sidebar', dropping && 'dropping')} id="sidebar">
       <div className="sidebar-head drag" onDoubleClick={(event) => zoomFromHeader(event.target)}>
         <div className="spacer"></div>
         <button
@@ -29,6 +31,11 @@ export function Sidebar() {
       </div>
 
       <StatsFooter />
+
+      {/* Shows while files are dragged over the sidebar. A drop opens a terminal in each folder. */}
+      <div className="drop-hint" id="sidebar-drop-hint" aria-hidden="true">
+        Drop to open a terminal here
+      </div>
     </aside>
   );
 }
