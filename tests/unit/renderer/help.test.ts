@@ -5,7 +5,12 @@ import { GUIDE_PAGES } from '../../../src/renderer/guidePages';
 import { parseGuide, parseInline } from '../../../src/renderer/guideMarkdown';
 import { keysFor } from '../../../src/renderer/HelpKeys';
 import { issueUrl, releaseNotesUrl } from '../../../src/renderer/helpLinks';
-import { filterPalette, paletteItems } from '../../../src/renderer/palette';
+import {
+  filterPalette,
+  launcherItems,
+  newCommandItem,
+  paletteItems,
+} from '../../../src/renderer/palette';
 import { shortcutRows } from '../../../src/renderer/shortcutRows';
 import { actionLabel, PALETTE_ACTIONS } from '../../../src/shared/appActions';
 import { SHORTCUT_ACTIONS } from '../../../src/shared/shortcuts';
@@ -98,6 +103,51 @@ describe('the command palette', () => {
     expect(filterPalette(items, 'shop').map((i) => i.key)).toEqual(['tab-7']);
     expect(filterPalette(items, '')).toHaveLength(items.length);
     expect(filterPalette(items, 'nothing like this')).toEqual([]);
+  });
+});
+
+describe('the launcher', () => {
+  it('lists each saved command with a one-line view of its first command', () => {
+    const items = launcherItems([
+      {
+        id: 'a',
+        name: 'Shop',
+        terminals: [{ command: 'cd web\n  npm run dev\n' }, { command: '' }],
+      },
+    ]);
+    expect(items).toEqual([
+      {
+        key: 'command-a',
+        label: 'Shop',
+        detail: 'cd web; npm run dev',
+        keys: '',
+        run: { commandId: 'a' },
+      },
+    ]);
+  });
+
+  it('shows the folder of a plain shell, or says it is one', () => {
+    const items = launcherItems([
+      { id: 'a', name: 'Here', terminals: [{ command: ' ' }], cwd: '~/shop' },
+      { id: 'b', name: 'Home', terminals: [{ command: '' }] },
+    ]);
+    expect(items.map((i) => i.detail)).toEqual(['~/shop', 'Plain shell']);
+  });
+
+  it('offers a new saved command, with its keys, when there is none', () => {
+    expect(newCommandItem('linux')).toEqual({
+      key: 'new-command',
+      label: 'New Saved Command',
+      keys: 'Ctrl+Shift+N',
+      run: { action: 'new-command' },
+    });
+  });
+
+  it('is in the command palette, with its keys', () => {
+    expect(paletteItems('darwin', []).find((i) => i.key === 'run-saved-command')).toMatchObject({
+      label: 'Run Saved Command',
+      keys: '⌘P',
+    });
   });
 });
 

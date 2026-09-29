@@ -38,6 +38,7 @@ const MAC_ADDED: Record<string, string> = {
   'command-palette': 'Cmd+Shift+P',
   'split-terminal': 'Cmd+D',
   'reopen-terminals': 'Cmd+Shift+T',
+  'run-saved-command': 'Cmd+P',
 };
 
 const ALIASES: Record<string, string> = {
@@ -137,6 +138,8 @@ describe('shortcutLabel', () => {
     expect(shortcutLabel('show-shortcuts', 'linux')).toBe('Ctrl+Shift+/');
     expect(shortcutLabel('show-shortcuts', 'darwin')).toBe('⌘/');
     expect(shortcutLabel('command-palette', 'darwin')).toBe('⇧⌘P');
+    expect(shortcutLabel('run-saved-command', 'darwin')).toBe('⌘P');
+    expect(shortcutLabel('run-saved-command', 'linux')).toBe('Ctrl+Shift+O');
   });
 });
 
@@ -182,6 +185,15 @@ describe('matchShortcut', () => {
     expect(matchShortcut(press('1', 'Digit1', { alt: true }), false)).toBe('select-terminal-0');
     // A layout that needs Shift for digits types & there.
     expect(matchShortcut(press('&', 'Digit1', { alt: true }), false)).toBe('select-terminal-0');
+  });
+
+  it('opens the launcher on Ctrl+Shift+O, and leaves Ctrl+P and Ctrl+O to the shell', () => {
+    expect(matchShortcut(press('O', 'KeyO', { control: true, shift: true }), false)).toBe(
+      'run-saved-command',
+    );
+    expect(matchShortcut(press('p', 'KeyP', { control: true }), false)).toBeNull();
+    expect(matchShortcut(press('o', 'KeyO', { control: true }), false)).toBeNull();
+    expect(matchShortcut(press('p', 'KeyP', { meta: true }), true)).toBe('run-saved-command');
   });
 
   it('matches Ctrl+PageDown and Ctrl+Alt+]', () => {

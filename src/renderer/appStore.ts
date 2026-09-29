@@ -3,7 +3,7 @@
 // main, MCP edits to the settings file), so the IPC listeners are registered here, once, in
 // init(), never in a component.
 
-import { LAYOUTS, type Layout } from '../shared/layouts';
+import { fittingLayout, layoutIds, type Layout } from '../shared/layouts';
 import { MAX_TERMINALS } from '../shared/savedCommands';
 import type { AppInfo, PtyCreated, SavedCommand, Settings, WindowState } from '../shared/types';
 import {
@@ -15,8 +15,16 @@ import {
   runtimeForPty,
   type RuntimeEvents,
 } from './terminalRuntime';
+import {
+  folderToOpen,
+  MAX_DROPPED_TABS,
+  pasteText,
+  watchDrops,
+  type DroppedItem,
+} from './fileDrop';
 import { DEFAULT_FONT_SIZE, DURATION, SIDEBAR_DEFAULT } from './theme';
 import { issueUrl, releaseNotesUrl } from './helpLinks';
+import { layoutGrid, tracksFor, type Axis, type TrackSizes } from './paneTracks';
 
 const api = window.termi;
 
@@ -38,6 +46,7 @@ export interface TabState {
   cwd: string | undefined; // the folder the tab's shells start in, and a split's shell too
   activity: boolean;
   layout: string | null;
+  tracks: TrackSizes | null; // the sizes of a split's columns and rows, or null while equal
   panes: PaneState[];
   focusedPaneId: string | null;
   ready: boolean; // every pane's shell has started once, so the tab shows in the sidebar
@@ -54,7 +63,7 @@ export interface DialogState {
   token: number; // changes on every open, so the form starts fresh
 }
 
-export type Overlay = 'guide' | 'shortcuts' | 'palette';
+export type Overlay = 'guide' | 'shortcuts' | 'palette' | 'launcher';
 
 export interface AppState {
   info: AppInfo;
@@ -64,9 +73,10 @@ export interface AppState {
   leavingId: number | null; // the tab that was active and is fading out
   closing: ClosingTab[]; // closed tabs, kept while they fade out
   dialog: DialogState | null;
-  overlay: Overlay | null; // the guide, the shortcut sheet or the command palette
+  overlay: Overlay | null; // the guide, the shortcut sheet, the command palette or the launcher
   guidePage: number;
   toast: { text: string; visible: boolean };
+  sidebarDrop: boolean; // files are dragged over the sidebar
 }
 
 export interface TabOptions {
@@ -95,6 +105,7 @@ let state: AppState = {
   overlay: null,
   guidePage: 0,
   toast: { text: '', visible: false },
+  sidebarDrop: false,
 };
 
 const listeners = new Set<() => void>();
@@ -139,9 +150,7 @@ export function readyTabs(tabs: TabState[]): TabState[] {
 }
 
 export function layoutFor(tab: TabState): Layout | null {
-  const options = LAYOUTS[tab.panes.length];
-  if (!options) return null;
-  return options.find((l) => l.id === tab.layout) || options[0] || null;
+  return fittingLayout(tab.panes.length, tab.layout) ?? null;
 }
 
 export function isBusy(pane: PaneState): boolean {
@@ -277,6 +286,7 @@ function createTab({ name, commands = [''], cwd, commandId, layout }: TabOptions
     cwd,
     activity: false,
     layout: layout || null,
+    tracks: null,
     panes,
     focusedPaneId: panes[0]?.id ?? null,
     ready: false,
@@ -361,6 +371,7 @@ export function removePane(paneId: string): void {
   updateTab(tab.id, (t) => ({
     ...t,
     panes,
+    tracks: null,
     focusedPaneId,
     ready: t.ready || panes.every((p) => p.attached),
   }));
@@ -382,7 +393,12 @@ export function splitTab(id: number): void {
     return;
   }
   const pane = createPane('', tab.cwd);
-  updateTab(id, (t) => ({ ...t, panes: [...t.panes, pane], focusedPaneId: pane.id }));
+  updateTab(id, (t) => ({
+    ...t,
+    panes: [...t.panes, pane],
+    tracks: null,
+    focusedPaneId: pane.id,
+  }));
   if (id === state.activeId) requestAnimationFrame(() => fitTab(id));
 }
 
@@ -454,7 +470,7 @@ function setFontSize(size: number): void {
 export function setLayout(tabId: number, layoutId: string): void {
   const tab = tabById(tabId);
   if (!tab) return;
-  updateTab(tabId, (t) => ({ ...t, layout: layoutId }));
+  updateTab(tabId, (t) => ({ ...t, layout: layoutId, tracks: null }));
   requestAnimationFrame(() => fitTab(tabId));
   // Remember the layout for the next time the saved command runs, unless a split or a closed
   // pane left the tab with another number of terminals than the command has.
@@ -468,8 +484,49 @@ export function setLayout(tabId: number, layoutId: string): void {
   }
 }
 
+// Resize the columns or the rows of a split tab. The sizes stay with the running tab, and go back
+// to equal when its layout or its number of terminals changes.
+export function resizeTracks(tabId: number, axis: Axis, sizes: number[]): void {
+  const tab = tabById(tabId);
+  const layout = tab && layoutFor(tab);
+  if (!tab || !layout) return;
+  const tracks = tracksFor(tab.tracks, layoutGrid(layout.areas));
+  if (sizes.length !== tracks[axis].length) return;
+  updateTab(tabId, (t) => ({ ...t, tracks: { ...tracks, [axis]: sizes } }));
+  if (tabId === state.activeId) requestAnimationFrame(() => fitTab(tabId));
+}
+
 export function setSelecting(paneId: string): void {
   selectingIn = paneId;
+}
+
+// ---------- Dropped files and folders ----------
+
+// A drop on a terminal types the quoted paths into it, and focuses it. In a split tab that is
+// the pane under the pointer, which need not be the focused one.
+export function dropOnPane(paneId: string, items: DroppedItem[]): void {
+  const runtime = getRuntime(paneId);
+  if (!runtime || !items.length) return;
+  focusPane(paneId);
+  runtime.paste(pasteText(items.map((item) => item.path)));
+  runtime.focus();
+}
+
+export function hoverSidebar(over: boolean): void {
+  if (state.sidebarDrop !== over) setState({ sidebarDrop: over });
+}
+
+// A drop on the sidebar opens a terminal for each item, in the dropped folder or in the folder a
+// dropped file is in. The last one opened becomes active, and the tab keeps the shell's name.
+export function dropOnSidebar(items: DroppedItem[]): void {
+  const opening = items.slice(0, MAX_DROPPED_TABS);
+  let last: TabState | undefined;
+  for (const item of opening) last = createTab({ cwd: folderToOpen(item) });
+  if (last) activate(last.id);
+  if (items.length > opening.length)
+    showToast(
+      `Opened ${opening.length} of ${items.length}. A drop opens at most ${MAX_DROPPED_TABS}.`,
+    );
 }
 
 // ---------- Settings and saved commands ----------
@@ -508,12 +565,21 @@ export interface CommandInput {
   terminals: { command: string }[];
   cwd: string;
   autoStart: boolean;
+  layout?: string;
+}
+
+// Drop a layout that does not fit the command's number of terminals, as the MCP server does.
+function withFittingLayout(cmd: SavedCommand): SavedCommand {
+  const { layout, ...rest } = cmd;
+  return layout && layoutIds(cmd.terminals.length)?.includes(layout) ? { ...rest, layout } : rest;
 }
 
 export async function saveCommand(editingId: string | null, data: CommandInput): Promise<void> {
   const commands = editingId
-    ? state.settings.commands.map((c) => (c.id === editingId ? { ...c, ...data } : c))
-    : [...state.settings.commands, { id: uid(), ...data }];
+    ? state.settings.commands.map((c) =>
+        c.id === editingId ? withFittingLayout({ ...c, ...data }) : c,
+      )
+    : [...state.settings.commands, withFittingLayout({ id: uid(), ...data })];
   await saveSettings({ commands });
   // Keep the name of a running tab in step with its command.
   if (editingId) {
@@ -617,6 +683,7 @@ const OVERLAYS: Record<string, Overlay> = {
   'show-guide': 'guide',
   'show-shortcuts': 'shortcuts',
   'command-palette': 'palette',
+  'run-saved-command': 'launcher',
 };
 
 export function openOverlay(overlay: Overlay): void {
@@ -758,6 +825,9 @@ export async function init(): Promise<void> {
       showToast('Copied to clipboard');
     });
   });
+
+  // Files and folders dropped anywhere in the window.
+  watchDrops({ hoverSidebar, dropOnPane, dropOnSidebar }, (file) => api.pathForFile(file));
 
   const autoStart = settings.commands.filter((c) => c.autoStart);
   if (autoStart.length) {

@@ -7,6 +7,8 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { CommandRow } from '../../../src/renderer/CommandRow';
+import { launcherItems } from '../../../src/renderer/palette';
+import { PaletteSearch } from '../../../src/renderer/PaletteDialog';
 import { TerminalRow } from '../../../src/renderer/TerminalRow';
 import type { TabState } from '../../../src/renderer/appStore';
 
@@ -39,6 +41,7 @@ const tab = (overrides: Partial<TabState>): TabState => ({
   cwd: undefined,
   activity: false,
   layout: null,
+  tracks: null,
   panes: [{ id: 'p1', command: '', proc: 'zsh', shellName: 'zsh', attached: true }],
   focusedPaneId: 'p1',
   ready: true,
@@ -71,5 +74,14 @@ describe('untrusted text stays text', () => {
     expect(container.querySelector('.item')?.getAttribute('title')).toBe(
       `${PAYLOAD}\nin ${PAYLOAD}`,
     );
+  });
+
+  it('in a saved command name and its command, in the launcher', () => {
+    const items = launcherItems([
+      { id: 'c1', name: PAYLOAD, terminals: [{ command: PAYLOAD }], cwd: PAYLOAD },
+    ]);
+    render(<PaletteSearch name="t" placeholder="" searchLabel="" results={() => items} />);
+    expectText(container.querySelector('.palette-label'));
+    expectText(container.querySelector('.palette-detail'));
   });
 });

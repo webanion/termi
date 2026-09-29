@@ -30,6 +30,10 @@ async function until(check: () => Promise<boolean> | boolean, ms = 10_000): Prom
 
 const text = (selector: string) => page.locator(selector).first().textContent();
 
+// The layout of the tab on screen, one quoted string per row of its grid.
+const gridAreas = () =>
+  page.evaluate("document.querySelector('.tab-view.active').style.gridTemplateAreas");
+
 const settingsFile = () =>
   JSON.parse(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8')) as Record<string, unknown>;
 
@@ -40,6 +44,31 @@ const clickMenu = (id: string) =>
     if (!item) throw new Error(`No menu item ${itemId}`);
     item.click();
   }, id);
+
+// Drag events carrying files from disk, sent to the first element that matches `selector`.
+// Playwright's file chooser gives the page File objects backed by real paths, as a drop from the
+// file manager does, so the preload finds their paths.
+async function dragFiles(selector: string, files: string[], types: string[]): Promise<void> {
+  await page.evaluate(`(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.id = 'e2e-drop-files';
+    input.hidden = true;
+    document.body.append(input);
+  })()`);
+  await page.setInputFiles('#e2e-drop-files', files);
+  await page.evaluate(`(() => {
+    const input = document.getElementById('e2e-drop-files');
+    const data = new DataTransfer();
+    for (const file of input.files) data.items.add(file);
+    input.remove();
+    const target = document.querySelector(${JSON.stringify(selector)});
+    for (const type of ${JSON.stringify(types)}) {
+      target.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: data }));
+    }
+  })()`);
+}
 
 beforeAll(async () => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'termi-e2e-'));
@@ -92,7 +121,7 @@ describe('Termi', () => {
   it('opens the auto-start command with its four terminals in its layout', async () => {
     await until(() => [1, 2, 3, 4].every((n) => fs.existsSync(marker(n))));
     expect(await page.locator('.tab-view.active .term-pane').count()).toBe(4);
-    expect(await page.locator('.tab-view.active').getAttribute('style')).toContain('"a b" "c d"');
+    expect(await gridAreas()).toBe('"a b" "c d"');
     expect(await text('#title-text')).toBe('Quad');
   });
 
@@ -175,7 +204,7 @@ describe('Termi', () => {
     expect(await panes.count()).toBe(1);
     await page.locator('#split-terminal').click();
     await until(async () => (await panes.count()) === 2);
-    expect(await page.locator('.tab-view.active').getAttribute('style')).toContain('"a b"');
+    expect(await gridAreas()).toBe('"a b"');
 
     // The new terminal has focus, and takes typing once its shell has started and it shows
     // the shell's name.
@@ -186,9 +215,86 @@ describe('Termi', () => {
     await page.keyboard.press('Enter');
     await until(() => fs.existsSync(marker(8)));
 
+    // Drag the line between the two terminals to the right. The left one grows, and its
+    // terminal is fitted to it once the drag ends. A double-click makes them equal again.
+    const widths = () =>
+      page
+        .locator('.tab-view.active .term-pane')
+        .evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width));
+    const screenWidth = () =>
+      page
+        .locator('.tab-view.active .term-pane .xterm-screen')
+        .first()
+        .evaluate((el) => el.getBoundingClientRect().width);
+    const line = page.locator('.tab-view.active .pane-resizer.vertical');
+    const box = await line.boundingBox();
+    if (!box) throw new Error('The line between the terminals does not show');
+    const before = await screenWidth();
+    const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 120, y, { steps: 6 });
+    await page.mouse.up();
+    const [left = 0, right = 0] = await widths();
+    expect(Math.abs(left - right - 240)).toBeLessThan(2);
+    await until(async () => (await screenWidth()) > before + 60);
+    await line.dblclick();
+    await until(async () => {
+      const [a = 0, b = 0] = await widths();
+      return Math.abs(a - b) < 1;
+    });
+
     await added.locator('.pane-head .icon-btn').click();
     await until(async () => (await panes.count()) === 1);
     expect(await page.locator('#terminal-list .item').count()).toBe(tabs);
+  });
+
+  it('types a dropped file into the terminal under the pointer, quoted for the shell', async () => {
+    const dropped = path.join(dir, "it's a drop.txt");
+    fs.writeFileSync(dropped, 'dropped\n');
+    const panes = page.locator('.tab-view.active .term-pane');
+    await page.locator('#split-terminal').click();
+    await until(async () => (await panes.count()) === 2);
+    const [first, second] = [panes.nth(0), panes.nth(1)];
+    await until(async () => ((await second.locator('.pane-name').textContent()) ?? '') !== '');
+
+    // Start a command in the first terminal, then drop on it while the second has focus.
+    await first.locator('.xterm-helper-textarea').focus();
+    await page.keyboard.type('cp ');
+    await second.locator('.xterm-helper-textarea').focus();
+    await until(async () => (await second.getAttribute('class'))?.includes('focused') ?? false);
+    await dragFiles('.tab-view.active .term-pane .pane-body', [dropped], ['drop']);
+    await until(async () => (await first.getAttribute('class'))?.includes('focused') ?? false);
+
+    // The drop took focus, so the rest of the command goes to the same terminal.
+    await page.keyboard.type(`'${marker(9)}'`);
+    await page.keyboard.press('Enter');
+    await until(() => fs.existsSync(marker(9)));
+    expect(fs.readFileSync(marker(9), 'utf8')).toBe('dropped\n');
+
+    await second.locator('.pane-head .icon-btn').click();
+    await until(async () => (await panes.count()) === 1);
+  });
+
+  it('opens a terminal in the folder of a file dropped on the sidebar', async () => {
+    const dropped = path.join(dir, "it's a drop.txt");
+    const count = () => page.locator('#terminal-list .item').count();
+    const dropping = async () =>
+      (await page.locator('#sidebar').getAttribute('class'))?.includes('dropping') ?? false;
+    const before = await count();
+
+    // A drop on a saved command opens a terminal too, and does not run the command.
+    await dragFiles('#command-list .item', [dropped], ['dragenter', 'dragover']);
+    await until(dropping);
+    await dragFiles('#command-list .item', [dropped], ['drop']);
+    await until(async () => !(await dropping()));
+    await until(async () => (await count()) === before + 1);
+
+    await page.locator('.tab-view.active .xterm-helper-textarea').first().focus();
+    await page.keyboard.type(`pwd > '${marker(10)}'`);
+    await page.keyboard.press('Enter');
+    await until(() => fs.existsSync(marker(10)) && fs.readFileSync(marker(10), 'utf8') !== '');
+    expect(fs.realpathSync(fs.readFileSync(marker(10), 'utf8').trim())).toBe(fs.realpathSync(dir));
   });
 
   it('lists the shortcuts and runs actions from the palette, through the menu', async () => {
@@ -211,6 +317,37 @@ describe('Termi', () => {
       await page.keyboard.press('Enter');
       await until(() => settingsFile().fontSize === size);
     }
+  });
+
+  it('goes to a running saved command from the launcher, and starts a stopped one', async () => {
+    const launcher = page.locator('#command-launcher');
+    const palette = page.locator('#command-palette');
+    const quad = page.locator('#terminal-list .item', { hasText: 'Quad renamed' });
+
+    // Opening the launcher closes the palette.
+    await clickMenu('command-palette');
+    await until(async () => (await palette.getAttribute('open')) !== null);
+    await clickMenu('run-saved-command');
+    await until(async () => (await launcher.getAttribute('open')) !== null);
+    expect(await palette.getAttribute('open')).toBeNull();
+    expect(await launcher.locator('.palette-label').allTextContents()).toEqual(['Quad renamed']);
+    expect(await text('#command-launcher .palette-detail')).toBe(`echo 1 > '${marker(1)}'`);
+
+    await page.keyboard.type('quad');
+    await page.keyboard.press('Enter');
+    await until(async () => (await launcher.getAttribute('open')) === null);
+    await until(async () => (await quad.getAttribute('class'))?.includes('active') ?? false);
+    const tabs = await page.locator('#terminal-list .item').count();
+
+    await clickMenu('close-terminal');
+    await until(async () => (await quad.count()) === 0);
+    for (const n of [1, 2, 3, 4]) fs.rmSync(marker(n));
+    await clickMenu('run-saved-command');
+    await page.locator('#launcher-input').waitFor();
+    await page.keyboard.press('Enter');
+    await until(() => [1, 2, 3, 4].every((n) => fs.existsSync(marker(n))));
+    await until(async () => (await page.locator('#terminal-list .item').count()) === tabs);
+    expect(await text('#title-text')).toBe('Quad renamed');
   });
 
   it('opens the bug report form, filled in, and sends nothing itself', async () => {
