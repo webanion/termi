@@ -44,14 +44,7 @@ export function TabView({ tab, state }: { tab: TabState; state: TabViewState }) 
       )}
       style={style}
     >
-      {tab.panes.map((pane, index) => (
-        <TerminalPane
-          key={pane.id}
-          tab={tab}
-          pane={pane}
-          area={layout ? PANE_AREAS[index] : undefined}
-        />
-      ))}
+      {/* The handles come first, so Tab reaches them before a terminal, which keeps Tab. */}
       {tracks &&
         lines.map((line) => (
           <PaneResizer
@@ -61,6 +54,14 @@ export function TabView({ tab, state }: { tab: TabState; state: TabViewState }) 
             sizes={tracks[line.axis]}
           />
         ))}
+      {tab.panes.map((pane, index) => (
+        <TerminalPane
+          key={pane.id}
+          tab={tab}
+          pane={pane}
+          area={layout ? PANE_AREAS[index] : undefined}
+        />
+      ))}
     </div>
   );
 }
