@@ -9,7 +9,7 @@ import { WebglAddon } from '@xterm/addon-webgl';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import '@xterm/xterm/css/xterm.css';
 import { TERMINAL_FONT, THEME } from './theme';
-import type { PtyCreated } from '@/shared/types';
+import type { CursorStyle, PtyCreated } from '@/shared/types';
 
 export interface RuntimeEvents {
   onTitle: (paneId: string, title: string) => void;
@@ -21,6 +21,8 @@ interface RuntimeOptions {
   command: string;
   cwd: string | undefined;
   fontSize: number;
+  cursorStyle: CursorStyle;
+  cursorBlink: boolean;
   events: RuntimeEvents;
 }
 
@@ -41,7 +43,15 @@ export class TerminalRuntime {
   private spawned = false;
   private disposed = false;
 
-  constructor({ paneId, command, cwd, fontSize, events }: RuntimeOptions) {
+  constructor({
+    paneId,
+    command,
+    cwd,
+    fontSize,
+    cursorStyle,
+    cursorBlink,
+    events,
+  }: RuntimeOptions) {
     this.paneId = paneId;
     this.command = command;
     this.cwd = cwd;
@@ -50,8 +60,8 @@ export class TerminalRuntime {
       fontFamily: TERMINAL_FONT,
       fontSize,
       lineHeight: 1.2,
-      cursorBlink: true,
-      cursorStyle: 'bar',
+      cursorBlink,
+      cursorStyle,
       cursorWidth: 2,
       scrollback: 10000,
       allowProposedApi: true,

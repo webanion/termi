@@ -2,6 +2,7 @@
 // The guide opens by itself on the first launch, and is marked as seen so it does not again.
 import './stubTermi';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { Settings } from '@/shared/types';
 
 vi.mock('@/renderer/terminalRuntime', () => ({
   createRuntime: () => ({}),
@@ -14,11 +15,13 @@ vi.mock('@/renderer/terminalRuntime', () => ({
 
 async function startWith(guideSeen: boolean) {
   vi.resetModules();
-  const settings = {
+  const settings: Settings = {
     commands: [],
     sidebarWidth: 232,
     sidebarHidden: false,
     fontSize: 13,
+    cursorStyle: 'bar',
+    cursorBlink: true,
     guideSeen,
   };
   vi.spyOn(window.termi.settings, 'get').mockResolvedValue(settings);

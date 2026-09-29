@@ -45,6 +45,8 @@ async function start() {
     sidebarWidth: 232,
     sidebarHidden: false,
     fontSize: 13,
+    cursorStyle: 'bar',
+    cursorBlink: true,
     guideSeen: true,
   });
   const store = await import('@/renderer/appStore');

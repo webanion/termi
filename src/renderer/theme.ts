@@ -1,6 +1,5 @@
 import type { ITheme } from '@xterm/xterm';
 
-export const DEFAULT_FONT_SIZE = 13;
 export const DURATION = 220; // matches --dur in styles/base.css
 export const SIDEBAR_MIN = 170;
 export const SIDEBAR_MAX = 420;

@@ -1,7 +1,7 @@
-import { toggleSidebar, zoomFromHeader } from './appStore';
+import { openOverlay, toggleSidebar, zoomFromHeader } from './appStore';
 import { CommandList } from './CommandList';
 import { cx } from './cx';
-import { SidebarIcon } from './Icons';
+import { SettingsIcon, SidebarIcon } from './Icons';
 import { StatsFooter } from './StatsFooter';
 import { TerminalList } from './TerminalList';
 import { useAppState } from './useAppState';
@@ -14,6 +14,15 @@ export function Sidebar() {
     <aside className={cx('sidebar', dropping && 'dropping')} id="sidebar">
       <div className="sidebar-head drag" onDoubleClick={(event) => zoomFromHeader(event.target)}>
         <div className="spacer"></div>
+        <button
+          className="icon-btn no-drag"
+          id="open-settings"
+          title={`Settings (${shortcutLabel('open-settings', platform)})`}
+          aria-label="Settings"
+          onClick={() => openOverlay('settings')}
+        >
+          <SettingsIcon />
+        </button>
         <button
           className="icon-btn no-drag"
           id="hide-sidebar"

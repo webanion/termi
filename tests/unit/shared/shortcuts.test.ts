@@ -39,6 +39,7 @@ const MAC_ADDED: Record<string, string> = {
   'split-terminal': 'Cmd+D',
   'reopen-terminals': 'Cmd+Shift+T',
   'run-saved-command': 'Cmd+P',
+  'open-settings': 'Cmd+,',
 };
 
 const ALIASES: Record<string, string> = {
@@ -140,6 +141,8 @@ describe('shortcutLabel', () => {
     expect(shortcutLabel('command-palette', 'darwin')).toBe('⇧⌘P');
     expect(shortcutLabel('run-saved-command', 'darwin')).toBe('⌘P');
     expect(shortcutLabel('run-saved-command', 'linux')).toBe('Ctrl+Shift+O');
+    expect(shortcutLabel('open-settings', 'darwin')).toBe('⌘,');
+    expect(shortcutLabel('open-settings', 'linux')).toBe('Ctrl+,');
   });
 });
 
@@ -150,6 +153,12 @@ describe('matchShortcut', () => {
     expect(matchShortcut(press('P', 'KeyP', { control: true, shift: true }), false)).toBe(
       'command-palette',
     );
+  });
+
+  it('matches Ctrl+, and Cmd+, to the settings by their key', () => {
+    expect(matchShortcut(press(',', 'Comma', { control: true }), false)).toBe('open-settings');
+    expect(matchShortcut(press(',', 'Comma', { meta: true }), true)).toBe('open-settings');
+    expect(matchShortcut(press('<', 'Comma', { control: true, shift: true }), false)).toBeNull();
   });
 
   it('matches Ctrl+Shift+T by the letter it types', () => {

@@ -5,8 +5,10 @@
 
 import { fittingLayout, layoutIds, type Layout } from '@/shared/layouts';
 import { MAX_TERMINALS } from '@/shared/savedCommands';
+import { clampFontSize, DEFAULT_SETTINGS } from '@/shared/settings';
 import type {
   AppInfo,
+  CursorStyle,
   PtyCreated,
   SavedCommand,
   SavedTerminal,
@@ -29,7 +31,7 @@ import {
   watchDrops,
   type DroppedItem,
 } from './fileDrop';
-import { DEFAULT_FONT_SIZE, DURATION, SIDEBAR_DEFAULT } from './theme';
+import { DURATION, SIDEBAR_DEFAULT } from './theme';
 import { issueUrl, releaseNotesUrl } from './helpLinks';
 import { layoutGrid, tracksFor, type Axis, type TrackSizes } from './paneTracks';
 
@@ -71,7 +73,7 @@ export interface DialogState {
   token: number; // changes on every open, so the form starts fresh
 }
 
-export type Overlay = 'guide' | 'shortcuts' | 'palette' | 'launcher';
+export type Overlay = 'guide' | 'shortcuts' | 'palette' | 'launcher' | 'settings';
 
 export interface AppState {
   info: AppInfo;
@@ -81,8 +83,9 @@ export interface AppState {
   leavingId: number | null; // the tab that was active and is fading out
   closing: ClosingTab[]; // closed tabs, kept while they fade out
   dialog: DialogState | null;
-  overlay: Overlay | null; // the guide, the shortcut sheet, the command palette or the launcher
+  overlay: Overlay | null; // the guide, the shortcut sheet, the palette, the launcher or settings
   guidePage: number;
+  openAtLogin: boolean | null; // null where Termi cannot open at login, or until settings open
   toast: { text: string; visible: boolean };
   sidebarDrop: boolean; // files are dragged over the sidebar
 }
@@ -98,13 +101,7 @@ export interface TabOptions {
 let state: AppState = {
   info: { platform: 'darwin', version: '', home: '' },
   // Replaced by the saved settings in init().
-  settings: {
-    commands: [],
-    sidebarWidth: SIDEBAR_DEFAULT,
-    sidebarHidden: false,
-    fontSize: DEFAULT_FONT_SIZE,
-    guideSeen: true,
-  },
+  settings: { ...DEFAULT_SETTINGS, sidebarWidth: SIDEBAR_DEFAULT, guideSeen: true },
   tabs: [],
   activeId: null,
   leavingId: null,
@@ -112,6 +109,7 @@ let state: AppState = {
   dialog: null,
   overlay: null,
   guidePage: 0,
+  openAtLogin: null,
   toast: { text: '', visible: false },
   sidebarDrop: false,
 };
@@ -280,6 +278,8 @@ function createPane(
     command,
     cwd,
     fontSize: state.settings.fontSize,
+    cursorStyle: state.settings.cursorStyle,
+    cursorBlink: state.settings.cursorBlink,
     events: runtimeEvents,
   });
   return pane;
@@ -481,11 +481,33 @@ function cyclePane(step: number): void {
   if (next) getRuntime(next.id)?.focus();
 }
 
-function setFontSize(size: number): void {
-  const fontSize = Math.min(28, Math.max(9, size));
-  for (const runtime of allRuntimes()) runtime.term.options.fontSize = fontSize;
-  fitActiveTab();
-  void saveSettings({ fontSize });
+export function setFontSize(size: number): void {
+  void saveSettings({ fontSize: clampFontSize(size) }).then(applyTerminalOptions);
+}
+
+export function setCursorStyle(cursorStyle: CursorStyle): void {
+  void saveSettings({ cursorStyle }).then(applyTerminalOptions);
+}
+
+export function setCursorBlink(cursorBlink: boolean): void {
+  void saveSettings({ cursorBlink }).then(applyTerminalOptions);
+}
+
+// Give every terminal the text size and cursor of the settings. A new text size changes how
+// many rows and columns fit, so the terminals on screen refit.
+function applyTerminalOptions(): void {
+  const { fontSize, cursorStyle, cursorBlink } = state.settings;
+  let resized = false;
+  for (const runtime of allRuntimes()) {
+    const options = runtime.term.options;
+    if (options.fontSize !== fontSize) {
+      options.fontSize = fontSize;
+      resized = true;
+    }
+    if (options.cursorStyle !== cursorStyle) options.cursorStyle = cursorStyle;
+    if (options.cursorBlink !== cursorBlink) options.cursorBlink = cursorBlink;
+  }
+  if (resized) fitActiveTab();
 }
 
 export function setLayout(tabId: number, layoutId: string): void {
@@ -683,7 +705,11 @@ function applySidebar(): void {
 }
 
 export function toggleSidebar(): void {
-  void saveSettings({ sidebarHidden: !state.settings.sidebarHidden }).then(applySidebar);
+  setSidebarHidden(!state.settings.sidebarHidden);
+}
+
+export function setSidebarHidden(sidebarHidden: boolean): void {
+  void saveSettings({ sidebarHidden }).then(applySidebar);
 }
 
 export function saveSidebarWidth(width: number): void {
@@ -709,6 +735,30 @@ function applyWindowState({ isFullScreen, isFocused }: WindowState): void {
   document.body.classList.toggle('blurred', !isFocused);
 }
 
+// ---------- Settings panel ----------
+
+// The settings the panel shows, which Reset all puts back. The sidebar's width, the saved
+// commands and whether the guide has opened stay as they are.
+export const PANEL_SETTINGS = ['fontSize', 'cursorStyle', 'cursorBlink', 'sidebarHidden'] as const;
+
+export async function setOpenAtLogin(open: boolean): Promise<void> {
+  setState({ openAtLogin: await api.loginItem.set(open) });
+}
+
+async function readOpenAtLogin(): Promise<void> {
+  setState({ openAtLogin: await api.loginItem.get() });
+}
+
+export function resetAllSettings(): void {
+  const patch: Partial<Settings> = {};
+  for (const key of PANEL_SETTINGS) Object.assign(patch, { [key]: DEFAULT_SETTINGS[key] });
+  void saveSettings(patch).then(() => {
+    applySidebar();
+    applyTerminalOptions();
+  });
+  if (state.openAtLogin) void setOpenAtLogin(false);
+}
+
 // ---------- Toast ----------
 
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -726,12 +776,15 @@ const OVERLAYS: Record<string, Overlay> = {
   'show-shortcuts': 'shortcuts',
   'command-palette': 'palette',
   'run-saved-command': 'launcher',
+  'open-settings': 'settings',
 };
 
 export function openOverlay(overlay: Overlay): void {
   if (state.dialog) closeCommandDialog();
   setState({ overlay });
   if (overlay === 'guide' && !state.settings.guideSeen) void saveSettings({ guideSeen: true });
+  // Another app, such as System Settings, can change it while Termi runs.
+  if (overlay === 'settings') void readOpenAtLogin();
 }
 
 export function closeOverlay(): void {
@@ -777,7 +830,7 @@ const menuActions: Record<string, () => unknown> = {
   'toggle-sidebar': toggleSidebar,
   'font-bigger': () => setFontSize(state.settings.fontSize + 1),
   'font-smaller': () => setFontSize(state.settings.fontSize - 1),
-  'font-reset': () => setFontSize(DEFAULT_FONT_SIZE),
+  'font-reset': () => setFontSize(DEFAULT_SETTINGS.fontSize),
   'next-terminal': () => cycle(1),
   'prev-terminal': () => cycle(-1),
   'next-pane': () => cyclePane(1),
@@ -826,8 +879,11 @@ export async function init(): Promise<void> {
   api.window.onState(applyWindowState);
   api.onMenuAction(runAction);
   api.settings.onChange((next) => {
-    // The MCP server changed the saved commands. Keep running tabs in step, like a save from
-    // the dialog.
+    // The MCP server changed the saved commands, or someone edited the file. Keep running tabs
+    // in step, like a save from the dialog, and apply the other settings as the panel does.
+    const sidebarChanged =
+      next.sidebarHidden !== state.settings.sidebarHidden ||
+      next.sidebarWidth !== state.settings.sidebarWidth;
     setState({
       settings: next,
       tabs: state.tabs.map((t) => {
@@ -836,6 +892,8 @@ export async function init(): Promise<void> {
         return cmd ? { ...t, name: cmd.name } : { ...t, commandId: null };
       }),
     });
+    applyTerminalOptions();
+    if (sidebarChanged) applySidebar();
   });
   api.pty.onData((id, data) => {
     const runtime = routePtyData(id, data);

@@ -9,6 +9,8 @@ const settings: Settings = {
   sidebarWidth: 232,
   sidebarHidden: false,
   fontSize: 13,
+  cursorStyle: 'bar',
+  cursorBlink: true,
   guideSeen: true,
 };
 
@@ -32,6 +34,7 @@ const api: TermiApi = {
   showTerminalMenu: noop,
   onStats: subscribe,
   pickFolder: async () => null,
+  loginItem: { get: async () => null, set: async () => null },
   pathForFile: () => '',
   window: {
     minimize: noop,
