@@ -63,6 +63,7 @@ The full conventions are in [CONTRIBUTING](.github/CONTRIBUTING.md). The short v
 - One-line Conventional Commits, `type(scope): description`, with the type matching the branch.
 - Pull requests merge with a merge commit. Never force push, and never rewrite `main`.
 - Source files and scripts are named in camelCase, React component files in PascalCase. Image assets keep kebab-case names, and config files keep the names their tools expect.
+- Import from another folder of `src/` with `@/`, which is `src/`, as in `@/shared/types`, and from the same folder with `./`. Tests do the same. Only files outside `src/`, the logos in `assets/` and `package.json`, keep a `../` path, and ESLint refuses any other.
 - Documentation moves with the code: if a change makes the README or `src/mcp/docs.md` wrong, fix it in the same pull request.
 - Never use an em dash in any text, and never hard wrap markdown. One paragraph is one line.
 - If you used a coding assistant, say which one in the pull request body. A `Co-authored-by` trailer naming the model is welcome on commits, and "generated with" footers are not. The maintainers' own commits carry no trailer.
