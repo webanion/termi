@@ -11,7 +11,7 @@ A terminal app for macOS and Linux with a warm dark theme, saved commands that o
 ## What it does
 
 - A sidebar with the running terminals at the top and your saved commands below.
-- A saved command can run up to 4 terminals in one tab, for example an API server, a web server and a plain shell for one project. Add them with "Add terminal" in the saved command dialog. An empty command opens a plain shell. When a tab has more than one terminal, a layout control shows on the right of the header, and Termi remembers the layout for each saved command.
+- A saved command can run up to 4 terminals in one tab, for example an API server, a web server and a plain shell for one project. Add them with "Add terminal" in the saved command dialog. An empty command opens a plain shell. Each terminal can have a title, such as API or Web, which its pane header shows in place of the command. When a tab has more than one terminal, a layout control shows on the right of the header, and Termi remembers the layout for each saved command.
 - Split any tab to add a plain shell to it, up to 4 terminals, with the split button on the right of the header or ⌘D (Ctrl+Shift+D on Linux). The new shell starts in the folder the tab started in. A split is not saved to a saved command, and while a split tab has more terminals than its saved command, Termi does not save its layout.
 - Saved commands can start when Termi opens (the bolt icon).
 - Select text in a terminal to copy it. A double-click copies a word, and a triple-click copies a line.
@@ -129,7 +129,7 @@ claude mcp add termi --scope user -- node /path/to/termi/out/main/mcpServer.js
 
 Termi keeps its data in `~/Library/Application Support/Termi/` on macOS, and in `$XDG_CONFIG_HOME/Termi` on Linux, which is usually `~/.config/Termi`.
 
-- `settings.json`: the saved commands, with their terminals and layout, the sidebar width, the text size, and whether the guide has opened. It has a version number, and Termi upgrades an older file when it reads it.
+- `settings.json`: the saved commands, with their terminals, terminal titles and layout, the sidebar width, the text size, and whether the guide has opened. It has a version number, and Termi upgrades an older file when it reads it.
 - `window-state.json`: the window's position and size.
 
 Set `TERMI_USER_DATA` to point the app and the MCP server at another folder, for example for tests.
