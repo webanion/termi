@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { fittingLayout, layoutIds, LAYOUTS } from '../../../src/shared/layouts';
-import {
-  isSavedCommandShape,
-  MAX_TERMINALS,
-  savedCommandError,
-} from '../../../src/shared/savedCommands';
-import type { SavedCommand } from '../../../src/shared/types';
+import { fittingLayout, layoutIds, LAYOUTS } from '@/shared/layouts';
+import { isSavedCommandShape, MAX_TERMINALS, savedCommandError } from '@/shared/savedCommands';
+import type { SavedCommand } from '@/shared/types';
 
 const command = (overrides: Partial<SavedCommand> = {}): SavedCommand => ({
   id: 'id1',

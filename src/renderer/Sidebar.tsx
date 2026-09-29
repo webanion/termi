@@ -5,7 +5,7 @@ import { SidebarIcon } from './Icons';
 import { StatsFooter } from './StatsFooter';
 import { TerminalList } from './TerminalList';
 import { useAppState } from './useAppState';
-import { shortcutLabel } from '../shared/shortcuts';
+import { shortcutLabel } from '@/shared/shortcuts';
 
 export function Sidebar() {
   const platform = useAppState((s) => s.info.platform);

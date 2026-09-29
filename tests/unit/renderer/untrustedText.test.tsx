@@ -6,11 +6,11 @@ import './stubTermi';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { CommandRow } from '../../../src/renderer/CommandRow';
-import { launcherItems } from '../../../src/renderer/palette';
-import { PaletteSearch } from '../../../src/renderer/PaletteDialog';
-import { TerminalRow } from '../../../src/renderer/TerminalRow';
-import type { TabState } from '../../../src/renderer/appStore';
+import { CommandRow } from '@/renderer/CommandRow';
+import { launcherItems } from '@/renderer/palette';
+import { PaletteSearch } from '@/renderer/PaletteDialog';
+import { TerminalRow } from '@/renderer/TerminalRow';
+import type { TabState } from '@/renderer/appStore';
 
 const PAYLOAD = '<img src=x onerror="window.__pwned = true">';
 

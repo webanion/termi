@@ -1,19 +1,14 @@
 // The in-app help: the guide's pages and their reader, the shortcut sheet, the command palette
 // and the Report an Issue link.
 import { describe, expect, it } from 'vitest';
-import { GUIDE_PAGES } from '../../../src/renderer/guidePages';
-import { parseGuide, parseInline } from '../../../src/renderer/guideMarkdown';
-import { keysFor } from '../../../src/renderer/HelpKeys';
-import { issueUrl, releaseNotesUrl } from '../../../src/renderer/helpLinks';
-import {
-  filterPalette,
-  launcherItems,
-  newCommandItem,
-  paletteItems,
-} from '../../../src/renderer/palette';
-import { shortcutRows } from '../../../src/renderer/shortcutRows';
-import { actionLabel, PALETTE_ACTIONS } from '../../../src/shared/appActions';
-import { SHORTCUT_ACTIONS } from '../../../src/shared/shortcuts';
+import { GUIDE_PAGES } from '@/renderer/guidePages';
+import { parseGuide, parseInline } from '@/renderer/guideMarkdown';
+import { keysFor } from '@/renderer/HelpKeys';
+import { issueUrl, releaseNotesUrl } from '@/renderer/helpLinks';
+import { filterPalette, launcherItems, newCommandItem, paletteItems } from '@/renderer/palette';
+import { shortcutRows } from '@/renderer/shortcutRows';
+import { actionLabel, PALETTE_ACTIONS } from '@/shared/appActions';
+import { SHORTCUT_ACTIONS } from '@/shared/shortcuts';
 
 describe('the guide', () => {
   it('has pages that each start with a title and hold text', () => {

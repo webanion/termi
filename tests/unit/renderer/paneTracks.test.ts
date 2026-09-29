@@ -9,8 +9,8 @@ import {
   trackLines,
   tracksFor,
   trackTemplate,
-} from '../../../src/renderer/paneTracks';
-import { LAYOUTS } from '../../../src/shared/layouts';
+} from '@/renderer/paneTracks';
+import { LAYOUTS } from '@/shared/layouts';
 
 const grid = (count: number, id: string) => {
   const layout = LAYOUTS[count]?.find((l) => l.id === id);

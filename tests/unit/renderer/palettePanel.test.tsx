@@ -5,18 +5,13 @@ import './stubTermi';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import * as store from '../../../src/renderer/appStore';
-import {
-  filterPalette,
-  launcherItems,
-  newCommandItem,
-  type PaletteItem,
-} from '../../../src/renderer/palette';
-import { PaletteSearch } from '../../../src/renderer/PaletteDialog';
-import type { SavedCommand } from '../../../src/shared/types';
+import * as store from '@/renderer/appStore';
+import { filterPalette, launcherItems, newCommandItem, type PaletteItem } from '@/renderer/palette';
+import { PaletteSearch } from '@/renderer/PaletteDialog';
+import type { SavedCommand } from '@/shared/types';
 
-vi.mock('../../../src/renderer/appStore', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../../../src/renderer/appStore')>()),
+vi.mock('@/renderer/appStore', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/renderer/appStore')>()),
   activate: vi.fn(),
   closeOverlay: vi.fn(),
   runAction: vi.fn(),

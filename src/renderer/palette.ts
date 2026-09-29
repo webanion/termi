@@ -2,9 +2,9 @@
 // its keys, and every running terminal by name. `hidden` holds the actions that have nothing to
 // act on at the moment. The launcher lists the saved commands.
 
-import { actionLabel, PALETTE_ACTIONS, type AppAction } from '../shared/appActions';
-import { isShortcutAction, shortcutLabel } from '../shared/shortcuts';
-import type { SavedCommand } from '../shared/types';
+import { actionLabel, PALETTE_ACTIONS, type AppAction } from '@/shared/appActions';
+import { isShortcutAction, shortcutLabel } from '@/shared/shortcuts';
+import type { SavedCommand } from '@/shared/types';
 import { commandLabel } from './commandText';
 
 export interface PaletteItem {

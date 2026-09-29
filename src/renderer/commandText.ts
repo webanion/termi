@@ -1,4 +1,4 @@
-import type { SavedCommand } from '../shared/types';
+import type { SavedCommand } from '@/shared/types';
 
 // One line for a command that may have many lines.
 export function commandLabel(command: string): string {

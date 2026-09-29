@@ -13,7 +13,7 @@ vi.mock('electron', () => ({
   screen: { getAllDisplays: () => mocks.displays },
 }));
 
-const { loadWindowState } = await import('../../../src/main/windowState');
+const { loadWindowState } = await import('@/main/windowState');
 
 const mainDisplay = { workArea: { x: 0, y: 25, width: 1440, height: 875 } };
 const save = (state: object) =>

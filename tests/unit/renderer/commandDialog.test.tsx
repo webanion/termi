@@ -5,9 +5,9 @@ import './stubTermi';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import type { SavedCommand } from '../../../src/shared/types';
+import type { SavedCommand } from '@/shared/types';
 
-vi.mock('../../../src/renderer/terminalRuntime', () => ({
+vi.mock('@/renderer/terminalRuntime', () => ({
   createRuntime: () => ({}),
   getRuntime: () => undefined,
   allRuntimes: () => [].values(),
@@ -46,8 +46,8 @@ async function openDialog(cmd: SavedCommand | null) {
     guideSeen: true,
   });
   const update = vi.spyOn(window.termi.settings, 'update');
-  const store = await import('../../../src/renderer/appStore');
-  const { CommandDialog } = await import('../../../src/renderer/CommandDialog');
+  const store = await import('@/renderer/appStore');
+  const { CommandDialog } = await import('@/renderer/CommandDialog');
   await store.init();
   container = document.createElement('div');
   document.body.appendChild(container);

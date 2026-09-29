@@ -4,7 +4,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { PtyManager } from '../../src/main/ptyManager';
+import { PtyManager } from '@/main/ptyManager';
 
 interface Sent {
   channel: string;

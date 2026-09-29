@@ -1,7 +1,7 @@
 import { app, Menu, type MenuItemConstructorOptions } from 'electron';
-import { actionLabel, type HelpAction } from '../shared/appActions';
-import type { SendEvent } from '../shared/ipc';
-import { SHORTCUT_ACTIONS, shortcutAccelerator, type ShortcutAction } from '../shared/shortcuts';
+import { actionLabel, type HelpAction } from '@/shared/appActions';
+import type { SendEvent } from '@/shared/ipc';
+import { SHORTCUT_ACTIONS, shortcutAccelerator, type ShortcutAction } from '@/shared/shortcuts';
 import { runShortcut } from './shortcuts';
 
 const isMac = process.platform === 'darwin';

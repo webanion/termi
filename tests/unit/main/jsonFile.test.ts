@@ -2,7 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { readJson, writeJson } from '../../../src/main/jsonFile';
+import { readJson, writeJson } from '@/main/jsonFile';
 
 let dir: string;
 
