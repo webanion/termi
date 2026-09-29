@@ -15,6 +15,7 @@ import {
   runtimeForPty,
   type RuntimeEvents,
 } from './terminalRuntime';
+import { pasteText, watchDrops, type DroppedItem } from './fileDrop';
 import { DEFAULT_FONT_SIZE, DURATION, SIDEBAR_DEFAULT } from './theme';
 import { issueUrl, releaseNotesUrl } from './helpLinks';
 
@@ -409,6 +410,18 @@ export function setSelecting(paneId: string): void {
   selectingIn = paneId;
 }
 
+// ---------- Dropped files and folders ----------
+
+// A drop on a terminal types the quoted paths into it, and focuses it. In a split tab that is
+// the pane under the pointer, which need not be the focused one.
+export function dropOnPane(paneId: string, items: DroppedItem[]): void {
+  const runtime = getRuntime(paneId);
+  if (!runtime || !items.length) return;
+  focusPane(paneId);
+  runtime.paste(pasteText(items.map((item) => item.path)));
+  runtime.focus();
+}
+
 // ---------- Settings and saved commands ----------
 
 async function saveSettings(patch: Partial<Settings>): Promise<void> {
@@ -692,6 +705,9 @@ export async function init(): Promise<void> {
       showToast('Copied to clipboard');
     });
   });
+
+  // Files and folders dropped anywhere in the window.
+  watchDrops({ dropOnPane }, (file) => api.pathForFile(file));
 
   const autoStart = settings.commands.filter((c) => c.autoStart);
   if (autoStart.length) {
