@@ -225,3 +225,15 @@ describe('choosing a layout after reopening', () => {
     );
   });
 });
+
+describe('the reopen action', () => {
+  it('reopens every closed terminal of the active tab, from its shortcut and menu item', async () => {
+    const { store, close, slots } = await startWith([trio]);
+    close(0);
+    close(2);
+    store.runAction('reopen-terminals');
+    expect(slots()).toEqual([0, 1, 2]);
+    store.runAction('reopen-terminals');
+    expect(slots()).toEqual([0, 1, 2]);
+  });
+});

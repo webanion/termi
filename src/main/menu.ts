@@ -71,6 +71,7 @@ export function buildMenu(send: SendEvent): void {
       submenu: [
         item('new-terminal'),
         item('split-terminal'),
+        item('reopen-terminals'),
         item('new-command'),
         { type: 'separator' },
         item('close-terminal'),

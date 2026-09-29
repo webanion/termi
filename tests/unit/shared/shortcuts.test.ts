@@ -37,6 +37,7 @@ const MAC_ADDED: Record<string, string> = {
   'show-shortcuts': 'Cmd+/',
   'command-palette': 'Cmd+Shift+P',
   'split-terminal': 'Cmd+D',
+  'reopen-terminals': 'Cmd+Shift+T',
 };
 
 const ALIASES: Record<string, string> = {
@@ -156,6 +157,18 @@ describe('matchShortcut', () => {
     expect(matchShortcut(press('T', 'KeyK', { control: true, shift: true }), false)).toBe(
       'new-terminal',
     );
+  });
+
+  it('reopens closed terminals with Ctrl+Shift+R, and with ⇧⌘T on macOS', () => {
+    expect(matchShortcut(press('R', 'KeyR', { control: true, shift: true }), false)).toBe(
+      'reopen-terminals',
+    );
+    expect(matchShortcut(press('r', 'KeyR', { control: true }), false)).toBeNull();
+    expect(matchShortcut(press('t', 'KeyT', { meta: true, shift: true }), true)).toBe(
+      'reopen-terminals',
+    );
+    expect(shortcutLabel('reopen-terminals', 'darwin')).toBe('⇧⌘T');
+    expect(shortcutLabel('reopen-terminals', 'linux')).toBe('Ctrl+Shift+R');
   });
 
   it('leaves Ctrl+T alone, since every modifier must match', () => {

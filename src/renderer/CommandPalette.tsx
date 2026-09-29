@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent } from 'react';
-import { activate, closeOverlay, readyTabs, runAction } from './appStore';
+import { activate, closedTerminals, closeOverlay, readyTabs, runAction } from './appStore';
 import { cx } from './cx';
 import { filterPalette, paletteItems, type PaletteItem } from './palette';
 import { useAppState } from './useAppState';
@@ -15,6 +15,8 @@ function run(item: PaletteItem): void {
 function PaletteBody() {
   const platform = useAppState((s) => s.info.platform);
   const tabs = useAppState((s) => s.tabs);
+  const activeId = useAppState((s) => s.activeId);
+  const commands = useAppState((s) => s.settings.commands);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(0);
 
@@ -22,7 +24,10 @@ function PaletteBody() {
     id: t.id,
     name: t.name || t.panes[0]?.shellName || 'Terminal',
   }));
-  const items = filterPalette(paletteItems(platform, terminals), query);
+  const active = tabs.find((t) => t.id === activeId && t.ready);
+  const canReopen = Boolean(active && closedTerminals(active, commands).length);
+  const hidden = canReopen ? [] : (['reopen-terminals'] as const);
+  const items = filterPalette(paletteItems(platform, terminals, hidden), query);
   const current = Math.min(selected, Math.max(items.length - 1, 0));
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

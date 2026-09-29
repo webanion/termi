@@ -1,5 +1,5 @@
 // What the command palette lists: every action the page runs, with its keys, and every running
-// terminal by name.
+// terminal by name. `hidden` holds the actions that have nothing to act on at the moment.
 
 import { actionLabel, PALETTE_ACTIONS, type AppAction } from '../shared/appActions';
 import { isShortcutAction, shortcutLabel } from '../shared/shortcuts';
@@ -14,8 +14,10 @@ export interface PaletteItem {
 export function paletteItems(
   platform: string,
   tabs: { id: number; name: string }[],
+  hidden: readonly AppAction[] = [],
 ): PaletteItem[] {
-  const actions = PALETTE_ACTIONS.map((action) => ({
+  const shown = PALETTE_ACTIONS.filter((action) => !hidden.includes(action));
+  const actions = shown.map((action) => ({
     key: action,
     label: actionLabel(action).replace(/…$/, ''),
     keys: isShortcutAction(action) ? shortcutLabel(action, platform) : '',

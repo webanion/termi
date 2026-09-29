@@ -647,6 +647,9 @@ const menuActions: Record<string, () => unknown> = {
   'split-terminal': () => {
     if (state.activeId !== null) splitTab(state.activeId);
   },
+  'reopen-terminals': () => {
+    if (state.activeId !== null) reopenTerminals(state.activeId);
+  },
   'new-command': () => openCommandDialog(),
   'close-terminal': () => {
     if (state.dialog) closeCommandDialog();
