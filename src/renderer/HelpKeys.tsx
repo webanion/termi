@@ -1,4 +1,4 @@
-import { isShortcutAction, shortcutLabel } from '../shared/shortcuts';
+import { isShortcutAction, shortcutLabel } from '@/shared/shortcuts';
 
 // The keys for a shortcut on this platform, or for a link click, which is not in the table.
 export function keysFor(name: string, platform: string): string | null {

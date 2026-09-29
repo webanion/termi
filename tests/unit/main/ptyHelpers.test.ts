@@ -2,7 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { resolveCwd, shellEnv } from '../../../src/main/ptyManager';
+import { resolveCwd, shellEnv } from '@/main/ptyManager';
 
 afterEach(() => {
   vi.unstubAllEnvs();

@@ -1,4 +1,4 @@
-import type { TermiApi } from '../shared/types';
+import type { TermiApi } from '@/shared/types';
 
 declare global {
   interface Window {

@@ -11,7 +11,7 @@ import {
   pasteText,
   quoteForShell,
   watchDrops,
-} from '../../../src/renderer/fileDrop';
+} from '@/renderer/fileDrop';
 
 interface FakeItem {
   path: string;

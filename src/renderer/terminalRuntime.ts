@@ -9,7 +9,7 @@ import { WebglAddon } from '@xterm/addon-webgl';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import '@xterm/xterm/css/xterm.css';
 import { TERMINAL_FONT, THEME } from './theme';
-import type { PtyCreated } from '../shared/types';
+import type { PtyCreated } from '@/shared/types';
 
 export interface RuntimeEvents {
   onTitle: (paneId: string, title: string) => void;

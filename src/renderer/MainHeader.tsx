@@ -6,9 +6,9 @@ import { SidebarIcon, SplitIcon } from './Icons';
 import { LayoutControl } from './LayoutControl';
 import { ReopenControl } from './ReopenControl';
 import { useAppState } from './useAppState';
-import { LAYOUTS } from '../shared/layouts';
-import { MAX_TERMINALS } from '../shared/savedCommands';
-import { shortcutLabel } from '../shared/shortcuts';
+import { LAYOUTS } from '@/shared/layouts';
+import { MAX_TERMINALS } from '@/shared/savedCommands';
+import { shortcutLabel } from '@/shared/shortcuts';
 
 export function MainHeader() {
   const tabs = useAppState((s) => s.tabs);

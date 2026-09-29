@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { Layout } from '../shared/layouts';
+import type { Layout } from '@/shared/layouts';
 
 // Draw a layout as an icon: a frame, and a line wherever two panes meet.
 export function LayoutIcon({ layout }: { layout: Layout }) {

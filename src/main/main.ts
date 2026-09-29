@@ -6,7 +6,7 @@ import { handleShortcuts } from './shortcuts';
 import { watchSettings } from './settings';
 import { PtyManager } from './ptyManager';
 import { SystemStats } from './systemStats';
-import type { SendEvent } from '../shared/ipc';
+import type { SendEvent } from '@/shared/ipc';
 
 app.setName('Termi');
 // Lets tests and development runs keep their data apart from the real app.

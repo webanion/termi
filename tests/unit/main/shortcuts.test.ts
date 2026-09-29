@@ -1,7 +1,7 @@
 import type { BrowserWindow } from 'electron';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { handleShortcuts, runShortcut } from '../../../src/main/shortcuts';
-import type { ShortcutInput } from '../../../src/shared/shortcuts';
+import { handleShortcuts, runShortcut } from '@/main/shortcuts';
+import type { ShortcutInput } from '@/shared/shortcuts';
 
 const PLATFORM = Object.getOwnPropertyDescriptor(process, 'platform');
 

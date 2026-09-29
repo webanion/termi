@@ -1,7 +1,7 @@
 import os from 'os';
 import fs from 'fs/promises';
 import { execFile } from 'child_process';
-import type { StatsSample } from '../shared/types';
+import type { StatsSample } from '@/shared/types';
 
 const SAMPLE_MS = 1500;
 

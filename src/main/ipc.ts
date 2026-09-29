@@ -9,11 +9,11 @@ import {
 } from 'electron';
 import { getSettings, updateSettings } from './settings';
 import { isAppPage } from './window';
-import { cleanSettingsPatch } from '../shared/settings';
-import { isRecord } from '../shared/savedCommands';
+import { cleanSettingsPatch } from '@/shared/settings';
+import { isRecord } from '@/shared/savedCommands';
 import type { PtyManager } from './ptyManager';
-import type { InvokeChannels, SendChannels } from '../shared/ipc';
-import type { PtyCreateOptions } from '../shared/types';
+import type { InvokeChannels, SendChannels } from '@/shared/ipc';
+import type { PtyCreateOptions } from '@/shared/types';
 
 // Arguments from the renderer arrive as unknown and are checked here before main uses them.
 type Handler<C extends keyof InvokeChannels> = (

@@ -13,7 +13,7 @@ import { cx } from './cx';
 import { CloseIcon } from './Icons';
 import { useAppState } from './useAppState';
 import type { Presence } from './usePresence';
-import { isShortcutAction, shortcutLabel } from '../shared/shortcuts';
+import { isShortcutAction, shortcutLabel } from '@/shared/shortcuts';
 
 interface Props {
   tab: TabState;

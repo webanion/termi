@@ -19,7 +19,7 @@ interface FakeRuntime {
 const runtimes = vi.hoisted(() => new Map<string, FakeRuntime>());
 const created = vi.hoisted(() => [] as Created[]);
 
-vi.mock('../../../src/renderer/terminalRuntime', () => ({
+vi.mock('@/renderer/terminalRuntime', () => ({
   createRuntime: (options: Created) => {
     const runtime = { paste: vi.fn(), focus: vi.fn(), fit: vi.fn() };
     created.push(options);
@@ -37,7 +37,7 @@ async function start() {
   vi.resetModules();
   runtimes.clear();
   created.length = 0;
-  const store = await import('../../../src/renderer/appStore');
+  const store = await import('@/renderer/appStore');
   await store.init();
   const tab = () => {
     const found = store.activeTab();

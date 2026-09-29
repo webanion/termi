@@ -4,7 +4,7 @@ import { PlusIcon } from './Icons';
 import { TerminalRow } from './TerminalRow';
 import { useAppState } from './useAppState';
 import { usePresence } from './usePresence';
-import { shortcutLabel } from '../shared/shortcuts';
+import { shortcutLabel } from '@/shared/shortcuts';
 
 export function TerminalList() {
   const tabs = useAppState((s) => s.tabs);

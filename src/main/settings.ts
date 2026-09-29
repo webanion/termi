@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
 import { readJson, writeJson } from './jsonFile';
-import { readSettingsFile, type SettingsFile } from '../shared/settings';
-import type { Settings } from '../shared/types';
+import { readSettingsFile, type SettingsFile } from '@/shared/settings';
+import type { Settings } from '@/shared/types';
 
 let cache: SettingsFile | null = null;
 

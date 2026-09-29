@@ -6,7 +6,7 @@ import mcpServer from './guide/mcpServer.md?raw';
 import savedCommands from './guide/savedCommands.md?raw';
 import splitTerminals from './guide/splitTerminals.md?raw';
 import terminals from './guide/terminals.md?raw';
-import type { AppAction } from '../shared/appActions';
+import type { AppAction } from '@/shared/appActions';
 
 export interface GuidePage {
   source: string;

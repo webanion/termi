@@ -1,6 +1,6 @@
 import type { BrowserWindow } from 'electron';
-import type { SendEvent } from '../shared/ipc';
-import { matchShortcut, type ShortcutAction } from '../shared/shortcuts';
+import type { SendEvent } from '@/shared/ipc';
+import { matchShortcut, type ShortcutAction } from '@/shared/shortcuts';
 
 // What a shortcut does, from its key or its menu item. Copy, paste and full screen act on the
 // window. The page runs every other action.

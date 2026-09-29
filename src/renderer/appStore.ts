@@ -3,9 +3,9 @@
 // main, MCP edits to the settings file), so the IPC listeners are registered here, once, in
 // init(), never in a component.
 
-import { fittingLayout, layoutIds, type Layout } from '../shared/layouts';
-import { MAX_TERMINALS } from '../shared/savedCommands';
-import type { AppInfo, PtyCreated, SavedCommand, Settings, WindowState } from '../shared/types';
+import { fittingLayout, layoutIds, type Layout } from '@/shared/layouts';
+import { MAX_TERMINALS } from '@/shared/savedCommands';
+import type { AppInfo, PtyCreated, SavedCommand, Settings, WindowState } from '@/shared/types';
 import {
   allRuntimes,
   createRuntime,

@@ -1,5 +1,5 @@
-import { actionLabel } from '../shared/appActions';
-import { SHORTCUT_ACTIONS, shortcutLabel } from '../shared/shortcuts';
+import { actionLabel } from '@/shared/appActions';
+import { SHORTCUT_ACTIONS, shortcutLabel } from '@/shared/shortcuts';
 import { keysFor } from './HelpKeys';
 
 // Every shortcut on this platform, read from the table the menu is built from, so the two agree.

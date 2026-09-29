@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron';
-import type { EventChannels, InvokeChannels, SendChannels } from '../shared/ipc';
-import type { TermiApi, Unsubscribe } from '../shared/types';
+import type { EventChannels, InvokeChannels, SendChannels } from '@/shared/ipc';
+import type { TermiApi, Unsubscribe } from '@/shared/types';
 
 // Typed wrappers around ipcRenderer, so every channel and payload below matches shared/ipc.ts.
 function invoke<C extends keyof InvokeChannels>(

@@ -3,8 +3,8 @@
 // command while the tab has as many terminals as the command.
 import './stubTermi';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { RuntimeEvents } from '../../../src/renderer/terminalRuntime';
-import type { SavedCommand } from '../../../src/shared/types';
+import type { RuntimeEvents } from '@/renderer/terminalRuntime';
+import type { SavedCommand } from '@/shared/types';
 
 interface Created {
   paneId: string;
@@ -15,7 +15,7 @@ interface Created {
 
 const created = vi.hoisted(() => [] as Created[]);
 
-vi.mock('../../../src/renderer/terminalRuntime', () => ({
+vi.mock('@/renderer/terminalRuntime', () => ({
   createRuntime: (options: Created) => {
     created.push(options);
     return {};
@@ -47,7 +47,7 @@ async function startWith(commands: SavedCommand[] = []) {
     guideSeen: true,
   });
   const update = vi.spyOn(window.termi.settings, 'update');
-  const store = await import('../../../src/renderer/appStore');
+  const store = await import('@/renderer/appStore');
   await store.init();
   const tab = () => {
     const found = store.activeTab();
