@@ -53,7 +53,7 @@ export interface DialogState {
   token: number; // changes on every open, so the form starts fresh
 }
 
-export type Overlay = 'guide' | 'shortcuts' | 'palette';
+export type Overlay = 'guide' | 'shortcuts' | 'palette' | 'launcher';
 
 export interface AppState {
   info: AppInfo;
@@ -63,7 +63,7 @@ export interface AppState {
   leavingId: number | null; // the tab that was active and is fading out
   closing: ClosingTab[]; // closed tabs, kept while they fade out
   dialog: DialogState | null;
-  overlay: Overlay | null; // the guide, the shortcut sheet or the command palette
+  overlay: Overlay | null; // the guide, the shortcut sheet, the command palette or the launcher
   guidePage: number;
   toast: { text: string; visible: boolean };
 }
@@ -561,6 +561,7 @@ const OVERLAYS: Record<string, Overlay> = {
   'show-guide': 'guide',
   'show-shortcuts': 'shortcuts',
   'command-palette': 'palette',
+  'run-saved-command': 'launcher',
 };
 
 export function openOverlay(overlay: Overlay): void {
