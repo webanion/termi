@@ -61,6 +61,12 @@ export interface WindowState {
   isFocused: boolean;
 }
 
+// A right-click in a terminal: whether it has a selection, and the web link under the mouse.
+export interface TerminalContext {
+  hasSelection: boolean;
+  link: string | null;
+}
+
 export type Unsubscribe = () => void;
 
 export interface TermiApi {
@@ -80,6 +86,7 @@ export interface TermiApi {
     onTitle: (callback: (id: number, title: string) => void) => Unsubscribe;
   };
   copyText: (text: string) => void;
+  showTerminalMenu: (context: TerminalContext) => void;
   onStats: (callback: (sample: StatsSample) => void) => Unsubscribe;
   pickFolder: (defaultPath?: string) => Promise<string | null>;
   window: {

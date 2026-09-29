@@ -29,6 +29,7 @@ const api: TermiApi = {
     onTitle: subscribe,
   },
   copyText: noop,
+  showTerminalMenu: noop,
   onStats: subscribe,
   pickFolder: async () => null,
   window: {

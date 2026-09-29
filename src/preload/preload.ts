@@ -45,6 +45,7 @@ const api: TermiApi = {
   },
 
   copyText: (text) => send('clipboard:write', text),
+  showTerminalMenu: (context) => send('terminal:context-menu', context),
 
   onStats: (callback) => listen('stats:update', callback),
 
