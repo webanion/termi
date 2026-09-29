@@ -16,6 +16,7 @@ Each saved command has these fields:
 | `id` | A short random id, such as `3t9tupws`. The server makes it. It never changes. |
 | `name` | The name in the sidebar and on the tab. |
 | `terminals` | One command string per terminal, 1 to 4 items. A command can have more than one line. |
+| `titles` | Only in the output, and only when a terminal has a title. One title per terminal, in the same order as `terminals`, with an empty string for a terminal without one. The user sets titles in the app, and a pane head shows the title in place of the command. The tools cannot set them. |
 | `cwd` | The folder all terminals start in. Empty means the home folder. `~` works. |
 | `autoStart` | When true, the command starts when Termi opens (the bolt icon in the sidebar). |
 | `layout` | How a tab with 2 to 4 terminals is split. See "Layouts" below. It is not set for 1 terminal. |
@@ -41,6 +42,7 @@ A tool that breaks a rule returns an error that says what to fix. Nothing is sav
   `list_saved_commands` first to get the old list.
 - An empty `layout` string removes the layout, so the app uses the default one.
 - If the number of terminals changes and the saved layout does not fit the new number, the server removes it.
+- When `terminals` replaces the list, a terminal keeps its title if its command is the same and in the same place. Every other title is removed. A command left with 1 terminal has no titles.
 
 ## How changes reach the app
 
@@ -61,6 +63,7 @@ The watcher is in the app source (`src/main/settings.ts`). A packaged build made
   clicked twice.
 - Start or stop a command, or open, close, or type into terminals.
 - Change other settings, such as text size or sidebar width.
+- Set the title of a terminal. The user does it in the saved command dialog.
 
 ## Common tasks
 

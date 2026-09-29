@@ -108,9 +108,9 @@ Double-click a running terminal in the sidebar to rename it. In a tab with more 
 
 | Tool | What it does |
 | --- | --- |
-| `list_saved_commands` | Lists every saved command with its id, name, terminal commands, folder, auto-start and layout |
+| `list_saved_commands` | Lists every saved command with its id, name, terminal commands, terminal titles, folder, auto-start and layout |
 | `add_saved_command` | Adds a saved command with 1 to 4 terminals |
-| `edit_saved_command` | Changes a saved command, found by id or by name. Only the fields you give change |
+| `edit_saved_command` | Changes a saved command, found by id or by name. Only the fields you give change, and a terminal keeps its title while its command stays in the same place |
 | `get_termi_docs` | Returns the guide to the server. The same text is the `termi://docs` resource |
 
 The guide is `src/mcp/docs.md`, and the build puts it inside the server. The server adds a reference to the end of it, built from the code: the layouts, every tool and parameter, and the paths this install uses. So the reference never goes out of date.

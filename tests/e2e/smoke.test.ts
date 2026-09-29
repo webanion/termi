@@ -157,6 +157,8 @@ describe('Termi', () => {
       timeout: 10_000,
     });
     expect(mcp.stdout.toString()).toContain('Quad renamed');
+    const [quad] = settingsFile().commands as { terminals: { title?: string }[] }[];
+    expect(quad?.terminals.map((t) => t.title)).toEqual(['First', undefined, 'Third', undefined]);
     await until(async () => (await text('#command-list .item-name')) === 'Quad renamed');
     await until(async () =>
       (await page.locator('#terminal-list .item-name').allTextContents()).includes('Quad renamed'),

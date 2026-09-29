@@ -1,7 +1,7 @@
 import { readSettings, SETTINGS_FILE, writeSettings } from './settingsFile';
 import { docsText, DOCS_URI } from './docs';
 import { layoutIds, LAYOUTS } from '../shared/layouts';
-import { MAX_TERMINALS, savedCommandError } from '../shared/savedCommands';
+import { keepTitles, MAX_TERMINALS, savedCommandError } from '../shared/savedCommands';
 import type { SavedCommand } from '../shared/types';
 
 // An error the caller can fix, sent back as the tool's result instead of a protocol error.
@@ -74,11 +74,14 @@ function cleanString(value: unknown, field: string): string {
   return value.trim();
 }
 
+// Titles are set in the app. They are listed only when a terminal has one.
 function describe(cmd: SavedCommand) {
+  const titled = cmd.terminals.some((t) => t.title);
   return {
     id: cmd.id,
     name: cmd.name,
     terminals: cmd.terminals.map((t) => t.command),
+    ...(titled ? { titles: cmd.terminals.map((t) => t.title ?? '') } : {}),
     cwd: cmd.cwd || '',
     autoStart: Boolean(cmd.autoStart),
     ...(cmd.layout ? { layout: cmd.layout } : {}),
@@ -110,7 +113,8 @@ function editCommand(args: ToolArgs) {
   const current = findCommand(settings.commands, args.target);
   const next: SavedCommand = { ...current };
   if (args.name !== undefined) next.name = cleanString(args.name, 'name');
-  if (args.terminals !== undefined) next.terminals = cleanTerminals(args.terminals);
+  if (args.terminals !== undefined)
+    next.terminals = keepTitles(current.terminals, cleanTerminals(args.terminals));
   if (args.cwd !== undefined) next.cwd = cleanString(args.cwd, 'cwd');
   if (args.autoStart !== undefined) next.autoStart = Boolean(args.autoStart);
   if (args.layout !== undefined) {
@@ -155,7 +159,7 @@ export const TOOLS: Tool[] = [
     name: 'list_saved_commands',
     description:
       'List the saved commands in the Termi terminal app, with their id, name, terminal commands, ' +
-      'working folder (cwd), auto-start flag, and layout.',
+      'terminal titles (when a terminal has one), working folder (cwd), auto-start flag, and layout.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     annotations: { title: 'List Termi saved commands', readOnlyHint: true },
     run: listCommands,
@@ -195,7 +199,8 @@ export const TOOLS: Tool[] = [
     name: 'edit_saved_command',
     description:
       'Change a saved command in the Termi terminal app. Only the fields you give change. ' +
-      '"terminals" replaces the whole list of terminal commands.',
+      '"terminals" replaces the whole list of terminal commands. A terminal keeps its title ' +
+      'while its command stays the same in the same place.',
     inputSchema: {
       type: 'object',
       properties: {
