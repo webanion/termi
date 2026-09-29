@@ -88,6 +88,16 @@ describe('the command palette', () => {
     });
   });
 
+  it('leaves out the actions that have nothing to act on', () => {
+    const keys = paletteItems('linux', [], ['reopen-terminals']).map((i) => i.key);
+    expect(keys).not.toContain('reopen-terminals');
+    expect(keys).toEqual(PALETTE_ACTIONS.filter((a) => a !== 'reopen-terminals'));
+    expect(items.find((i) => i.key === 'reopen-terminals')).toMatchObject({
+      label: 'Reopen Closed Terminals',
+      keys: 'Ctrl+Shift+R',
+    });
+  });
+
   it('keeps the items whose label holds every word', () => {
     expect(filterPalette(items, 'TEXT size').map((i) => i.key)).toEqual(['font-reset']);
     expect(filterPalette(items, 'shop').map((i) => i.key)).toEqual(['tab-7']);

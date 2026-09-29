@@ -95,13 +95,22 @@ body.fullscreen {
   color: var(--faint);
 }
 
-/* Keep the title centered and clear of the split button and the layout control. */
+/* Keep the title centered and clear of the split button, the layout control and the reopen
+   control. */
 .main-head.has-split .title {
   padding: 0 var(--split-w);
 }
 
 .main-head.has-split.has-layout .title {
   padding: 0 calc(var(--split-w) + var(--layout-w, 0px));
+}
+
+.main-head.has-split.has-reopen .title {
+  padding: 0 calc(var(--split-w) + var(--reopen-w, 0px));
+}
+
+.main-head.has-split.has-layout.has-reopen .title {
+  padding: 0 calc(var(--split-w) + var(--layout-w, 0px) + var(--reopen-w, 0px));
 }
 
 body.blurred .title,
@@ -174,4 +183,116 @@ body.blurred .sidebar-head {
 .layout-control .icon-btn.on {
   background: var(--active);
   color: var(--accent);
+}
+
+/* Reopens a saved command's closed terminals, left of the layout control. Its menu drops down
+   over the terminals. */
+.reopen-control {
+  position: absolute;
+  top: 50%;
+  right: calc(var(--head-right) + var(--split-w));
+  z-index: 10;
+  transform: translateY(-50%);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility var(--dur) var(--ease);
+}
+
+.main-head.has-layout .reopen-control {
+  right: calc(var(--head-right) + var(--split-w) + var(--layout-w, 0px));
+}
+
+.reopen-control.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.reopen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 9px 0 7px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font: 500 12px var(--ui-font);
+  transition:
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
+}
+
+.reopen-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.75;
+}
+
+.reopen-btn:hover,
+.reopen-btn.on {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.reopen-btn.on {
+  color: var(--accent);
+}
+
+.reopen-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 220px;
+  max-width: 360px;
+  padding: 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  animation: fade-in var(--dur) var(--ease);
+}
+
+.reopen-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-2);
+  font: 12px var(--mono);
+  text-align: left;
+}
+
+.reopen-item.all {
+  font: 12.5px var(--ui-font);
+}
+
+.reopen-item:hover,
+.reopen-item:focus-visible {
+  outline: none;
+  background: var(--active);
+  color: var(--text);
+}
+
+.reopen-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reopen-sep {
+  height: 1px;
+  margin: 3px 4px;
+  background: var(--border);
 }

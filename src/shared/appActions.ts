@@ -9,6 +9,7 @@ export type AppAction = ShortcutAction | HelpAction;
 const LABELS: Record<AppAction, string> = {
   'new-terminal': 'New Terminal',
   'split-terminal': 'Split Terminal',
+  'reopen-terminals': 'Reopen Closed Terminals',
   'new-command': 'New Saved Command…',
   'run-saved-command': 'Run Saved Command…',
   'close-terminal': 'Close Terminal',
@@ -46,10 +47,12 @@ export function actionLabel(action: AppAction): string {
 
 // The actions the command palette lists: those the page runs itself. Copy, paste and full screen
 // act on the window and its selection, the terminals are listed by name instead of by number,
-// and the palette does not list itself.
+// and the palette does not list itself. Reopen Closed Terminals only shows while the active tab
+// has a closed terminal to reopen.
 export const PALETTE_ACTIONS: AppAction[] = [
   'new-terminal',
   'split-terminal',
+  'reopen-terminals',
   'new-command',
   'run-saved-command',
   'close-terminal',

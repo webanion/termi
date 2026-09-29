@@ -59,6 +59,15 @@ describe('handleShortcuts on Linux', () => {
     expect(send).toHaveBeenCalledWith('menu:action', 'new-terminal');
   });
 
+  it('takes Ctrl+Shift+R and tells the page to reopen closed terminals', () => {
+    setPlatform('linux');
+    const send = vi.fn();
+    const { win, press } = fakeWindow();
+    handleShortcuts(win, send);
+    expect(press('R', 'KeyR', { control: true, shift: true })).toBe(true);
+    expect(send).toHaveBeenCalledWith('menu:action', 'reopen-terminals');
+  });
+
   it('leaves a plain Ctrl+letter to the shell', () => {
     setPlatform('linux');
     const send = vi.fn();

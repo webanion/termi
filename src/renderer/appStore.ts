@@ -31,6 +31,7 @@ const api = window.termi;
 export interface PaneState {
   id: string;
   command: string;
+  terminal?: number; // which of the saved command's terminals it runs, by index. A split has none.
   proc: string; // the program in the foreground
   shellName: string;
   attached: boolean; // its shell is running
@@ -175,6 +176,26 @@ export function runningFor(commandId: string): TabState | undefined {
   return state.tabs.find((t) => t.commandId === commandId);
 }
 
+export interface ClosedTerminal {
+  terminal: number;
+  command: string;
+}
+
+// The terminals of a tab's saved command that are not open in it, read from the saved command
+// as it is now, like a fresh run: a terminal added since counts, and one removed since does not.
+// A tab whose saved command was deleted has none.
+export function closedTerminals(
+  tab: TabState,
+  commands: SavedCommand[] = state.settings.commands,
+): ClosedTerminal[] {
+  const cmd = tab.commandId ? commands.find((c) => c.id === tab.commandId) : undefined;
+  if (!cmd) return [];
+  const open = new Set(tab.panes.map((p) => p.terminal));
+  return cmd.terminals
+    .slice(0, MAX_TERMINALS)
+    .flatMap((t, terminal) => (open.has(terminal) ? [] : [{ terminal, command: t.command }]));
+}
+
 // ---------- Terminals ----------
 
 let nextTabId = 1;
@@ -232,10 +253,11 @@ export function focusIfCurrent(paneId: string): void {
 
 // A pane and its runtime. An empty command opens a plain shell. The shell starts when the
 // pane's terminal is first shown, at the size it has there.
-function createPane(command: string, cwd: string | undefined): PaneState {
+function createPane(command: string, cwd: string | undefined, terminal?: number): PaneState {
   const pane: PaneState = {
     id: `p${nextPaneId++}`,
     command,
+    terminal,
     proc: '',
     shellName: '',
     attached: false,
@@ -250,9 +272,12 @@ function createPane(command: string, cwd: string | undefined): PaneState {
   return pane;
 }
 
-// `commands` has one entry per pane.
+// `commands` has one entry per pane. In a saved command's tab, each pane remembers which of the
+// command's terminals it runs, so a closed one can be reopened.
 function createTab({ name, commands = [''], cwd, commandId, layout }: TabOptions = {}): TabState {
-  const panes = commands.slice(0, MAX_TERMINALS).map((command) => createPane(command, cwd));
+  const panes = commands
+    .slice(0, MAX_TERMINALS)
+    .map((command, i) => createPane(command, cwd, commandId ? i : undefined));
   const tab: TabState = {
     id: nextTabId++,
     name: name || '',
@@ -373,6 +398,44 @@ export function splitTab(id: number): void {
     panes: [...t.panes, pane],
     tracks: null,
     focusedPaneId: pane.id,
+  }));
+  if (id === state.activeId) requestAnimationFrame(() => fitTab(id));
+}
+
+// A saved command's panes come first, in the order of its terminals, and splits follow them,
+// since splitTab adds a pane at the end. A reopened pane goes before the first pane with a later
+// terminal, or else after the last of the command's panes. So each terminal gets back the place
+// in the layout a fresh run gives it, and the splits stay after the command's terminals.
+function insertByTerminal(panes: PaneState[], pane: PaneState): PaneState[] {
+  const terminal = pane.terminal ?? 0;
+  let at = panes.findIndex((p) => p.terminal !== undefined && p.terminal > terminal);
+  if (at < 0) at = panes.reduce((end, p, i) => (p.terminal === undefined ? end : i + 1), 0);
+  return [...panes.slice(0, at), pane, ...panes.slice(at)];
+}
+
+// Reopen one closed terminal of a saved command's tab, or all of them. Each starts with the
+// command and in the folder the saved command has now, like a fresh run, and goes back to its
+// place. When the tab has no room for all of them, the first ones that fit open. The first
+// reopened pane takes focus once it shows.
+export function reopenTerminals(id: number, terminal?: number): void {
+  const tab = tabById(id);
+  const cmd = tab?.commandId ? commandById(tab.commandId) : undefined;
+  if (!tab || !cmd) return;
+  const wanted = closedTerminals(tab).filter(
+    (c) => terminal === undefined || c.terminal === terminal,
+  );
+  if (!wanted.length) return;
+  const room = MAX_TERMINALS - tab.panes.length;
+  if (wanted.length > room) showToast(`A tab holds at most ${MAX_TERMINALS} terminals`);
+  const reopened = wanted
+    .slice(0, Math.max(room, 0))
+    .map((c) => createPane(c.command, cmd.cwd, c.terminal));
+  const first = reopened[0];
+  if (!first) return;
+  updateTab(id, (t) => ({
+    ...t,
+    panes: reopened.reduce(insertByTerminal, t.panes),
+    focusedPaneId: first.id,
   }));
   if (id === state.activeId) requestAnimationFrame(() => fitTab(id));
 }
@@ -650,6 +713,9 @@ const menuActions: Record<string, () => unknown> = {
   'new-terminal': () => openTab(),
   'split-terminal': () => {
     if (state.activeId !== null) splitTab(state.activeId);
+  },
+  'reopen-terminals': () => {
+    if (state.activeId !== null) reopenTerminals(state.activeId);
   },
   'new-command': () => openCommandDialog(),
   'close-terminal': () => {
