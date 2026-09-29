@@ -5,6 +5,9 @@ export const DURATION = 220; // matches --dur in styles/base.css
 export const SIDEBAR_MIN = 170;
 export const SIDEBAR_MAX = 420;
 export const SIDEBAR_DEFAULT = 232;
+// The smallest a pane of a split tab gets by dragging, so its terminal stays usable.
+export const PANE_MIN_WIDTH = 160;
+export const PANE_MIN_HEIGHT = 100;
 
 export const TERMINAL_FONT =
   "ui-monospace, 'SF Mono', Menlo, Monaco, 'Cascadia Mono', Consolas, " +
