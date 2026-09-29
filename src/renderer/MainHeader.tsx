@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import logoMark from '../../assets/logo-mark.svg';
-import { focusedProc, splitTab, toggleSidebar, zoomFromHeader } from './appStore';
+import { closedTerminals, focusedProc, splitTab, toggleSidebar, zoomFromHeader } from './appStore';
 import { cx } from './cx';
 import { SidebarIcon, SplitIcon } from './Icons';
 import { LayoutControl } from './LayoutControl';
+import { ReopenControl } from './ReopenControl';
 import { useAppState } from './useAppState';
 import { LAYOUTS } from '../shared/layouts';
 import { MAX_TERMINALS } from '../shared/savedCommands';
@@ -13,11 +14,13 @@ export function MainHeader() {
   const tabs = useAppState((s) => s.tabs);
   const activeId = useAppState((s) => s.activeId);
   const platform = useAppState((s) => s.info.platform);
+  const commands = useAppState((s) => s.settings.commands);
   // The title follows the active tab once its shells are running.
   const found = tabs.find((t) => t.id === activeId);
   const tab = found?.ready ? found : undefined;
   const hasLayout = Boolean(tab && LAYOUTS[tab.panes.length]);
   const full = Boolean(tab && tab.panes.length >= MAX_TERMINALS);
+  const closed = tab ? closedTerminals(tab, commands) : [];
   const splitKeys = shortcutLabel('split-terminal', platform);
   const name = tab ? tab.name : 'Termi';
 
@@ -27,7 +30,12 @@ export function MainHeader() {
 
   return (
     <header
-      className={cx('main-head drag', tab && 'has-split', hasLayout && 'has-layout')}
+      className={cx(
+        'main-head drag',
+        tab && 'has-split',
+        hasLayout && 'has-layout',
+        closed.length > 0 && 'has-reopen',
+      )}
       id="main-head"
       onDoubleClick={(event) => zoomFromHeader(event.target)}
     >
@@ -49,6 +57,8 @@ export function MainHeader() {
           {tab ? focusedProc(tab) : ''}
         </span>
       </div>
+      {/* Shows when the tab's saved command has terminals that were closed. */}
+      <ReopenControl tab={tab} closed={closed} />
       {/* Shows when the tab has more than one terminal. */}
       <LayoutControl tab={tab} />
       <button

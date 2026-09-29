@@ -35,6 +35,60 @@
   background: var(--border);
 }
 
+/* A handle on a line between panes, set in the grid by PaneResizer.tsx. It is wider than the
+   line, so it is easy to grab, and the line itself lights up on hover and while dragging. */
+.pane-resizer {
+  position: relative;
+  z-index: 2;
+  touch-action: none;
+}
+
+.pane-resizer.vertical {
+  justify-self: start;
+  width: 5px;
+  margin-left: -3px;
+  cursor: col-resize;
+}
+
+.pane-resizer.horizontal {
+  align-self: start;
+  height: 5px;
+  margin-top: -3px;
+  cursor: row-resize;
+}
+
+.pane-resizer::after {
+  content: '';
+  position: absolute;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.pane-resizer.vertical::after {
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 1px;
+}
+
+.pane-resizer.horizontal::after {
+  left: 0;
+  right: 0;
+  top: 2px;
+  height: 1px;
+}
+
+.pane-resizer:focus-visible {
+  outline: none;
+}
+
+.pane-resizer:hover::after,
+.pane-resizer.dragging::after,
+.pane-resizer:focus-visible::after {
+  opacity: 1;
+}
+
 .term-pane {
   display: flex;
   flex-direction: column;

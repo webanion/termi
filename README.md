@@ -11,11 +11,16 @@ A terminal app for macOS and Linux with a warm dark theme, saved commands that o
 ## What it does
 
 - A sidebar with the running terminals at the top and your saved commands below.
-- A saved command can run up to 4 terminals in one tab, for example an API server, a web server and a plain shell for one project. Add them with "Add terminal" in the saved command dialog. An empty command opens a plain shell. When a tab has more than one terminal, a layout control shows on the right of the header, and Termi remembers the layout for each saved command.
+- A saved command can run up to 4 terminals in one tab, for example an API server, a web server and a plain shell for one project. Add them with "Add terminal" in the saved command dialog. An empty command opens a plain shell. Pick how the terminals are arranged under Layout in the same dialog, or with the layout control that shows on the right of the header when a tab has more than one terminal. Termi remembers the layout for each saved command.
+- When you close one terminal of a saved command, Reopen shows in the header. It lists the closed terminals by their command, with Reopen all, and ⇧⌘T (Ctrl+Shift+R on Linux) reopens all of them. Each one runs the command the saved command has now, in its folder, and goes back to its place in the layout. While some are closed, the saved command's row in the sidebar shows how many are open, such as 2 of 3.
 - Split any tab to add a plain shell to it, up to 4 terminals, with the split button on the right of the header or ⌘D (Ctrl+Shift+D on Linux). The new shell starts in the folder the tab started in. A split is not saved to a saved command, and while a split tab has more terminals than its saved command, Termi does not save its layout.
+- Drag the line between two terminals of a tab to resize them, and double-click the line to make them equal again. The sizes last while the tab runs, and go back to equal when the layout or the number of terminals changes.
 - Saved commands can start when Termi opens (the bolt icon).
+- Press ⌘P (Ctrl+Shift+O on Linux) to run a saved command from the keyboard. A panel lists your saved commands. Type part of a name and press Enter: Termi starts the command, or goes to its tab if it is already running.
 - Select text in a terminal to copy it. A double-click copies a word, and a triple-click copies a line.
 - Right-click a terminal for Copy, Paste, Select All and Clear Buffer. On a link, the menu can also open the link in your browser or copy its address.
+- Drop files or folders from Finder or the file manager on a terminal to type their paths, quoted for the shell, as Terminal.app does. Nothing runs until you press Enter, and in a split tab the paths go to the terminal under the pointer. This is how a tool like Claude Code attaches a dropped image.
+- Drop a folder on the sidebar to open a new terminal in it. A dropped file opens one in the folder it is in. One drop opens up to 4 terminals.
 - The sidebar footer shows CPU use, memory use, and download and upload speed. Termi checks them every 1.5 seconds, and stops while the window is minimized.
 - Termi reopens at the same window position and size. If that display is gone, the window moves to the main display.
 - The header holds the system's own window controls: the traffic lights on the left on macOS, and minimize, maximize and close on the right on Linux.
@@ -85,8 +90,10 @@ Releases are made by the Release workflow in GitHub Actions, never by hand. Run 
 | --- | --- | --- |
 | New terminal | ⌘T | Ctrl+Shift+T |
 | Split terminal | ⌘D | Ctrl+Shift+D |
+| Reopen closed terminals | ⇧⌘T | Ctrl+Shift+R |
 | Close terminal | ⌘W | Ctrl+Shift+W |
 | New saved command | ⇧⌘N | Ctrl+Shift+N |
+| Run a saved command | ⌘P | Ctrl+Shift+O |
 | Go to terminal 1 to 9 | ⌘1 to ⌘9 | Alt+1 to Alt+9 |
 | Previous and next terminal | ⇧⌘[ and ⇧⌘] | Ctrl+Page Up and Ctrl+Page Down |
 | Previous and next pane in a split tab | ⌘[ and ⌘] | Ctrl+Alt+[ and Ctrl+Alt+] |
@@ -101,7 +108,7 @@ Releases are made by the Release workflow in GitHub Actions, never by hand. Run 
 
 On Linux a plain Ctrl+letter always reaches the shell, so Ctrl+C interrupts, Ctrl+W deletes a word, Ctrl+K deletes to the end of the line and Ctrl+B stays the tmux prefix. Termi's own shortcuts use the keys other Linux terminals use: Ctrl+Shift with a letter, Alt+1 to 9 for tabs, and Ctrl+Page Up and Page Down to move between them.
 
-Double-click a running terminal in the sidebar to rename it. In a tab with more than one terminal, closing the terminal closes the whole tab. To close one terminal, use the × in its pane header, or type `exit`.
+Double-click a running terminal in the sidebar to rename it. In a tab with more than one terminal, closing the terminal closes the whole tab. To close one terminal, use the × in its pane header, or type `exit`. To get a saved command's terminal back, use Reopen in the header.
 
 ## MCP server
 

@@ -119,6 +119,12 @@ export class TerminalRuntime {
     this.term.write(data);
   }
 
+  // Text that goes to the shell as a paste. xterm wraps it in bracketed paste when the program
+  // asks for that, so a shell shows it on its line and runs nothing until Enter.
+  paste(text: string): void {
+    if (this.opened && !this.disposed) this.term.paste(text);
+  }
+
   // Stop the shell now, and free the terminal after `delay`, once a closing tab has faded out.
   dispose(delay = 0): void {
     if (this.disposed) return;

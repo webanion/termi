@@ -164,6 +164,15 @@
   white-space: nowrap;
 }
 
+/* How many of a running saved command's terminals are open, while some are closed. */
+.item-count {
+  flex: none;
+  font-size: 10.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* The buttons always keep their space and only fade in on hover, so nothing in the row moves. */
 .item-actions {
   flex: none;
@@ -281,4 +290,31 @@
   vertical-align: -1px;
   color: var(--accent);
   fill: currentColor;
+}
+
+/* ---------- Drop ---------- */
+
+/* Covers the sidebar while files are dragged over it. It takes no pointer events, so the drag
+   stays over the sidebar under it. */
+.sidebar .drop-hint {
+  position: absolute;
+  inset: 6px;
+  z-index: 10;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border: 1.5px dashed var(--accent);
+  border-radius: var(--radius);
+  background: rgba(31, 30, 29, 0.88);
+  color: var(--text);
+  font-size: 12px;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.sidebar.dropping .drop-hint {
+  opacity: 1;
 }

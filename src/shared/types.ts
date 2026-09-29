@@ -89,6 +89,7 @@ export interface TermiApi {
   showTerminalMenu: (context: TerminalContext) => void;
   onStats: (callback: (sample: StatsSample) => void) => Unsubscribe;
   pickFolder: (defaultPath?: string) => Promise<string | null>;
+  pathForFile: (file: File) => string;
   window: {
     minimize: () => void;
     toggleMaximize: () => void;

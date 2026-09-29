@@ -11,7 +11,11 @@ export interface ShortcutKeys {
 export const SHORTCUTS = {
   'new-terminal': { mac: 'Cmd+T', other: 'Ctrl+Shift+T' },
   'split-terminal': { mac: 'Cmd+D', other: 'Ctrl+Shift+D' },
+  // Ctrl+Shift+T opens a terminal on other systems, so reopening takes R there.
+  'reopen-terminals': { mac: 'Cmd+Shift+T', other: 'Ctrl+Shift+R' },
   'new-command': { mac: 'Cmd+Shift+N', other: 'Ctrl+Shift+N' },
+  // Ctrl+P is the shell's previous command, and Ctrl+Shift+P the command palette.
+  'run-saved-command': { mac: 'Cmd+P', other: 'Ctrl+Shift+O' },
   'close-terminal': { mac: 'Cmd+W', other: 'Ctrl+Shift+W' },
   clear: { mac: 'Cmd+K', other: 'Ctrl+Shift+K' },
   'toggle-sidebar': { mac: 'Cmd+B', other: 'Ctrl+Shift+B' },

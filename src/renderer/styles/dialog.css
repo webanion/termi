@@ -259,3 +259,47 @@
   gap: 8px;
   margin-top: 2px;
 }
+
+/* The layouts for a saved command with more than one terminal, each with its name. */
+.layout-options {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 6px;
+}
+
+.layout-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.layout-option svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.5;
+}
+
+.layout-option:hover {
+  border-color: var(--border-strong);
+  color: var(--text-2);
+}
+
+.layout-option.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.layout-option.on svg {
+  color: var(--accent);
+}

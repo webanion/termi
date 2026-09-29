@@ -1,4 +1,4 @@
-/* ---------- Guide, shortcut sheet and command palette ---------- */
+/* ---------- Guide, shortcut sheet, command palette and launcher ---------- */
 
 .help-dialog {
   width: min(560px, calc(100vw - 32px));
@@ -158,6 +158,28 @@
 .palette-item.selected {
   background: var(--active);
   color: var(--text);
+}
+
+/* A saved command's name keeps most of the row, and what it runs gives way first. */
+.palette-item.has-detail .palette-label {
+  flex: none;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.palette-detail {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 11.5px var(--mono);
+  color: var(--faint);
+}
+
+.palette-item.selected .palette-detail {
+  color: var(--muted);
 }
 
 .palette-empty {

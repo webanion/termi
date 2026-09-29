@@ -32,6 +32,7 @@ const api: TermiApi = {
   showTerminalMenu: noop,
   onStats: subscribe,
   pickFolder: async () => null,
+  pathForFile: () => '',
   window: {
     minimize: noop,
     toggleMaximize: noop,
