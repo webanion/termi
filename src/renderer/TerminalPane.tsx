@@ -40,6 +40,8 @@ export function TerminalPane({ tab, pane, area }: Props) {
   return (
     <div
       className={cx('term-pane', split && pane.id === tab.focusedPaneId && 'focused')}
+      // The drop handler finds the pane under the pointer by this.
+      data-pane-id={pane.id}
       style={area ? { gridArea: area } : undefined}
       // Select to copy: the store copies the selection when the mouse press that started here ends.
       onMouseDown={() => setSelecting(pane.id)}

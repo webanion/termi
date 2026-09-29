@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { layoutIds, LAYOUTS } from '../../../src/shared/layouts';
+import { fittingLayout, layoutIds, LAYOUTS } from '../../../src/shared/layouts';
 import {
   isSavedCommandShape,
   keepTitles,
@@ -137,6 +137,13 @@ describe('layouts', () => {
     expect(layoutIds(3)).toEqual(['main-left', 'main-top', 'columns', 'rows']);
     expect(layoutIds(4)).toEqual(['grid', 'main-left', 'columns', 'rows']);
     expect(layoutIds(5)).toBeUndefined();
+  });
+
+  it('keeps a layout that fits the number of terminals, and falls back to the default', () => {
+    expect(fittingLayout(3, 'rows')?.id).toBe('rows');
+    expect(fittingLayout(2, 'main-left')?.id).toBe('columns');
+    expect(fittingLayout(4, undefined)?.id).toBe('grid');
+    expect(fittingLayout(1, 'columns')).toBeUndefined();
   });
 
   it('gives every terminal of a layout an area, in order', () => {

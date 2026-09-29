@@ -60,6 +60,14 @@ export const SplitIcon = () => (
   </svg>
 );
 
+// An arrow that turns back, for reopening a closed terminal.
+export const ReopenIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <path d="M9 14l-4 -4l4 -4" />
+    <path d="M5 10h11a4 4 0 1 1 0 8h-1" />
+  </svg>
+);
+
 export const FolderIcon = () => (
   <svg viewBox="0 0 24 24">
     <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />

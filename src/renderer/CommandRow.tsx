@@ -1,5 +1,6 @@
 import {
   activate,
+  closedTerminals,
   closeTab,
   commandById,
   openCommandDialog,
@@ -11,6 +12,7 @@ import { cx } from './cx';
 import { BoltIcon, EditIcon, PlayIcon, StopIcon } from './Icons';
 import { useAppState } from './useAppState';
 import type { Presence } from './usePresence';
+import { MAX_TERMINALS } from '../shared/savedCommands';
 import type { SavedCommand } from '../shared/types';
 
 interface Props {
@@ -22,6 +24,10 @@ export function CommandRow({ cmd, presence }: Props) {
   const tabs = useAppState((s) => s.tabs);
   const activeId = useAppState((s) => s.activeId);
   const running = tabs.find((t) => t.commandId === cmd.id);
+  // While some of its terminals are closed, the row says how many are open, as in 2 of 3.
+  const total = Math.min(cmd.terminals.length, MAX_TERMINALS);
+  const closed = running ? closedTerminals(running, [cmd]).length : 0;
+  const count = closed ? `${total - closed} of ${total}` : '';
 
   return (
     <li
@@ -32,7 +38,7 @@ export function CommandRow({ cmd, presence }: Props) {
         presence === 'leaving' && 'leaving',
       )}
       title={`${commandSummary(cmd)}${cmd.cwd ? `\nin ${cmd.cwd}` : ''}`}
-      // A running command gets focus. A stopped one starts.
+      // A running command gets focus, even with terminals closed. A stopped one starts.
       onClick={() => {
         const current = commandById(cmd.id);
         if (running) activate(running.id);
@@ -41,6 +47,11 @@ export function CommandRow({ cmd, presence }: Props) {
     >
       <span className="cmd-state">{running ? <span className="dot"></span> : <PlayIcon />}</span>
       <span className="item-name">{cmd.name}</span>
+      {count && (
+        <span className="item-count" title={`${count} terminals open`}>
+          {count}
+        </span>
+      )}
       {/* One group, so every button has the same gap. */}
       <span className="item-actions">
         <button

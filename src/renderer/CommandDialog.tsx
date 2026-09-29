@@ -9,7 +9,9 @@ import {
 } from './appStore';
 import { cx } from './cx';
 import { CloseIcon, FolderIcon, PlusIcon } from './Icons';
+import { LayoutOptions } from './LayoutOptions';
 import { useAppState } from './useAppState';
+import { fittingLayout, LAYOUTS } from '../shared/layouts';
 import { MAX_TERMINALS, MAX_TITLE, savedTerminal } from '../shared/savedCommands';
 
 interface Field {
@@ -34,6 +36,7 @@ export function CommandDialog() {
 
   const [name, setName] = useState('');
   const [fields, setFields] = useState<Field[]>([field()]);
+  const [layoutId, setLayoutId] = useState<string>();
   const [cwd, setCwd] = useState('');
   const [autoStart, setAutoStart] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -42,6 +45,7 @@ export function CommandDialog() {
 
   const editingId = dialogState?.editingId ?? null;
   const multi = fields.length > 1;
+  const layouts = LAYOUTS[fields.length];
   const token = dialogState?.token ?? null;
 
   // Each opening fills the form from the command being edited, or leaves it empty for a new one.
@@ -49,11 +53,9 @@ export function CommandDialog() {
     const cmd = dialogState.editingId ? commandById(dialogState.editingId) : undefined;
     setOpenedToken(token);
     setName(cmd?.name ?? '');
-    setFields(
-      (cmd?.terminals ?? [{ command: '' }])
-        .slice(0, MAX_TERMINALS)
-        .map((t) => field(t.command, t.title)),
-    );
+    const terminals = (cmd?.terminals ?? [{ command: '' }]).slice(0, MAX_TERMINALS);
+    setFields(terminals.map((t) => field(t.command, t.title)));
+    setLayoutId(fittingLayout(terminals.length, cmd?.layout)?.id);
     setCwd(cmd?.cwd ?? '');
     setAutoStart(cmd?.autoStart ?? false);
     setConfirmDelete(false);
@@ -78,11 +80,17 @@ export function CommandDialog() {
     focusField.current = null;
   }, [fields]);
 
+  // The selected layout stays while it fits the new number of terminals.
+  const changeFields = (next: Field[]) => {
+    setFields(next);
+    setLayoutId(fittingLayout(next.length, layoutId)?.id);
+  };
+
   const addField = () => {
     if (fields.length >= MAX_TERMINALS) return;
     const added = field();
     focusField.current = added.key;
-    setFields([...fields, added]);
+    changeFields([...fields, added]);
   };
 
   const updateField = (key: number, change: Partial<Field>) =>
@@ -91,7 +99,7 @@ export function CommandDialog() {
   const removeField = (index: number) => {
     const next = fields.filter((_, i) => i !== index);
     focusField.current = next[Math.min(index, next.length - 1)]?.key ?? null;
-    setFields(next);
+    changeFields(next);
   };
 
   const onSubmit = async (event: FormEvent) => {
@@ -102,6 +110,7 @@ export function CommandDialog() {
       terminals: fields.map((f) => savedTerminal(f.value, multi ? f.title : '')),
       cwd: cwd.trim(),
       autoStart,
+      layout: layoutId,
     };
     if (!data.name || !data.terminals[0]?.command) return;
     await saveCommand(editingId, data);
@@ -238,6 +247,20 @@ export function CommandDialog() {
             {multi && ' A title shows in the header of its terminal, in place of the command.'}
           </span>
         </div>
+
+        {layouts && (
+          <div className="field">
+            <span className="field-label">Layout</span>
+            <LayoutOptions
+              className="layout-options"
+              id="command-layout"
+              layouts={layouts}
+              selected={layoutId}
+              labeled
+              onSelect={setLayoutId}
+            />
+          </div>
+        )}
 
         <div className="field">
           <span className="field-label">Folder</span>

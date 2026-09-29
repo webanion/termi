@@ -29,6 +29,7 @@ const tab = (overrides: Partial<TabState> = {}): TabState => ({
   cwd: undefined,
   activity: false,
   layout: null,
+  tracks: null,
   panes: [pane()],
   focusedPaneId: 'p1',
   ready: true,

@@ -120,6 +120,7 @@ describe('the pane head', () => {
       cwd: undefined,
       activity: false,
       layout: null,
+      tracks: null,
       panes: [shown, ...others],
       focusedPaneId: shown.id,
       ready: true,
