@@ -235,7 +235,7 @@ export function CommandDialog() {
           <span className="field-hint">
             Each line runs in order, in your normal shell. Add up to 4 terminals to run them side by
             side in one tab.
-            {multi && ' A title shows in the head of its terminal, in place of the command.'}
+            {multi && ' A title shows in the header of its terminal, in place of the command.'}
           </span>
         </div>
 
