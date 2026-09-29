@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { activeTab, layoutFor, setLayout, type TabState } from './appStore';
 import { cx } from './cx';
-import { LayoutIcon } from './LayoutIcon';
+import { LayoutOptions } from './LayoutOptions';
 import { LAYOUTS, type Layout } from '../shared/layouts';
 
 // The layout picker for a tab with more than one terminal. When it hides, the last buttons stay
@@ -30,30 +30,16 @@ export function LayoutControl({ tab }: { tab: TabState | undefined }) {
   }, [key]);
 
   return (
-    <div
+    <LayoutOptions
       ref={ref}
       className={cx('layout-control', options && 'show')}
       id="layout-control"
-      role="radiogroup"
-      aria-label="Layout"
-    >
-      {buttons.map((layout) => (
-        <button
-          key={layout.id}
-          className={cx('icon-btn', layout.id === current && 'on')}
-          data-layout={layout.id}
-          title={layout.label}
-          role="radio"
-          aria-label={layout.label}
-          aria-checked={layout.id === current}
-          onClick={() => {
-            const active = activeTab();
-            if (active) setLayout(active.id, layout.id);
-          }}
-        >
-          <LayoutIcon layout={layout} />
-        </button>
-      ))}
-    </div>
+      layouts={buttons}
+      selected={current}
+      onSelect={(id) => {
+        const active = activeTab();
+        if (active) setLayout(active.id, id);
+      }}
+    />
   );
 }
