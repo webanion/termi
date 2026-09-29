@@ -1,13 +1,21 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
-import { activate, closeOverlay, runAction } from './appStore';
+import { activate, closeOverlay, commandById, runAction, runCommand, runningFor } from './appStore';
 import { cx } from './cx';
 import type { PaletteItem } from './palette';
 import { useModal } from './useModal';
 
+// A saved command does what a click on it in the sidebar does: a running one gets focus, and a
+// stopped one starts.
 function run(item: PaletteItem): void {
   closeOverlay();
   if ('action' in item.run) runAction(item.run.action);
-  else activate(item.run.tabId);
+  else if ('tabId' in item.run) activate(item.run.tabId);
+  else {
+    const running = runningFor(item.run.commandId);
+    const cmd = commandById(item.run.commandId);
+    if (running) activate(running.id);
+    else if (cmd) runCommand(cmd);
+  }
 }
 
 interface SearchProps {
@@ -15,11 +23,12 @@ interface SearchProps {
   placeholder: string;
   searchLabel: string;
   results: (query: string) => PaletteItem[];
+  note?: string; // a line above the list
 }
 
 // A search field over a list: the arrows move the selection, and Enter or a click runs it.
 // Mounted on each opening, so the query and the selection start fresh.
-export function PaletteSearch({ name, placeholder, searchLabel, results }: SearchProps) {
+export function PaletteSearch({ name, placeholder, searchLabel, results, note }: SearchProps) {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(0);
 
@@ -55,16 +64,18 @@ export function PaletteSearch({ name, placeholder, searchLabel, results }: Searc
         onKeyDown={onKeyDown}
       />
       <ul className="palette-list" id={`${name}-list`} role="listbox">
+        {note && <li className="palette-empty">{note}</li>}
         {items.map((item, i) => (
           <li
             key={item.key}
             role="option"
             aria-selected={i === current}
-            className={cx('palette-item', i === current && 'selected')}
+            className={cx('palette-item', item.detail && 'has-detail', i === current && 'selected')}
             onMouseMove={() => setSelected(i)}
             onClick={() => run(item)}
           >
             <span className="palette-label">{item.label}</span>
+            {item.detail && <span className="palette-detail">{item.detail}</span>}
             {item.keys && <kbd className="keys">{item.keys}</kbd>}
           </li>
         ))}

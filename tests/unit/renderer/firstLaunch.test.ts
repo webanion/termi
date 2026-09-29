@@ -55,4 +55,16 @@ describe('the first launch', () => {
     store.runAction('close-terminal');
     expect(store.getState().overlay).toBeNull();
   });
+
+  it('opens the launcher in place of the command palette, and back', async () => {
+    const { store } = await startWith(true);
+    store.runAction('run-saved-command');
+    expect(store.getState().overlay).toBe('launcher');
+    store.runAction('command-palette');
+    expect(store.getState().overlay).toBe('palette');
+    store.runAction('run-saved-command');
+    expect(store.getState().overlay).toBe('launcher');
+    store.runAction('run-saved-command');
+    expect(store.getState().overlay).toBeNull();
+  });
 });

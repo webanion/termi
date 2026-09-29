@@ -193,6 +193,37 @@ describe('Termi', () => {
     }
   });
 
+  it('goes to a running saved command from the launcher, and starts a stopped one', async () => {
+    const launcher = page.locator('#command-launcher');
+    const palette = page.locator('#command-palette');
+    const quad = page.locator('#terminal-list .item', { hasText: 'Quad renamed' });
+
+    // Opening the launcher closes the palette.
+    await clickMenu('command-palette');
+    await until(async () => (await palette.getAttribute('open')) !== null);
+    await clickMenu('run-saved-command');
+    await until(async () => (await launcher.getAttribute('open')) !== null);
+    expect(await palette.getAttribute('open')).toBeNull();
+    expect(await launcher.locator('.palette-label').allTextContents()).toEqual(['Quad renamed']);
+    expect(await text('#command-launcher .palette-detail')).toBe(`echo 1 > '${marker(1)}'`);
+
+    await page.keyboard.type('quad');
+    await page.keyboard.press('Enter');
+    await until(async () => (await launcher.getAttribute('open')) === null);
+    await until(async () => (await quad.getAttribute('class'))?.includes('active') ?? false);
+    const tabs = await page.locator('#terminal-list .item').count();
+
+    await clickMenu('close-terminal');
+    await until(async () => (await quad.count()) === 0);
+    for (const n of [1, 2, 3, 4]) fs.rmSync(marker(n));
+    await clickMenu('run-saved-command');
+    await page.locator('#launcher-input').waitFor();
+    await page.keyboard.press('Enter');
+    await until(() => [1, 2, 3, 4].every((n) => fs.existsSync(marker(n))));
+    await until(async () => (await page.locator('#terminal-list .item').count()) === tabs);
+    expect(await text('#title-text')).toBe('Quad renamed');
+  });
+
   it('opens the bug report form, filled in, and sends nothing itself', async () => {
     await app.evaluate(({ shell }) => {
       const record = globalThis as unknown as { opened: string[] };
