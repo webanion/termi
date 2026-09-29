@@ -202,9 +202,16 @@
   animation: fade-in var(--dur) var(--ease);
 }
 
-.term-field textarea {
+.term-field-inputs {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.term-fields.multi {
+  gap: 10px;
 }
 
 .term-fields.multi textarea {

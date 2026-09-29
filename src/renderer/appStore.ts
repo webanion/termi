@@ -5,7 +5,14 @@
 
 import { LAYOUTS, type Layout } from '../shared/layouts';
 import { MAX_TERMINALS } from '../shared/savedCommands';
-import type { AppInfo, PtyCreated, SavedCommand, Settings, WindowState } from '../shared/types';
+import type {
+  AppInfo,
+  PtyCreated,
+  SavedCommand,
+  SavedTerminal,
+  Settings,
+  WindowState,
+} from '../shared/types';
 import {
   allRuntimes,
   createRuntime,
@@ -442,7 +449,7 @@ export async function toggleAutoStart(cmd: SavedCommand): Promise<void> {
 
 export interface CommandInput {
   name: string;
-  terminals: { command: string }[];
+  terminals: SavedTerminal[];
   cwd: string;
   autoStart: boolean;
 }

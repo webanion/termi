@@ -10,15 +10,16 @@ import {
 import { cx } from './cx';
 import { CloseIcon, FolderIcon, PlusIcon } from './Icons';
 import { useAppState } from './useAppState';
-import { MAX_TERMINALS } from '../shared/savedCommands';
+import { MAX_TERMINALS, MAX_TITLE, savedTerminal } from '../shared/savedCommands';
 
 interface Field {
   key: number;
   value: string;
+  title: string;
 }
 
 let nextFieldKey = 1;
-const field = (value = ''): Field => ({ key: nextFieldKey++, value });
+const field = (value = '', title = ''): Field => ({ key: nextFieldKey++, value, title });
 
 // The dialog to add or edit a saved command. It opens when the store says so, and plays its
 // closing animation before the store closes it.
@@ -49,7 +50,9 @@ export function CommandDialog() {
     setOpenedToken(token);
     setName(cmd?.name ?? '');
     setFields(
-      (cmd?.terminals ?? [{ command: '' }]).slice(0, MAX_TERMINALS).map((t) => field(t.command)),
+      (cmd?.terminals ?? [{ command: '' }])
+        .slice(0, MAX_TERMINALS)
+        .map((t) => field(t.command, t.title)),
     );
     setCwd(cmd?.cwd ?? '');
     setAutoStart(cmd?.autoStart ?? false);
@@ -82,6 +85,9 @@ export function CommandDialog() {
     setFields([...fields, added]);
   };
 
+  const updateField = (key: number, change: Partial<Field>) =>
+    setFields(fields.map((g) => (g.key === key ? { ...g, ...change } : g)));
+
   const removeField = (index: number) => {
     const next = fields.filter((_, i) => i !== index);
     focusField.current = next[Math.min(index, next.length - 1)]?.key ?? null;
@@ -92,7 +98,8 @@ export function CommandDialog() {
     event.preventDefault();
     const data = {
       name: name.trim(),
-      terminals: fields.map((f) => ({ command: f.value.trim() })),
+      // Titles only name the terminals of a command with more than one.
+      terminals: fields.map((f) => savedTerminal(f.value, multi ? f.title : '')),
       cwd: cwd.trim(),
       autoStart,
     };
@@ -163,7 +170,8 @@ export function CommandDialog() {
           <span className="field-label" id="command-label">
             {multi ? 'Commands' : 'Command'}
           </span>
-          {/* One box per terminal. With more than one, each gets a number and a remove button. */}
+          {/* One box per terminal. With more than one, each gets a number, a title and a remove
+              button. */}
           <div
             className={cx('term-fields', multi && 'multi')}
             id="term-fields"
@@ -178,25 +186,32 @@ export function CommandDialog() {
             {fields.map((f, index) => (
               <div className="term-field" key={f.key}>
                 <span className="term-field-num">{index + 1}</span>
-                <textarea
-                  ref={(el) => {
-                    if (el) inputs.current.set(f.key, el);
-                    else inputs.current.delete(f.key);
-                  }}
-                  spellCheck={false}
-                  value={f.value}
-                  rows={multi ? 2 : 3}
-                  required={index === 0}
-                  placeholder={index === 0 ? 'npm run dev' : 'Leave empty for a plain shell'}
-                  aria-label={multi ? `Command for terminal ${index + 1}` : 'Command'}
-                  onChange={(event) =>
-                    setFields(
-                      fields.map((g) =>
-                        g.key === f.key ? { ...g, value: event.target.value } : g,
-                      ),
-                    )
-                  }
-                />
+                <div className="term-field-inputs">
+                  {multi && (
+                    <input
+                      type="text"
+                      className="term-field-title"
+                      placeholder="Title (optional)"
+                      maxLength={MAX_TITLE}
+                      value={f.title}
+                      aria-label={`Title for terminal ${index + 1}`}
+                      onChange={(event) => updateField(f.key, { title: event.target.value })}
+                    />
+                  )}
+                  <textarea
+                    ref={(el) => {
+                      if (el) inputs.current.set(f.key, el);
+                      else inputs.current.delete(f.key);
+                    }}
+                    spellCheck={false}
+                    value={f.value}
+                    rows={multi ? 2 : 3}
+                    required={index === 0}
+                    placeholder={index === 0 ? 'npm run dev' : 'Leave empty for a plain shell'}
+                    aria-label={multi ? `Command for terminal ${index + 1}` : 'Command'}
+                    onChange={(event) => updateField(f.key, { value: event.target.value })}
+                  />
+                </div>
                 <button
                   type="button"
                   className="icon-btn small"
@@ -220,6 +235,7 @@ export function CommandDialog() {
           <span className="field-hint">
             Each line runs in order, in your normal shell. Add up to 4 terminals to run them side by
             side in one tab.
+            {multi && ' A title shows in the head of its terminal, in place of the command.'}
           </span>
         </div>
 
