@@ -43,7 +43,7 @@ function newId(taken: Set<string>): string {
 
 // Find a saved command by id, or by name when no id matches.
 function findCommand(commands: SavedCommand[], target: unknown): SavedCommand {
-  const key = String(target ?? '').trim();
+  const key = typeof target === 'string' ? target.trim() : '';
   if (!key) throw new ToolError('Give the id or the name of the saved command.');
   const byId = commands.find((c) => c.id === key);
   if (byId) return byId;
