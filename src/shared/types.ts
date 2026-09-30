@@ -35,6 +35,7 @@ export interface Settings {
   cursorStyle: CursorStyle;
   cursorBlink: boolean;
   smoothScroll: boolean; // a mouse wheel scrolls in a short animation
+  wordWrap: boolean; // whether a new terminal wraps long lines
   guideSeen: boolean; // the guide opens by itself once, on the first launch
 }
 
@@ -113,5 +114,6 @@ export interface TermiApi {
     getState: () => Promise<WindowState>;
     onState: (callback: (state: WindowState) => void) => Unsubscribe;
   };
+  setWordWrapMenu: (on: boolean) => void;
   onMenuAction: (callback: (action: string) => void) => Unsubscribe;
 }

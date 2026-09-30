@@ -23,6 +23,7 @@ async function startWith(guideSeen: boolean) {
     cursorStyle: 'bar',
     cursorBlink: true,
     smoothScroll: true,
+    wordWrap: true,
     guideSeen,
   };
   vi.spyOn(window.termi.settings, 'get').mockResolvedValue(settings);

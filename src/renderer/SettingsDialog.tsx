@@ -8,6 +8,7 @@ import {
   setOpenAtLogin,
   setSidebarHidden,
   setSmoothScroll,
+  setWordWrap,
 } from './appStore';
 import { cx } from './cx';
 import { CloseIcon, MinusIcon, PlusIcon, ResetIcon } from './Icons';
@@ -106,12 +107,13 @@ export function SettingsDialog() {
   const [section, setSection] = useState<Section>('general');
 
   const keys = (action: Parameters<typeof shortcutLabel>[0]) => shortcutLabel(action, platform);
-  const { fontSize, cursorStyle, cursorBlink, smoothScroll, sidebarHidden } = settings;
+  const { fontSize, cursorStyle, cursorBlink, smoothScroll, wordWrap, sidebarHidden } = settings;
   const allDefault =
     fontSize === DEFAULT_SETTINGS.fontSize &&
     cursorStyle === DEFAULT_SETTINGS.cursorStyle &&
     cursorBlink === DEFAULT_SETTINGS.cursorBlink &&
     smoothScroll === DEFAULT_SETTINGS.smoothScroll &&
+    wordWrap === DEFAULT_SETTINGS.wordWrap &&
     sidebarHidden === DEFAULT_SETTINGS.sidebarHidden &&
     !openAtLogin;
 
@@ -279,6 +281,20 @@ export function SettingsDialog() {
                       checked={smoothScroll}
                       labelledBy="setting-smooth-scroll-label"
                       onChange={setSmoothScroll}
+                    />
+                  </SettingRow>
+                  <SettingRow
+                    id="word-wrap"
+                    label="Wrap long lines"
+                    hint={`How a new terminal starts. ${keys('toggle-word-wrap')} turns it on and off in the focused terminal.`}
+                    defaultText={onOff(DEFAULT_SETTINGS.wordWrap)}
+                    isDefault={wordWrap === DEFAULT_SETTINGS.wordWrap}
+                    onReset={() => setWordWrap(DEFAULT_SETTINGS.wordWrap)}
+                  >
+                    <Switch
+                      checked={wordWrap}
+                      labelledBy="setting-word-wrap-label"
+                      onChange={setWordWrap}
                     />
                   </SettingRow>
                 </>

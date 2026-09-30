@@ -40,6 +40,7 @@ const MAC_ADDED: Record<string, string> = {
   'reopen-terminals': 'Cmd+Shift+T',
   'run-saved-command': 'Cmd+P',
   'open-settings': 'Cmd+,',
+  'toggle-word-wrap': 'Alt+Z',
 };
 
 const ALIASES: Record<string, string> = {
@@ -181,6 +182,16 @@ describe('matchShortcut', () => {
     );
     expect(shortcutLabel('reopen-terminals', 'darwin')).toBe('⇧⌘T');
     expect(shortcutLabel('reopen-terminals', 'linux')).toBe('Ctrl+Shift+R');
+  });
+
+  it('toggles word wrap with Ctrl+Shift+Z, and with ⌥Z on macOS whatever Option types', () => {
+    expect(matchShortcut(press('Z', 'KeyZ', { control: true, shift: true }), false)).toBe(
+      'toggle-word-wrap',
+    );
+    expect(matchShortcut(press('z', 'KeyZ', { control: true }), false)).toBeNull();
+    expect(matchShortcut(press('Ω', 'KeyZ', { alt: true }), true)).toBe('toggle-word-wrap');
+    expect(shortcutLabel('toggle-word-wrap', 'darwin')).toBe('⌥Z');
+    expect(shortcutLabel('toggle-word-wrap', 'linux')).toBe('Ctrl+Shift+Z');
   });
 
   it('leaves Ctrl+T alone, since every modifier must match', () => {

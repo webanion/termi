@@ -48,6 +48,7 @@ export interface PaneState {
   shellName: string;
   attached: boolean; // its shell is running
   activity: boolean; // new output while its tab shows another terminal, in tab view
+  wrap: boolean; // long lines wrap at the pane's edge. Off, the pane scrolls sideways.
 }
 
 // A tab holds 1 to 4 panes. A saved command can open several, and a split adds one more.
@@ -288,6 +289,7 @@ function createPane(
     shellName: '',
     attached: false,
     activity: false,
+    wrap: state.settings.wordWrap,
   };
   createRuntime({
     paneId: pane.id,
@@ -296,6 +298,7 @@ function createPane(
     fontSize: state.settings.fontSize,
     cursorStyle: state.settings.cursorStyle,
     cursorBlink: state.settings.cursorBlink,
+    wrap: pane.wrap,
     smoothScrollDuration: scrollDuration(),
     events: runtimeEvents,
   });
@@ -513,6 +516,36 @@ function cyclePane(step: number): void {
   if (next) selectPane(next.id);
 }
 
+// Word wrap on or off in the focused terminal only. The setting decides how a new one starts.
+export function toggleWordWrap(): void {
+  const tab = activeTab();
+  const pane = tab && focusedPane(tab);
+  if (!tab || !pane) return;
+  const wrap = !pane.wrap;
+  updateTab(tab.id, (t) => ({
+    ...t,
+    panes: t.panes.map((p) => (p.id === pane.id ? { ...p, wrap } : p)),
+  }));
+  getRuntime(pane.id)?.setWrap(wrap);
+}
+
+// Whether the focused terminal wraps, or a new one would when there is none. The menu's check
+// mark and the command palette show it.
+export function focusedWrap(s: AppState = state): boolean {
+  const tab = s.tabs.find((t) => t.id === s.activeId);
+  const pane = tab?.panes.find((p) => p.id === tab.focusedPaneId);
+  return pane ? pane.wrap : s.settings.wordWrap;
+}
+
+let menuWrap: boolean | null = null;
+
+function syncWordWrapMenu(): void {
+  const wrap = focusedWrap();
+  if (wrap === menuWrap) return;
+  menuWrap = wrap;
+  api.setWordWrapMenu(wrap);
+}
+
 export function setFontSize(size: number): void {
   void saveSettings({ fontSize: clampFontSize(size) }).then(applyTerminalOptions);
 }
@@ -527,6 +560,11 @@ export function setCursorBlink(cursorBlink: boolean): void {
 
 export function setSmoothScroll(smoothScroll: boolean): void {
   void saveSettings({ smoothScroll }).then(applyTerminalOptions);
+}
+
+// Only new terminals follow it. The open ones keep what they have.
+export function setWordWrap(wordWrap: boolean): void {
+  void saveSettings({ wordWrap });
 }
 
 const scrollDuration = () => (state.settings.smoothScroll ? SMOOTH_SCROLL_MS : 0);
@@ -825,6 +863,7 @@ export const PANEL_SETTINGS = [
   'cursorStyle',
   'cursorBlink',
   'smoothScroll',
+  'wordWrap',
   'sidebarHidden',
 ] as const;
 
@@ -915,6 +954,7 @@ const menuActions: Record<string, () => unknown> = {
     if (pane) getRuntime(pane.id)?.term.selectAll();
   },
   'toggle-sidebar': toggleSidebar,
+  'toggle-word-wrap': toggleWordWrap,
   'font-bigger': () => setFontSize(state.settings.fontSize + 1),
   'font-smaller': () => setFontSize(state.settings.fontSize - 1),
   'font-reset': () => setFontSize(DEFAULT_SETTINGS.fontSize),
@@ -965,6 +1005,8 @@ export async function init(): Promise<void> {
 
   api.window.onState(applyWindowState);
   api.onMenuAction(runAction);
+  subscribe(syncWordWrapMenu);
+  syncWordWrapMenu();
   api.settings.onChange((next) => {
     // The MCP server changed the saved commands, or someone edited the file. Keep running tabs
     // in step, like a save from the dialog, and apply the other settings as the panel does.

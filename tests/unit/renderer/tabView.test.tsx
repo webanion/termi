@@ -61,6 +61,7 @@ async function startWith(commands: SavedCommand[]) {
     cursorStyle: 'bar',
     cursorBlink: true,
     smoothScroll: true,
+    wordWrap: true,
     guideSeen: true,
   });
   let onData: (id: number, data: string) => void = () => {};

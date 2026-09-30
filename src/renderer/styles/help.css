@@ -160,6 +160,15 @@
   color: var(--text);
 }
 
+/* An action that is on, such as word wrap. */
+.palette-label .check-icon {
+  width: 14px;
+  height: 14px;
+  margin-left: 8px;
+  vertical-align: -2px;
+  color: var(--accent);
+}
+
 /* A saved command's name keeps most of the row, and what it runs gives way first. */
 .palette-item.has-detail .palette-label {
   flex: none;

@@ -19,6 +19,7 @@ const pane = (overrides: Partial<PaneState> = {}): PaneState => ({
   shellName: 'zsh',
   attached: true,
   activity: false,
+  wrap: true,
   ...overrides,
 });
 

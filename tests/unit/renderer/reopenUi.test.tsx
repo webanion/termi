@@ -63,6 +63,7 @@ async function renderHeader() {
     cursorStyle: 'bar',
     cursorBlink: true,
     smoothScroll: true,
+    wordWrap: true,
     guideSeen: true,
   });
   const store = await import('@/renderer/appStore');

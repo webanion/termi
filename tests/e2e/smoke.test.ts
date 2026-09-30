@@ -205,6 +205,46 @@ describe('Termi', () => {
     expect(await shellSize(22)).toBe(before);
   });
 
+  it('turns word wrap off and on in the focused terminal, and the shell gets the size', async () => {
+    const term = page.locator('.tab-view.active .xterm').first();
+    await term.locator('.xterm-helper-textarea').focus();
+    const shellSize = async (n: number, command = 'stty size') => {
+      await page.keyboard.type(`${command} > '${marker(n)}'`);
+      await page.keyboard.press('Enter');
+      await until(
+        () => fs.existsSync(marker(n)) && fs.readFileSync(marker(n), 'utf8').trim() !== '',
+      );
+      return fs.readFileSync(marker(n), 'utf8').trim();
+    };
+    const cols = (size: string) => Number(size.split(' ')[1]);
+    const checked = () =>
+      app.evaluate(
+        ({ Menu }) => Menu.getApplicationMenu()?.getMenuItemById('toggle-word-wrap')?.checked,
+      );
+    const wide = async () => (await term.getAttribute('class'))?.includes('no-wrap') ?? false;
+
+    const before = await shellSize(30);
+    expect(await checked()).toBe(true);
+    await clickMenu('toggle-word-wrap');
+    await until(wide);
+    expect(cols(await shellSize(31))).toBe(300);
+    await until(async () => (await checked()) === false);
+    expect(await term.locator('.sideways-scroll').isVisible()).toBe(true);
+
+    // A program on the alternate screen gets the pane's width, and the wide size comes back after.
+    const alternate = `printf '\\033[?1049h'; sleep 0.5; stty size`;
+    expect(cols(await shellSize(32, alternate))).toBe(cols(before));
+    await page.keyboard.type(`printf '\\033[?1049l'`);
+    await page.keyboard.press('Enter');
+    await until(wide);
+    expect(cols(await shellSize(33))).toBe(300);
+
+    await clickMenu('toggle-word-wrap');
+    await until(async () => !(await wide()));
+    expect(await shellSize(34)).toBe(before);
+    expect(await checked()).toBe(true);
+  });
+
   it("reopens a saved command's closed terminal with its command and title, in its place", async () => {
     const panes = page.locator('.tab-view.active .term-pane');
     const third = `echo 3 > '${marker(3)}'`;

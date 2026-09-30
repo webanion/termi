@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { activate, closeOverlay, commandById, runAction, runCommand, runningFor } from './appStore';
 import { cx } from './cx';
+import { CheckIcon } from './Icons';
 import type { PaletteItem } from './palette';
 import { useModal } from './useModal';
 
@@ -70,11 +71,15 @@ export function PaletteSearch({ name, placeholder, searchLabel, results, note }:
             key={item.key}
             role="option"
             aria-selected={i === current}
+            aria-checked={item.checked}
             className={cx('palette-item', item.detail && 'has-detail', i === current && 'selected')}
             onMouseMove={() => setSelected(i)}
             onClick={() => run(item)}
           >
-            <span className="palette-label">{item.label}</span>
+            <span className="palette-label">
+              {item.label}
+              {item.checked && <CheckIcon />}
+            </span>
             {item.detail && <span className="palette-detail">{item.detail}</span>}
             {item.keys && <kbd className="keys">{item.keys}</kbd>}
           </li>

@@ -146,12 +146,27 @@ describe('the settings panel', () => {
     for (const term of terms) expect(term.options).toMatchObject({ smoothScrollDuration: 125 });
   });
 
+  it('saves whether a new terminal wraps, and leaves the open ones as they are', async () => {
+    const { update, $, click } = await openPanel();
+    await click('#settings-tab-terminal');
+    const toggle = '#setting-word-wrap [role="switch"]';
+    expect($(toggle)?.getAttribute('aria-checked')).toBe('true');
+    expect($('#setting-word-wrap .field-hint')?.textContent).toContain('Ctrl+Shift+Z');
+    await click(toggle);
+    expect(update).toHaveBeenLastCalledWith({ wordWrap: false });
+    expect($(toggle)?.getAttribute('aria-checked')).toBe('false');
+    for (const term of terms) expect(term.options).toEqual({});
+    await click(reset('word-wrap'));
+    expect(update).toHaveBeenLastCalledWith({ wordWrap: true });
+  });
+
   it('puts every setting back with Reset all', async () => {
     const saved = {
       fontSize: 18,
       cursorStyle: 'underline',
       cursorBlink: false,
       smoothScroll: false,
+      wordWrap: false,
     } as const;
     const { update, $, click } = await openPanel({ saved, loginItem: true });
     expect(($('#settings-reset-all') as HTMLButtonElement).disabled).toBe(false);
@@ -161,6 +176,7 @@ describe('the settings panel', () => {
       cursorStyle: 'bar',
       cursorBlink: true,
       smoothScroll: true,
+      wordWrap: true,
       sidebarHidden: false,
     });
     expect(window.termi.loginItem.set).toHaveBeenCalledWith(false);

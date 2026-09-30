@@ -59,6 +59,7 @@ async function openDialog(cmd: SavedCommand | null) {
     cursorStyle: 'bar',
     cursorBlink: true,
     smoothScroll: true,
+    wordWrap: true,
     guideSeen: true,
   });
   const update = vi.spyOn(window.termi.settings, 'update');

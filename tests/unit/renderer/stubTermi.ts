@@ -12,6 +12,7 @@ const settings: Settings = {
   cursorStyle: 'bar',
   cursorBlink: true,
   smoothScroll: true,
+  wordWrap: true,
   guideSeen: true,
 };
 
@@ -34,6 +35,7 @@ const api: TermiApi = {
   },
   copyText: noop,
   showTerminalMenu: noop,
+  setWordWrapMenu: noop,
   onStats: subscribe,
   pickFolder: async () => null,
   loginItem: { get: async () => null, set: async () => null },

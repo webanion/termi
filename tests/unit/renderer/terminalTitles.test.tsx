@@ -48,6 +48,7 @@ async function start() {
     cursorStyle: 'bar',
     cursorBlink: true,
     smoothScroll: true,
+    wordWrap: true,
     guideSeen: true,
   });
   const store = await import('@/renderer/appStore');
@@ -110,6 +111,7 @@ describe('the pane head', () => {
     shellName: 'zsh',
     attached: true,
     activity: false,
+    wrap: true,
     ...overrides,
   });
 

@@ -1,4 +1,4 @@
-import { closedTerminals, readyTabs } from './appStore';
+import { closedTerminals, focusedWrap, readyTabs } from './appStore';
 import { filterPalette, paletteItems } from './palette';
 import { PaletteDialog, PaletteSearch } from './PaletteDialog';
 import { useAppState } from './useAppState';
@@ -8,6 +8,7 @@ function PaletteBody() {
   const tabs = useAppState((s) => s.tabs);
   const activeId = useAppState((s) => s.activeId);
   const commands = useAppState((s) => s.settings.commands);
+  const wrap = useAppState(focusedWrap);
 
   const terminals = readyTabs(tabs).map((t) => ({
     id: t.id,
@@ -16,7 +17,7 @@ function PaletteBody() {
   const active = tabs.find((t) => t.id === activeId && t.ready);
   const canReopen = Boolean(active && closedTerminals(active, commands).length);
   const hidden = canReopen ? [] : (['reopen-terminals'] as const);
-  const items = paletteItems(platform, terminals, hidden);
+  const items = paletteItems(platform, terminals, hidden, { 'toggle-word-wrap': wrap });
   return (
     <PaletteSearch
       name="palette"

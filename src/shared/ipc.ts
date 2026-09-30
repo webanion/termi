@@ -33,6 +33,8 @@ export interface SendChannels {
   'pty:kill': [id: number];
   'clipboard:write': [text: string];
   'terminal:context-menu': [context: TerminalContext];
+  // Whether the focused terminal wraps long lines, for the check mark on View > Word Wrap.
+  'menu:word-wrap': [on: boolean];
   'window:minimize': [];
   'window:toggle-maximize': [];
   'window:close': [];

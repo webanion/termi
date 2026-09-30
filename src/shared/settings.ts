@@ -4,7 +4,7 @@ import { isRecord, isSavedCommandShape } from './savedCommands';
 import type { CursorStyle, SavedCommand, Settings, StoredCommand } from './types';
 
 // Bump this and add a step to MIGRATIONS whenever the shape of the file changes.
-export const SETTINGS_VERSION = 6;
+export const SETTINGS_VERSION = 7;
 
 export const DEFAULT_SETTINGS: Settings = {
   commands: [],
@@ -14,6 +14,7 @@ export const DEFAULT_SETTINGS: Settings = {
   cursorStyle: 'bar',
   cursorBlink: true,
   smoothScroll: true,
+  wordWrap: true,
   guideSeen: false,
 };
 
@@ -58,6 +59,9 @@ const MIGRATIONS: Record<number, (file: Record<string, unknown>) => void> = {
   4: () => {},
   // Version 6 added smooth scrolling. An older file gets the default, which turns it on.
   5: () => {},
+  // Version 7 added whether a new terminal wraps long lines. An older file gets the default,
+  // which wraps them, as every terminal did before.
+  6: () => {},
 };
 
 // The settings the renderer may change, each with a check of its value.
@@ -73,6 +77,7 @@ const PATCH_CHECKS: { [K in keyof Settings]: (value: unknown) => boolean } = {
   cursorStyle: (value) => CURSOR_STYLES.includes(value as CursorStyle),
   cursorBlink: (value) => typeof value === 'boolean',
   smoothScroll: (value) => typeof value === 'boolean',
+  wordWrap: (value) => typeof value === 'boolean',
   guideSeen: (value) => typeof value === 'boolean',
 };
 
