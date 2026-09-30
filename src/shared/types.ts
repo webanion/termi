@@ -34,6 +34,7 @@ export interface Settings {
   fontSize: number;
   cursorStyle: CursorStyle;
   cursorBlink: boolean;
+  smoothScroll: boolean; // a mouse wheel scrolls in a short animation
   guideSeen: boolean; // the guide opens by itself once, on the first launch
 }
 

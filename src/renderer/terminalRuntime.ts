@@ -23,6 +23,7 @@ interface RuntimeOptions {
   fontSize: number;
   cursorStyle: CursorStyle;
   cursorBlink: boolean;
+  smoothScrollDuration: number;
   events: RuntimeEvents;
 }
 
@@ -50,6 +51,7 @@ export class TerminalRuntime {
     fontSize,
     cursorStyle,
     cursorBlink,
+    smoothScrollDuration,
     events,
   }: RuntimeOptions) {
     this.paneId = paneId;
@@ -64,6 +66,11 @@ export class TerminalRuntime {
       cursorStyle,
       cursorWidth: 2,
       scrollback: 10000,
+      smoothScrollDuration,
+      // A wheel's notch scrolls 50 pixels, about 3 rows at the default text size, and 5 times
+      // that with Alt held. These are xterm's defaults, and VS Code's terminal uses the same.
+      scrollSensitivity: 1,
+      fastScrollSensitivity: 5,
       allowProposedApi: true,
       macOptionClickForcesSelection: true,
       theme: THEME,
