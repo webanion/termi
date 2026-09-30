@@ -25,6 +25,17 @@ export function isAppPage(url: string): boolean {
   return url.startsWith(DEV_URL ?? PAGE_URL);
 }
 
+// A page that fails to load never becomes ready to show, so the window would stay hidden. Say so
+// and quit with an error, as a failed startup does. A load that another load replaced, such as a
+// reload from the menu before the first load finished, rejects with ERR_ABORTED and is no failure.
+export function pageLoadFailed(error: unknown): void {
+  const code = error instanceof Error ? (error as Error & { code?: unknown }).code : undefined;
+  if (code === 'ERR_ABORTED') return;
+  const reason = error instanceof Error ? error.message : String(error);
+  dialog.showErrorBox('Termi could not open its window', reason);
+  app.exit(1);
+}
+
 let quitConfirmed = false;
 
 export function createWindow(ptys: PtyManager, stats: SystemStats, send: SendEvent): BrowserWindow {
@@ -71,12 +82,7 @@ export function createWindow(ptys: PtyManager, stats: SystemStats, send: SendEve
   trackWindowState(win);
 
   win.once('ready-to-show', () => win.show());
-  // A page that fails to load never becomes ready to show, so the window would stay hidden.
-  win.loadURL(DEV_URL ?? PAGE_URL).catch((error: unknown) => {
-    const reason = error instanceof Error ? error.message : String(error);
-    dialog.showErrorBox('Termi could not open its window', reason);
-    app.quit();
-  });
+  win.loadURL(DEV_URL ?? PAGE_URL).catch(pageLoadFailed);
 
   const sendWindowState = () =>
     send('window:state', {
