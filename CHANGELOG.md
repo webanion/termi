@@ -2,6 +2,49 @@
 
 Every release of Termi, newest first. Each section is written by `scripts/changelog.mjs` from the Conventional Commits since the release before it, and is that version's GitHub Release notes.
 
+## v0.1.4 (2026-09-30)
+
+[Compare with v0.1.3](https://github.com/webanion/termi/compare/v0.1.3...v0.1.4)
+
+### Features
+
+- **settings:** add the Wrap long lines switch to the settings panel ([da262a1](https://github.com/webanion/termi/commit/da262a17be79fc60f62abe77195fb08b50066c2e), [#85](https://github.com/webanion/termi/pull/85))
+- **terminal:** toggle word wrap in the focused terminal with a shortcut ([917b553](https://github.com/webanion/termi/commit/917b553b6117f6a0722823436dee9d2dab0c27f5), [#85](https://github.com/webanion/termi/pull/85))
+- **ipc:** let the page set the check mark on the Word Wrap menu item ([530dc6a](https://github.com/webanion/termi/commit/530dc6a53cfeff8e246879036a5575086dfd43a4), [#85](https://github.com/webanion/termi/pull/85))
+- **settings:** add whether a new terminal wraps long lines ([71a2f98](https://github.com/webanion/termi/commit/71a2f98fed4b83746fa0185ef448064d99695153), [#85](https://github.com/webanion/termi/pull/85))
+- **settings:** add the smooth scrolling switch to the settings panel ([b769544](https://github.com/webanion/termi/commit/b7695440565782532d56dc60397140f40655f47a), [#84](https://github.com/webanion/termi/pull/84))
+- **terminal:** scroll smoothly with a mouse wheel, with a setting to turn it off ([02c7219](https://github.com/webanion/termi/commit/02c7219e94a9e646782f7c35991250699c3bf01b), [#84](https://github.com/webanion/termi/pull/84))
+- **settings:** add a settings panel, opened with Cmd+, or Ctrl+, ([0b456ed](https://github.com/webanion/termi/commit/0b456ed7cb3c2e0a6f1295299b7931225b5cfe45), [#78](https://github.com/webanion/termi/pull/78))
+- **ipc:** let the page read and set Open at Login on macOS ([805cc49](https://github.com/webanion/termi/commit/805cc4976565626e1b0ab470079601d91482697a), [#78](https://github.com/webanion/termi/pull/78))
+- **settings:** add the cursor settings and range check each setting ([bac2559](https://github.com/webanion/termi/commit/bac2559832805297f35b7a5039f42d9654e7ce81), [#78](https://github.com/webanion/termi/pull/78))
+- **mcp:** set the view of a saved command ([45723db](https://github.com/webanion/termi/commit/45723db8ce3c143185304fabf61814014ce7cd66), [#77](https://github.com/webanion/termi/pull/77))
+- **tabs:** show a tab's terminals one at a time as tabs ([b0b8412](https://github.com/webanion/termi/commit/b0b8412e05ecb613e4a6dec1b8ba29356048a112), [#77](https://github.com/webanion/termi/pull/77))
+- **settings:** save a view on each saved command ([9d7492a](https://github.com/webanion/termi/commit/9d7492a0bc7af126040fbe62aaa1382b2636cab9), [#77](https://github.com/webanion/termi/pull/77))
+
+### Fixes
+
+- **pty:** write mouse reports in the X10 encoding to the shell as bytes ([e9a8ed6](https://github.com/webanion/termi/commit/e9a8ed6b56e3e1f43c80261e480b57b88a5ffe06), [#83](https://github.com/webanion/termi/pull/83))
+- **release:** start the release jobs only for a branch in this repository ([3da2cfa](https://github.com/webanion/termi/commit/3da2cfab83138a094128e764803a4d1e495fe959), [#80](https://github.com/webanion/termi/pull/80))
+
+### Refactoring
+
+- **styles:** remove the scrollbar styles xterm 6 draws over ([5a6dab3](https://github.com/webanion/termi/commit/5a6dab3faba3f83049862fd22d5039f5c4807f7a), [#84](https://github.com/webanion/termi/pull/84))
+
+### Documentation
+
+- **terminal:** describe word wrap in the README and the guide ([eef0201](https://github.com/webanion/termi/commit/eef020124826836f3e8d70af20f51e6a7b0024d8), [#85](https://github.com/webanion/termi/pull/85))
+- **settings:** describe smooth scrolling in the README and the guide ([65dd8ff](https://github.com/webanion/termi/commit/65dd8ffe7bcbeea2dd8620fcf3f109f145635436), [#84](https://github.com/webanion/termi/pull/84))
+- **settings:** describe the settings panel in the README and the guide ([a6391dd](https://github.com/webanion/termi/commit/a6391ddd10ea9e88f018acd4bf5f13251d9d7c47), [#78](https://github.com/webanion/termi/pull/78))
+- **tabs:** describe tab view in the README and the guide ([23676b3](https://github.com/webanion/termi/commit/23676b3c04a2a7eff488f7729b8b3fc93d5a2897), [#77](https://github.com/webanion/termi/pull/77))
+
+### Tests
+
+- **terminal:** give the word wrap test's runtime mock the methods animation frames call ([1e728e4](https://github.com/webanion/termi/commit/1e728e4c1d5b48ee8e13f7e3e9e66700839e9853), [#85](https://github.com/webanion/termi/pull/85))
+
+### Other
+
+- move the app ID, author, copyright and conduct contact to Webanion ([b78786c](https://github.com/webanion/termi/commit/b78786c6ff88cd9d1f2fef5f6d644c6bb6511fd2), [#82](https://github.com/webanion/termi/pull/82))
+
 ## v0.1.3 (2026-09-29)
 
 [Compare with v0.1.2](https://github.com/webanion/termi/compare/v0.1.2...v0.1.3)
