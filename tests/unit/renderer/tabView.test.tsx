@@ -58,6 +58,8 @@ async function startWith(commands: SavedCommand[]) {
     sidebarWidth: 232,
     sidebarHidden: false,
     fontSize: 13,
+    cursorStyle: 'bar',
+    cursorBlink: true,
     guideSeen: true,
   });
   let onData: (id: number, data: string) => void = () => {};

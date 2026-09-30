@@ -4,6 +4,7 @@
 import copyingAndStats from './guide/copyingAndStats.md?raw';
 import mcpServer from './guide/mcpServer.md?raw';
 import savedCommands from './guide/savedCommands.md?raw';
+import settings from './guide/settings.md?raw';
 import splitTerminals from './guide/splitTerminals.md?raw';
 import terminals from './guide/terminals.md?raw';
 import type { AppAction } from '@/shared/appActions';
@@ -18,5 +19,6 @@ export const GUIDE_PAGES: GuidePage[] = [
   { source: savedCommands, tryIt: { label: 'Save a command', action: 'new-command' } },
   { source: splitTerminals, tryIt: { label: 'Split this tab', action: 'split-terminal' } },
   { source: copyingAndStats, tryIt: { label: 'Show every shortcut', action: 'show-shortcuts' } },
+  { source: settings, tryIt: { label: 'Open the settings', action: 'open-settings' } },
   { source: mcpServer },
 ];

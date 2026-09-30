@@ -41,6 +41,8 @@ export const SHORTCUTS = {
   'toggle-fullscreen': { mac: 'Ctrl+Cmd+F', other: 'F11' },
   'show-shortcuts': { mac: 'Cmd+/', other: 'Ctrl+Shift+/' },
   'command-palette': { mac: 'Cmd+Shift+P', other: 'Ctrl+Shift+P' },
+  // Ctrl+, is not a letter, so the shell keeps every Ctrl+letter, as with Ctrl+= and Ctrl+-.
+  'open-settings': { mac: 'Cmd+,', other: 'Ctrl+,' },
 } satisfies Record<string, ShortcutKeys>;
 
 export type ShortcutAction = keyof typeof SHORTCUTS;
@@ -107,6 +109,7 @@ const CODES: Record<string, string> = {
   '[': 'BracketLeft',
   ']': 'BracketRight',
   '/': 'Slash',
+  ',': 'Comma',
 };
 
 // A letter matches by the character it types, so the shortcut follows the keyboard layout, or by

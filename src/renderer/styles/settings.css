@@ -1,0 +1,186 @@
+/* ---------- Settings panel ---------- */
+
+#settings-dialog {
+  width: min(620px, calc(100vw - 32px));
+}
+
+/* The sections on the left, and the settings of the chosen one on the right. */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 18px;
+  min-height: 240px;
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-tab {
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius);
+  color: var(--muted);
+  text-align: left;
+  font-weight: 500;
+}
+
+.settings-tab:hover {
+  background: var(--hover);
+  color: var(--text-2);
+}
+
+.settings-tab.on {
+  background: var(--active);
+  color: var(--text);
+}
+
+.settings-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.setting-row:first-child {
+  padding-top: 0;
+}
+
+.setting-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.setting-label {
+  font-weight: 500;
+}
+
+.setting-control {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.setting-reset {
+  width: 24px;
+  height: 24px;
+}
+
+.setting-reset svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* A setting at its default has nothing to put back, so its button stays out of the way. */
+.setting-reset:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  background: var(--surface-2);
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-2);
+  transition:
+    transform var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.switch.on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.switch.on .switch-knob {
+  background: #fff;
+  transform: translateX(14px);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.stepper .icon-btn {
+  width: 26px;
+  height: 26px;
+}
+
+.stepper .icon-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.stepper .icon-btn:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.stepper-value {
+  min-width: 28px;
+  color: var(--text);
+  font: 12px var(--mono);
+  text-align: center;
+}
+
+.segmented {
+  display: flex;
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.segmented button {
+  height: 24px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.segmented button:hover {
+  color: var(--text-2);
+}
+
+.segmented button.on {
+  background: var(--active);
+  color: var(--accent);
+}

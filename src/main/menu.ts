@@ -48,12 +48,8 @@ export function buildMenu(send: SendEvent): void {
             submenu: [
               { role: 'about' },
               { type: 'separator' },
-              {
-                label: 'Open at Login',
-                type: 'checkbox',
-                checked: app.getLoginItemSettings().openAtLogin,
-                click: (item) => app.setLoginItemSettings({ openAtLogin: item.checked }),
-              },
+              // Open at Login is a switch in the settings, next to the other settings.
+              item('open-settings'),
               { type: 'separator' },
               { role: 'services' },
               { type: 'separator' },
@@ -96,6 +92,8 @@ export function buildMenu(send: SendEvent): void {
         { role: 'selectAll' },
         { type: 'separator' },
         item('clear'),
+        // macOS has Settings in the app menu. Other systems keep it here.
+        ...(isMac ? [] : [{ type: 'separator' } as const, item('open-settings')]),
       ],
     },
     {

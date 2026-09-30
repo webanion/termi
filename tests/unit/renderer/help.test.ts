@@ -12,7 +12,7 @@ import { SHORTCUT_ACTIONS } from '@/shared/shortcuts';
 
 describe('the guide', () => {
   it('has pages that each start with a title and hold text', () => {
-    expect(GUIDE_PAGES.length).toBe(5);
+    expect(GUIDE_PAGES.length).toBe(6);
     for (const page of GUIDE_PAGES) {
       const blocks = parseGuide(page.source);
       expect(blocks[0]?.kind).toBe('title');

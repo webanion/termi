@@ -11,6 +11,7 @@ A terminal app for macOS and Linux with a warm dark theme, saved commands that o
 ## What it does
 
 - A sidebar with the running terminals at the top and your saved commands below.
+- A settings panel, with ⌘, (Ctrl+, on Linux) or the gear at the top of the sidebar: whether the sidebar shows, the text size, the cursor's shape and whether it blinks, and on macOS whether Termi opens at login. A change applies at once, and each setting can go back to its default.
 - A saved command can run up to 4 terminals in one tab, for example an API server, a web server and a plain shell for one project. Add them with "Add terminal" in the saved command dialog. An empty command opens a plain shell. Each terminal can have a title, such as API or Web, which its pane header shows in place of the command. Pick how the terminals are arranged under Layout in the same dialog, or with the layout control that shows on the right of the header when a tab has more than one terminal. Its last choice, Tabs, shows one terminal at a time at full size, with a tab for each above it. A hidden terminal's tab lights up when it has new output, and ⌘] and ⌘[ (Ctrl+Alt+] and Ctrl+Alt+[ on Linux) move between the tabs. Termi remembers the layout and the view for each saved command.
 - When you close one terminal of a saved command, Reopen shows in the header. It lists the closed terminals by their command, with Reopen all, and ⇧⌘T (Ctrl+Shift+R on Linux) reopens all of them. Each one runs the command the saved command has now, in its folder, and goes back to its place in the layout. While some are closed, the saved command's row in the sidebar shows how many are open, such as 2 of 3.
 - Split any tab to add a plain shell to it, up to 4 terminals, with the split button on the right of the header or ⌘D (Ctrl+Shift+D on Linux). The new shell starts in the folder the tab started in. A split is not saved to a saved command, and while a split tab has more terminals than its saved command, Termi does not save its layout or view. In tab view, a split opens as a new tab.
@@ -102,6 +103,7 @@ Releases are made by the Release workflow in GitHub Actions, never by hand. Run 
 | Copy and paste | ⌘C and ⌘V | Ctrl+Shift+C and Ctrl+Shift+V |
 | Full screen | ⌃⌘F | F11 |
 | Text size | ⌘=, ⌘- and ⌘0 | Ctrl+=, Ctrl+- and Ctrl+0 |
+| Settings | ⌘, | Ctrl+, |
 | Open a link | ⌘ click | Ctrl+click |
 | Command palette | ⇧⌘P | Ctrl+Shift+P |
 | Keyboard shortcuts | ⌘/ | Ctrl+Shift+/ |
@@ -137,7 +139,7 @@ claude mcp add termi --scope user -- node /path/to/termi/out/main/mcpServer.js
 
 Termi keeps its data in `~/Library/Application Support/Termi/` on macOS, and in `$XDG_CONFIG_HOME/Termi` on Linux, which is usually `~/.config/Termi`.
 
-- `settings.json`: the saved commands, with their terminals, terminal titles, layout and view, the sidebar width, the text size, and whether the guide has opened. It has a version number, and Termi upgrades an older file when it reads it.
+- `settings.json`: the saved commands, with their terminals, terminal titles, layout and view, the sidebar width, whether the sidebar shows, the text size, the cursor style and whether it blinks, and whether the guide has opened. It has a version number, and Termi upgrades an older file when it reads it. If you edit it while Termi runs, Termi applies the change, and a value it cannot use goes back to its default. Open at login is not in this file: macOS keeps it.
 - `window-state.json`: the window's position and size.
 
 Set `TERMI_USER_DATA` to point the app and the MCP server at another folder, for example for tests.

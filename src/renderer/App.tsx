@@ -3,6 +3,7 @@ import { CommandLauncher } from './CommandLauncher';
 import { CommandPalette } from './CommandPalette';
 import { GuideDialog } from './GuideDialog';
 import { MainHeader } from './MainHeader';
+import { SettingsDialog } from './SettingsDialog';
 import { ShortcutSheet } from './ShortcutSheet';
 import { Sidebar } from './Sidebar';
 import { SidebarResizer } from './SidebarResizer';
@@ -24,6 +25,7 @@ export function App() {
       <ShortcutSheet />
       <CommandPalette />
       <CommandLauncher />
+      <SettingsDialog />
     </>
   );
 }

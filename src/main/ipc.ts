@@ -130,6 +130,17 @@ export function registerIpc(
     else win.maximize();
   });
   on('window:close', () => getWindow()?.close());
+  // Opening at login is a login item on macOS. Electron cannot set one on Linux, so there the
+  // page gets null and shows no switch.
+  const loginItems = process.platform === 'darwin';
+  handle('login-item:get', () => (loginItems ? app.getLoginItemSettings().openAtLogin : null));
+  handle('login-item:set', (_event, open) => {
+    if (typeof open !== 'boolean') throw new TypeError('login-item:set needs true or false.');
+    if (!loginItems) return null;
+    app.setLoginItemSettings({ openAtLogin: open });
+    return app.getLoginItemSettings().openAtLogin;
+  });
+
   handle('window:get-state', () => {
     const win = getWindow();
     return {

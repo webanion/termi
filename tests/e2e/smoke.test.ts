@@ -174,6 +174,37 @@ describe('Termi', () => {
     await until(() => fs.existsSync(marker(5)));
   });
 
+  it('changes the text size from the settings panel, and the shell gets the new size', async () => {
+    const panel = page.locator('#settings-dialog');
+    // The rows and columns the shell of the focused terminal has, as `stty size` prints them.
+    const shellSize = async (n: number) => {
+      await page.keyboard.type(`stty size > '${marker(n)}'`);
+      await page.keyboard.press('Enter');
+      await until(
+        () => fs.existsSync(marker(n)) && fs.readFileSync(marker(n), 'utf8').trim() !== '',
+      );
+      return fs.readFileSync(marker(n), 'utf8').trim();
+    };
+    const setting = async (control: string) => {
+      await clickMenu('open-settings');
+      await until(async () => (await panel.getAttribute('open')) !== null);
+      await panel.locator('#settings-tab-terminal').click();
+      await panel.locator(control).click();
+      await page.keyboard.press('Escape');
+      await until(async () => (await panel.getAttribute('open')) === null);
+    };
+
+    const before = await shellSize(20);
+    await setting('.stepper [aria-label="Bigger text"]');
+    await until(() => settingsFile().fontSize === 14);
+    const bigger = await shellSize(21);
+    const cols = (size: string) => Number(size.split(' ')[1]);
+    expect(cols(bigger)).toBeLessThan(cols(before));
+    await setting('#setting-font-size .setting-reset');
+    await until(() => settingsFile().fontSize === 13);
+    expect(await shellSize(22)).toBe(before);
+  });
+
   it("reopens a saved command's closed terminal with its command and title, in its place", async () => {
     const panes = page.locator('.tab-view.active .term-pane');
     const third = `echo 3 > '${marker(3)}'`;
