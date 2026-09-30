@@ -522,7 +522,8 @@ describe('Termi', () => {
     // The drop took focus, so the rest of the command goes to the same terminal.
     await page.keyboard.type(`'${marker(9)}'`);
     await page.keyboard.press('Enter');
-    await until(() => fs.existsSync(marker(9)));
+    // cp creates the copy before it writes into it, so wait for the contents, not the file.
+    await until(() => fs.existsSync(marker(9)) && fs.readFileSync(marker(9), 'utf8') !== '');
     expect(fs.readFileSync(marker(9), 'utf8')).toBe('dropped\n');
 
     await second.locator('.pane-head .icon-btn').click();
