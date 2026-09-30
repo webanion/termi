@@ -110,6 +110,7 @@ describe('the pane head', () => {
     shellName: 'zsh',
     attached: true,
     activity: false,
+    wrap: true,
     ...overrides,
   });
 

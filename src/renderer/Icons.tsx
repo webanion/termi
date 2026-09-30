@@ -135,3 +135,9 @@ export const MinusIcon = () => (
     <path d="M5 12l14 0" />
   </svg>
 );
+
+export const CheckIcon = () => (
+  <svg className="check-icon" viewBox="0 0 24 24">
+    <path d="M5 12l5 5l10 -10" />
+  </svg>
+);

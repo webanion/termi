@@ -309,6 +309,55 @@
   height: 100%;
 }
 
+/* Word wrap off: the terminal is wider than its pane. It clips to the pane and keeps room below
+   for the sideways scrollbar, which the fit addon reads as padding and leaves out of the rows.
+   The runtime shifts the screen as that scrollbar moves. Clip, not hidden: the browser scrolls
+   a hidden overflow to show the focused input xterm keeps at the cursor, which would shift the
+   screen a second time. */
+.pane-body .xterm.no-wrap {
+  box-sizing: border-box;
+  padding-bottom: 10px;
+  overflow: clip;
+}
+
+.sideways-scroll {
+  display: none;
+}
+
+.xterm.no-wrap .sideways-scroll {
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  height: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  cursor: default;
+}
+
+.sideways-scroll > div {
+  height: 1px;
+}
+
+/* The colors of xterm's own scrollbar, from theme.ts. */
+.sideways-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.sideways-scroll::-webkit-scrollbar-thumb {
+  background: rgba(245, 240, 230, 0.12);
+}
+
+.sideways-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 240, 230, 0.2);
+}
+
+.sideways-scroll::-webkit-scrollbar-thumb:active {
+  background: rgba(217, 119, 87, 0.45);
+}
+
 .xterm .xterm-viewport {
   background-color: var(--bg) !important;
 }

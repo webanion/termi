@@ -19,6 +19,8 @@ export const SHORTCUTS = {
   'close-terminal': { mac: 'Cmd+W', other: 'Ctrl+Shift+W' },
   clear: { mac: 'Cmd+K', other: 'Ctrl+Shift+K' },
   'toggle-sidebar': { mac: 'Cmd+B', other: 'Ctrl+Shift+B' },
+  // VS Code's word wrap key on macOS. Taking it means Option+Z no longer types Ω in a terminal.
+  'toggle-word-wrap': { mac: 'Alt+Z', other: 'Ctrl+Shift+Z' },
   'font-bigger': { mac: 'Cmd+=', other: 'Ctrl+=' },
   'font-smaller': { mac: 'Cmd+-', other: 'Ctrl+-' },
   'font-reset': { mac: 'Cmd+0', other: 'Ctrl+0' },
