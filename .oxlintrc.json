@@ -47,6 +47,7 @@
     "react/static-components": "error",
     "react/unsupported-syntax": "error",
     "react/use-memo": "error",
+    "react/void-use-memo": "error",
 
     "no-restricted-imports": [
       "error",
