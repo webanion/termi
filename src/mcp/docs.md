@@ -20,6 +20,7 @@ Each saved command has these fields:
 | `cwd` | The folder all terminals start in. Empty means the home folder. `~` works. |
 | `autoStart` | When true, the command starts when Termi opens (the bolt icon in the sidebar). |
 | `layout` | How a tab with 2 to 4 terminals is split. See "Layouts" below. It is not set for 1 terminal. |
+| `view` | How a tab with 2 to 4 terminals shows them: `split` shows them all at once, arranged by the layout, and `tabs` shows one at a time, full size, with a tab for each. The output lists it for 2 or more terminals. The layout stays saved in tab view, for when the user switches back to split. |
 
 ## Rules
 
@@ -29,6 +30,7 @@ The server uses the same rules as the saved command dialog in the app:
 - There must be 1 to 4 terminals.
 - The first terminal must have a command. A later terminal can be an empty string, which opens a plain shell.
 - A layout must be one of the ids for that number of terminals.
+- A view must be `split` or `tabs`, and `tabs` needs 2 to 4 terminals.
 - Spaces at the start and end of the name, the folder, and each command are removed.
 
 A tool that breaks a rule returns an error that says what to fix. Nothing is saved in that case.
@@ -42,6 +44,7 @@ A tool that breaks a rule returns an error that says what to fix. Nothing is sav
   `list_saved_commands` first to get the old list.
 - An empty `layout` string removes the layout, so the app uses the default one.
 - If the number of terminals changes and the saved layout does not fit the new number, the server removes it.
+- `view: "split"` removes the view, since split is the default. A command left with 1 terminal loses its view.
 - When `terminals` replaces the list, a terminal keeps its title if its command is the same and in the same place. Every other title is removed. A command left with 1 terminal has no titles.
 
 ## How changes reach the app
@@ -52,7 +55,7 @@ A running Termi watches the file. After a change from this server:
 
 - the sidebar shows the new or changed command right away;
 - a running tab of a renamed command takes the new name;
-- a change to the terminals, folder, or layout applies the next time the command starts. A running tab keeps its
+- a change to the terminals, folder, layout, or view applies the next time the command starts. A running tab keeps its
   terminals.
 
 The watcher is in the app source (`src/main/settings.ts`). A packaged build made before the MCP server was added does not have it. That build shows changes only after a restart, and its next save can overwrite them. Rebuild it with `npm run dist:mac` or `npm run dist:linux`.
@@ -76,6 +79,8 @@ Add a project with an API server, a web server, and a spare shell:
 Rename a command: `{ "target": "Shop", "name": "Shop dev" }`
 
 Turn on auto-start: `{ "target": "Shop", "autoStart": true }`
+
+Show its terminals one at a time, as tabs: `{ "target": "Shop", "view": "tabs" }`
 
 Add a fourth terminal: list first, then `{ "target": "Shop", "terminals": ["npm run api", "npm run web", "", "npm test -- --watch"] }`
 

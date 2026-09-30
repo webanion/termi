@@ -18,6 +18,7 @@ const pane = (overrides: Partial<PaneState> = {}): PaneState => ({
   proc: 'zsh',
   shellName: 'zsh',
   attached: true,
+  activity: false,
   ...overrides,
 });
 
@@ -29,6 +30,7 @@ const tab = (overrides: Partial<TabState> = {}): TabState => ({
   cwd: undefined,
   activity: false,
   layout: null,
+  view: 'split',
   tracks: null,
   panes: [pane()],
   focusedPaneId: 'p1',

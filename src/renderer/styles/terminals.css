@@ -35,6 +35,97 @@
   background: var(--border);
 }
 
+/* Tab view: the tab strip on top, and every pane in the one area under it. Only the focused pane
+   is visible. The others keep their size, and a hidden element cannot take focus or a click. */
+.tab-view.tabbed {
+  grid-template: auto minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+.tabbed .term-pane {
+  grid-area: 2 / 1;
+}
+
+.tabbed .term-pane:not(.focused) {
+  visibility: hidden;
+}
+
+.pane-tabs {
+  grid-area: 1 / 1;
+  display: flex;
+  min-width: 0;
+  height: 30px;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.pane-tab {
+  position: relative;
+  flex: 0 1 220px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 0 4px 0 12px;
+  border-right: 1px solid var(--border);
+  color: var(--muted);
+  font: 11px var(--mono);
+  white-space: nowrap;
+  cursor: default;
+  transition:
+    color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.pane-tab:hover {
+  color: var(--text-2);
+}
+
+.pane-tab.on {
+  background: var(--active);
+  color: var(--text-2);
+}
+
+/* The open tab gets the same accent bar as a focused pane's head, along its bottom edge. */
+.pane-tab::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transform: scaleX(0.4);
+  transition:
+    opacity var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+
+.pane-tab.on::after {
+  opacity: 1;
+  transform: none;
+}
+
+.pane-tab .icon-btn {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  opacity: 0;
+}
+
+.pane-tab .icon-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.pane-tab:hover .icon-btn,
+.pane-tab.on .icon-btn,
+.pane-tab .icon-btn:focus-visible {
+  opacity: 1;
+}
+
 /* A handle on a line between panes, set in the grid by PaneResizer.tsx. It is wider than the
    line, so it is easy to grab, and the line itself lights up on hover and while dragging. */
 .pane-resizer {

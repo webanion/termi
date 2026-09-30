@@ -6,6 +6,9 @@ export interface SavedTerminal {
   title?: string; // shown in the pane head instead of the command, for 2 or more terminals
 }
 
+// How a tab shows 2 to 4 terminals: all at once in a layout, or one at a time behind tabs.
+export type PaneView = 'split' | 'tabs';
+
 export interface SavedCommand {
   id: string;
   name: string;
@@ -13,6 +16,7 @@ export interface SavedCommand {
   cwd?: string;
   autoStart?: boolean;
   layout?: string;
+  view?: PaneView; // left out for split, the default
 }
 
 // A saved command as older versions wrote it, with one `command` instead of `terminals`.

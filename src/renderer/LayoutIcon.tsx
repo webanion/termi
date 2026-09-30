@@ -30,3 +30,14 @@ export function LayoutIcon({ layout }: { layout: Layout }) {
   }
   return <svg viewBox="0 0 24 24">{parts}</svg>;
 }
+
+// Tab view as an icon: a frame, with a strip of tabs along its top and the first one open.
+export function TabsIcon() {
+  return (
+    <svg viewBox="0 0 24 24">
+      <rect x="4" y="5" width="16" height="14" rx="2" />
+      <path d="M4 9.5H20" />
+      <path d="M10 5V9.5" />
+    </svg>
+  );
+}
