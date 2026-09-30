@@ -1,15 +1,15 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { activeTab, layoutFor, setLayout, type TabState } from './appStore';
+import { activeTab, layoutFor, setLayout, showTabs, type TabState } from './appStore';
 import { cx } from './cx';
-import { LayoutOptions } from './LayoutOptions';
+import { LayoutOptions, TABS_CHOICE } from './LayoutOptions';
 import { LAYOUTS, type Layout } from '@/shared/layouts';
 
-// The layout picker for a tab with more than one terminal. When it hides, the last buttons stay
-// so they fade out with it.
+// The layout picker for a tab with more than one terminal, with tab view as its last choice. When
+// it hides, the last buttons stay so they fade out with it.
 export function LayoutControl({ tab }: { tab: TabState | undefined }) {
   const ref = useRef<HTMLDivElement>(null);
   const options = tab ? LAYOUTS[tab.panes.length] : undefined;
-  const selected = tab ? layoutFor(tab)?.id : undefined;
+  const selected = tab?.view === 'tabs' ? TABS_CHOICE : tab ? layoutFor(tab)?.id : undefined;
   const [kept, setKept] = useState<{ options: Layout[]; selected: string | undefined }>({
     options: [],
     selected: undefined,
@@ -35,10 +35,13 @@ export function LayoutControl({ tab }: { tab: TabState | undefined }) {
       className={cx('layout-control', options && 'show')}
       id="layout-control"
       layouts={buttons}
+      tabs
       selected={current}
       onSelect={(id) => {
         const active = activeTab();
-        if (active) setLayout(active.id, id);
+        if (!active) return;
+        if (id === TABS_CHOICE) showTabs(active.id);
+        else setLayout(active.id, id);
       }}
     />
   );

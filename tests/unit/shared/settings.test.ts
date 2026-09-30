@@ -56,21 +56,35 @@ describe('readSettingsFile', () => {
     expect(file.commands[0]?.terminals).toEqual(terminals);
   });
 
-  it('migrates a version 3 file: the cursor stays a blinking bar', () => {
-    const file = readSettingsFile({ version: 3, commands: [], fontSize: 15, guideSeen: true });
+  it('migrates a version 3 file: its commands have no view, so they split', () => {
+    const commands = [{ id: 'a', name: 'Pair', terminals: [{ command: 'ls' }, { command: '' }] }];
+    const file = readSettingsFile({ version: 3, commands, guideSeen: true });
+    expect(file.version).toBe(SETTINGS_VERSION);
+    expect(file.commands).toEqual(commands);
+  });
+
+  it('reads the view of each saved command', () => {
+    const terminals = [{ command: 'npm run api' }, { command: '' }];
+    const commands = [{ id: 'a', name: 'Dev', terminals, layout: 'rows', view: 'tabs' }];
+    const file = readSettingsFile({ version: 5, commands });
+    expect(file.commands).toEqual(commands);
+  });
+
+  it('migrates a version 4 file: the cursor stays a blinking bar', () => {
+    const file = readSettingsFile({ version: 4, commands: [], fontSize: 15, guideSeen: true });
     expect(file.version).toBe(SETTINGS_VERSION);
     expect(file).toMatchObject({ cursorStyle: 'bar', cursorBlink: true, fontSize: 15 });
-    expect(SETTINGS_VERSION).toBe(4);
+    expect(SETTINGS_VERSION).toBe(5);
   });
 
   it('reads the cursor settings', () => {
-    const file = readSettingsFile({ version: 4, cursorStyle: 'block', cursorBlink: false });
+    const file = readSettingsFile({ version: 5, cursorStyle: 'block', cursorBlink: false });
     expect(file).toMatchObject({ cursorStyle: 'block', cursorBlink: false });
   });
 
   it('gives a setting edited to a value the app cannot use its default', () => {
     const file = readSettingsFile({
-      version: 4,
+      version: 5,
       fontSize: 'big',
       cursorStyle: 'beam',
       cursorBlink: 'yes',
@@ -83,9 +97,9 @@ describe('readSettingsFile', () => {
   });
 
   it('brings a text size edited out of the range into it, as a whole number', () => {
-    expect(readSettingsFile({ version: 4, fontSize: 100 }).fontSize).toBe(28);
-    expect(readSettingsFile({ version: 4, fontSize: 2 }).fontSize).toBe(9);
-    expect(readSettingsFile({ version: 4, fontSize: 14.4 }).fontSize).toBe(14);
+    expect(readSettingsFile({ version: 5, fontSize: 100 }).fontSize).toBe(28);
+    expect(readSettingsFile({ version: 5, fontSize: 2 }).fontSize).toBe(9);
+    expect(readSettingsFile({ version: 5, fontSize: 14.4 }).fontSize).toBe(14);
     expect(clampFontSize(Number.POSITIVE_INFINITY)).toBe(28);
   });
 

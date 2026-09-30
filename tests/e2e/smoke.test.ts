@@ -227,6 +227,46 @@ describe('Termi', () => {
     expect(await page.locator('#command-list .item-count').count()).toBe(0);
   });
 
+  it('shows the terminals one at a time in tab view, and remembers it for the command', async () => {
+    const control = page.locator('#layout-control.show');
+    const quad = () => (settingsFile().commands as { view?: string; layout?: string }[])[0];
+    await control.locator('[data-layout="tabs"]').click();
+    const tabs = page.locator('.tab-view.active .pane-tab');
+    await until(async () => (await tabs.count()) === 4);
+    expect(await tabs.locator('.pane-name').first().textContent()).toBe('First');
+    await until(() => quad()?.view === 'tabs');
+    expect(quad()?.layout).toBe('grid');
+
+    // Only the chosen terminal shows, and every terminal has the whole area, hidden or not.
+    const shown = () =>
+      page.evaluate(
+        `[...document.querySelectorAll('.tab-view.active .term-pane')]
+          .filter((el) => getComputedStyle(el).visibility === 'visible')
+          .map((el) => el.dataset.paneId)`,
+      );
+    const ids = await page
+      .locator('.tab-view.active .term-pane')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('data-pane-id')));
+    await tabs.nth(2).click();
+    await until(async () => JSON.stringify(await shown()) === JSON.stringify([ids[2]]));
+    expect(await tabs.nth(2).getAttribute('aria-selected')).toBe('true');
+    const widths = await page
+      .locator('.tab-view.active .term-pane')
+      .evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().width)));
+    expect(new Set(widths).size).toBe(1);
+    expect(widths[0]).toBe(
+      await page.locator('.tab-view.active').evaluate((el) => Math.round(el.clientWidth)),
+    );
+    await clickMenu('next-pane');
+    await until(async () => JSON.stringify(await shown()) === JSON.stringify([ids[3]]));
+
+    await control.locator('[data-layout="grid"]').click();
+    await until(async () => (await gridAreas()) === '"a b" "c d"');
+    expect(await tabs.count()).toBe(0);
+    await until(() => quad()?.view === undefined);
+    await page.locator('.tab-view.active .term-pane.focused .xterm-helper-textarea').focus();
+  });
+
   it("brings a background tab's output back to the page", async () => {
     await page.keyboard.type('sleep 2; echo later');
     await page.keyboard.press('Enter');

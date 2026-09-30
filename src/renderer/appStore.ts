@@ -9,6 +9,7 @@ import { clampFontSize, DEFAULT_SETTINGS } from '@/shared/settings';
 import type {
   AppInfo,
   CursorStyle,
+  PaneView,
   PtyCreated,
   SavedCommand,
   SavedTerminal,
@@ -33,6 +34,7 @@ import {
 } from './fileDrop';
 import { DURATION, SIDEBAR_DEFAULT } from './theme';
 import { issueUrl, releaseNotesUrl } from './helpLinks';
+import { commandLabel } from './commandText';
 import { layoutGrid, tracksFor, type Axis, type TrackSizes } from './paneTracks';
 
 const api = window.termi;
@@ -45,6 +47,7 @@ export interface PaneState {
   proc: string; // the program in the foreground
   shellName: string;
   attached: boolean; // its shell is running
+  activity: boolean; // new output while its tab shows another terminal, in tab view
 }
 
 // A tab holds 1 to 4 panes. A saved command can open several, and a split adds one more.
@@ -56,6 +59,7 @@ export interface TabState {
   cwd: string | undefined; // the folder the tab's shells start in, and a split's shell too
   activity: boolean;
   layout: string | null;
+  view: PaneView; // in tab view, the focused pane is the one on screen
   tracks: TrackSizes | null; // the sizes of a split's columns and rows, or null while equal
   panes: PaneState[];
   focusedPaneId: string | null;
@@ -96,6 +100,7 @@ export interface TabOptions {
   cwd?: string;
   commandId?: string;
   layout?: string;
+  view?: PaneView;
 }
 
 let state: AppState = {
@@ -157,6 +162,16 @@ export function readyTabs(tabs: TabState[]): TabState[] {
 
 export function layoutFor(tab: TabState): Layout | null {
   return fittingLayout(tab.panes.length, tab.layout) ?? null;
+}
+
+// Tabs show only while the tab has more than one terminal. A tab left with 1 shows it plainly.
+export function showsTabs(tab: TabState): boolean {
+  return tab.view === 'tabs' && tab.panes.length > 1;
+}
+
+// A title stands in for the command. A plain shell goes by the shell's name.
+export function paneName(pane: PaneState): string {
+  return pane.title || commandLabel(pane.command) || pane.shellName;
 }
 
 export function isBusy(pane: PaneState): boolean {
@@ -272,6 +287,7 @@ function createPane(
     proc: '',
     shellName: '',
     attached: false,
+    activity: false,
   };
   createRuntime({
     paneId: pane.id,
@@ -293,6 +309,7 @@ function createTab({
   cwd,
   commandId,
   layout,
+  view,
 }: TabOptions = {}): TabState {
   const panes = terminals
     .slice(0, MAX_TERMINALS)
@@ -305,6 +322,7 @@ function createTab({
     cwd,
     activity: false,
     layout: layout || null,
+    view: view === 'tabs' ? 'tabs' : 'split',
     tracks: null,
     panes,
     focusedPaneId: panes[0]?.id ?? null,
@@ -343,10 +361,23 @@ export function activate(id: number): void {
   });
 }
 
+// The focused pane is also the one tab view shows, so focusing it has seen its output.
 export function focusPane(paneId: string): void {
   const tab = tabOfPane(paneId);
-  if (tab && tab.focusedPaneId !== paneId)
-    updateTab(tab.id, (t) => ({ ...t, focusedPaneId: paneId }));
+  const pane = tab?.panes.find((p) => p.id === paneId);
+  if (!tab || !pane || (tab.focusedPaneId === paneId && !pane.activity)) return;
+  updateTab(tab.id, (t) => ({
+    ...t,
+    focusedPaneId: paneId,
+    panes: t.panes.map((p) => (p.id === paneId && p.activity ? { ...p, activity: false } : p)),
+  }));
+}
+
+// Focus a pane from a click on its tab or a shortcut. In tab view it shows only once React has
+// drawn it, and a hidden terminal cannot take focus, so the terminal focuses on the next frame.
+export function selectPane(paneId: string): void {
+  focusPane(paneId);
+  requestAnimationFrame(() => getRuntime(paneId)?.focus());
 }
 
 export function closeTab(id: number): void {
@@ -478,7 +509,7 @@ function cyclePane(step: number): void {
   if (!tab || tab.panes.length < 2) return;
   const index = tab.panes.findIndex((p) => p.id === tab.focusedPaneId);
   const next = tab.panes[(index + step + tab.panes.length) % tab.panes.length];
-  if (next) getRuntime(next.id)?.focus();
+  if (next) selectPane(next.id);
 }
 
 export function setFontSize(size: number): void {
@@ -510,21 +541,53 @@ function applyTerminalOptions(): void {
   if (resized) fitActiveTab();
 }
 
+// A saved command with this view. Split is the default, so it is left out.
+function withView(cmd: SavedCommand, view: PaneView): SavedCommand {
+  const next = { ...cmd };
+  if (view === 'tabs') next.view = view;
+  else delete next.view;
+  return next;
+}
+
+// Remember a choice for the next time the tab's saved command runs, unless a split or a closed
+// pane left the tab with another number of terminals than the command has.
+function saveToCommand(tab: TabState, change: (cmd: SavedCommand) => SavedCommand): void {
+  const cmd = tab.commandId ? commandById(tab.commandId) : undefined;
+  if (!cmd || cmd.terminals.length !== tab.panes.length) return;
+  void saveSettings({
+    commands: state.settings.commands.map((c) => (c.id === cmd.id ? change(c) : c)),
+  });
+}
+
+// Choosing a layout also shows the tab split. The marks of tab view go, since every terminal is
+// on screen.
 export function setLayout(tabId: number, layoutId: string): void {
   const tab = tabById(tabId);
   if (!tab) return;
-  updateTab(tabId, (t) => ({ ...t, layout: layoutId, tracks: null }));
+  updateTab(tabId, (t) => ({
+    ...t,
+    layout: layoutId,
+    view: 'split',
+    tracks: null,
+    panes: t.panes.map((p) => (p.activity ? { ...p, activity: false } : p)),
+  }));
   requestAnimationFrame(() => fitTab(tabId));
-  // Remember the layout for the next time the saved command runs, unless a split or a closed
-  // pane left the tab with another number of terminals than the command has.
-  const cmd = tab.commandId ? commandById(tab.commandId) : undefined;
-  if (cmd && cmd.terminals.length === tab.panes.length) {
-    void saveSettings({
-      commands: state.settings.commands.map((c) =>
-        c.id === tab.commandId ? { ...c, layout: layoutId } : c,
-      ),
+  saveToCommand(tab, (c) => withView({ ...c, layout: layoutId }, 'split'));
+}
+
+// Show one terminal of the tab at a time, the focused one, with a tab for each. The layout stays
+// for when the tab splits again.
+export function showTabs(tabId: number): void {
+  const tab = tabById(tabId);
+  if (!tab || tab.view === 'tabs') return;
+  updateTab(tabId, (t) => ({ ...t, view: 'tabs' }));
+  if (tabId === state.activeId) {
+    requestAnimationFrame(() => {
+      fitTab(tabId);
+      focusTab(tabId);
     });
   }
+  saveToCommand(tab, (c) => withView(c, 'tabs'));
 }
 
 // Resize the columns or the rows of a split tab. The sizes stay with the running tab, and go back
@@ -610,6 +673,7 @@ function commandTabOptions(cmd: SavedCommand): TabOptions {
     cwd: cmd.cwd,
     commandId: cmd.id,
     layout: cmd.layout,
+    view: cmd.view,
   };
 }
 
@@ -630,12 +694,19 @@ export interface CommandInput {
   cwd: string;
   autoStart: boolean;
   layout?: string;
+  view?: PaneView;
 }
 
-// Drop a layout that does not fit the command's number of terminals, as the MCP server does.
+// Drop a layout that does not fit the command's number of terminals, as the MCP server does, and
+// a view when the command has 1 terminal. Split is the default view, so it is left out too.
 function withFittingLayout(cmd: SavedCommand): SavedCommand {
-  const { layout, ...rest } = cmd;
-  return layout && layoutIds(cmd.terminals.length)?.includes(layout) ? { ...rest, layout } : rest;
+  const { layout, view, ...rest } = cmd;
+  const ids = layoutIds(cmd.terminals.length);
+  return {
+    ...rest,
+    ...(layout && ids?.includes(layout) ? { layout } : {}),
+    ...(view === 'tabs' && ids ? { view } : {}),
+  };
 }
 
 export async function saveCommand(editingId: string | null, data: CommandInput): Promise<void> {
@@ -895,11 +966,23 @@ export async function init(): Promise<void> {
     applyTerminalOptions();
     if (sidebarChanged) applySidebar();
   });
+  // Output in a tab that is not on screen marks the tab in the sidebar. Output in a terminal that
+  // tab view hides marks its tab in the tab strip.
   api.pty.onData((id, data) => {
     const runtime = routePtyData(id, data);
     const tab = runtime && tabOfPane(runtime.paneId);
-    if (tab && tab.id !== state.activeId && !tab.activity)
-      updateTab(tab.id, (t) => ({ ...t, activity: true }));
+    if (!tab) return;
+    const markTab = tab.id !== state.activeId && !tab.activity;
+    const hidden = showsTabs(tab) && tab.focusedPaneId !== runtime.paneId;
+    const markPane = hidden && tab.panes.some((p) => p.id === runtime.paneId && !p.activity);
+    if (!markTab && !markPane) return;
+    updateTab(tab.id, (t) => ({
+      ...t,
+      activity: t.activity || markTab,
+      panes: markPane
+        ? t.panes.map((p) => (p.id === runtime.paneId ? { ...p, activity: true } : p))
+        : t.panes,
+    }));
   });
   api.pty.onTitle((id, title) => {
     const runtime = runtimeForPty(id);

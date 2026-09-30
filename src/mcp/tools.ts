@@ -1,8 +1,8 @@
 import { readSettings, SETTINGS_FILE, writeSettings } from './settingsFile';
 import { docsText, DOCS_URI } from './docs';
-import { layoutIds, LAYOUTS } from '@/shared/layouts';
+import { layoutIds, LAYOUTS, PANE_VIEWS } from '@/shared/layouts';
 import { keepTitles, MAX_TERMINALS, savedCommandError } from '@/shared/savedCommands';
-import type { SavedCommand } from '@/shared/types';
+import type { PaneView, SavedCommand } from '@/shared/types';
 
 // An error the caller can fix, sent back as the tool's result instead of a protocol error.
 export class ToolError extends Error {}
@@ -15,6 +15,7 @@ interface SchemaProperty {
   minItems?: number;
   maxItems?: number;
   items?: { type: string };
+  enum?: string[];
 }
 
 export interface Tool {
@@ -74,6 +75,13 @@ function cleanString(value: unknown, field: string): string {
   return value.trim();
 }
 
+// Split is the default view, so it is not stored. An empty string resets the view to it too.
+function setView(cmd: SavedCommand, value: unknown): void {
+  const view = cleanString(value, 'view');
+  if (view && view !== 'split') cmd.view = view as PaneView;
+  else delete cmd.view;
+}
+
 // Titles are set in the app. They are listed only when a terminal has one.
 function describe(cmd: SavedCommand) {
   const titled = cmd.terminals.some((t) => t.title);
@@ -85,6 +93,7 @@ function describe(cmd: SavedCommand) {
     cwd: cmd.cwd || '',
     autoStart: Boolean(cmd.autoStart),
     ...(cmd.layout ? { layout: cmd.layout } : {}),
+    ...(cmd.terminals.length > 1 ? { view: cmd.view ?? 'split' } : {}),
   };
 }
 
@@ -103,6 +112,7 @@ function addCommand(args: ToolArgs) {
     autoStart: Boolean(args.autoStart),
   };
   if (args.layout !== undefined) cmd.layout = cleanString(args.layout, 'layout');
+  if (args.view !== undefined) setView(cmd, args.view);
   validate(cmd);
   writeSettings({ ...settings, commands: [...settings.commands, cmd] });
   return { added: describe(cmd) };
@@ -126,6 +136,9 @@ function editCommand(args: ToolArgs) {
     // The terminal count changed and the old layout does not fit it.
     delete next.layout;
   }
+  if (args.view !== undefined) setView(next, args.view);
+  // A command left with 1 terminal has no view.
+  else if (!layoutIds(next.terminals.length)) delete next.view;
   validate(next);
   const commands = settings.commands.map((c) => (c.id === current.id ? next : c));
   writeSettings({ ...settings, commands });
@@ -153,13 +166,22 @@ const layoutSchema: SchemaProperty = {
       .join(' ') +
     ' Leave it out to use the first (default) layout.',
 };
+const viewSchema: SchemaProperty = {
+  type: 'string',
+  enum: PANE_VIEWS,
+  description:
+    'How a tab with 2 to 4 terminals shows them. "split" shows them all at once, arranged by the ' +
+    'layout. "tabs" shows one at a time, full size, with a tab for each. The layout stays saved ' +
+    'in tab view, for when the user switches back to split.',
+};
 
 export const TOOLS: Tool[] = [
   {
     name: 'list_saved_commands',
     description:
       'List the saved commands in the Termi terminal app, with their id, name, terminal commands, ' +
-      'terminal titles (when a terminal has one), working folder (cwd), auto-start flag, and layout.',
+      'terminal titles (when a terminal has one), working folder (cwd), auto-start flag, layout, and ' +
+      'view (for 2 or more terminals).',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     annotations: { title: 'List Termi saved commands', readOnlyHint: true },
     run: listCommands,
@@ -183,6 +205,7 @@ export const TOOLS: Tool[] = [
           description: 'Start this command when Termi opens. The default is false.',
         },
         layout: layoutSchema,
+        view: { ...viewSchema, description: `${viewSchema.description} Leave it out for split.` },
       },
       required: ['name', 'terminals'],
       additionalProperties: false,
@@ -218,6 +241,10 @@ export const TOOLS: Tool[] = [
         layout: {
           ...layoutSchema,
           description: `${layoutSchema.description} An empty string resets it to the default.`,
+        },
+        view: {
+          ...viewSchema,
+          description: `${viewSchema.description} Leave it out to keep the current view.`,
         },
       },
       required: ['target'],

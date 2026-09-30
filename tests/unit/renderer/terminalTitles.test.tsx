@@ -108,6 +108,7 @@ describe('the pane head', () => {
     proc: 'zsh',
     shellName: 'zsh',
     attached: true,
+    activity: false,
     ...overrides,
   });
 
@@ -122,6 +123,7 @@ describe('the pane head', () => {
       cwd: undefined,
       activity: false,
       layout: null,
+      view: 'split',
       tracks: null,
       panes: [shown, ...others],
       focusedPaneId: shown.id,

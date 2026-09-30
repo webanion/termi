@@ -1,6 +1,6 @@
 // The rules for a saved command, the same in the saved command dialog and the MCP server.
 
-import { layoutIds } from './layouts';
+import { isPaneView, layoutIds, PANE_VIEWS } from './layouts';
 import type { SavedCommand, SavedTerminal } from './types';
 
 export const MAX_TERMINALS = 4;
@@ -23,6 +23,11 @@ export function savedCommandError(cmd: SavedCommand): string | null {
     if (!ids.includes(cmd.layout))
       return `For ${cmd.terminals.length} terminals, the layout must be one of: ${ids.join(', ')}.`;
   }
+  if (cmd.view !== undefined) {
+    if (!isPaneView(cmd.view)) return `The view must be one of: ${PANE_VIEWS.join(', ')}.`;
+    if (!layoutIds(cmd.terminals.length))
+      return 'A view only applies to a saved command with 2 to 4 terminals.';
+  }
   return null;
 }
 
@@ -30,7 +35,7 @@ export function savedCommandError(cmd: SavedCommand): string | null {
 // above, so a command edited by hand into an unusual shape can still be saved back.
 export function isSavedCommandShape(value: unknown): value is SavedCommand {
   if (!isRecord(value)) return false;
-  const { id, name, terminals, cwd, autoStart, layout } = value;
+  const { id, name, terminals, cwd, autoStart, layout, view } = value;
   return (
     typeof id === 'string' &&
     typeof name === 'string' &&
@@ -43,7 +48,8 @@ export function isSavedCommandShape(value: unknown): value is SavedCommand {
     ) &&
     (cwd === undefined || typeof cwd === 'string') &&
     (autoStart === undefined || typeof autoStart === 'boolean') &&
-    (layout === undefined || typeof layout === 'string')
+    (layout === undefined || typeof layout === 'string') &&
+    (view === undefined || typeof view === 'string')
   );
 }
 

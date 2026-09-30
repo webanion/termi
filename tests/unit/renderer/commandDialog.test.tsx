@@ -97,7 +97,7 @@ describe('the layout picker in the saved command dialog', () => {
     await openDialog(null);
     expect(picker()).toBeNull();
     addTerminal();
-    expect(options()).toEqual(['columns', 'rows']);
+    expect(options()).toEqual(['columns', 'rows', 'tabs']);
     expect(selected()).toBe('columns');
     const above = picker()?.closest('.field')?.previousElementSibling;
     expect(above?.querySelector('#term-fields')).not.toBeNull();
@@ -108,21 +108,21 @@ describe('the layout picker in the saved command dialog', () => {
 
   it("selects the command's saved layout", async () => {
     await openDialog(trio);
-    expect(options()).toEqual(['main-left', 'main-top', 'columns', 'rows']);
+    expect(options()).toEqual(['main-left', 'main-top', 'columns', 'rows', 'tabs']);
     expect(selected()).toBe('main-top');
   });
 
   it('keeps the selection while it fits the number of terminals, or moves to the default', async () => {
     await openDialog(trio);
     removeTerminal(3);
-    expect(options()).toEqual(['columns', 'rows']);
+    expect(options()).toEqual(['columns', 'rows', 'tabs']);
     expect(selected()).toBe('columns');
     choose('rows');
     addTerminal();
     expect(selected()).toBe('rows');
     choose('main-top');
     addTerminal();
-    expect(options()).toEqual(['grid', 'main-left', 'columns', 'rows']);
+    expect(options()).toEqual(['grid', 'main-left', 'columns', 'rows', 'tabs']);
     expect(selected()).toBe('grid');
   });
 
@@ -140,6 +140,41 @@ describe('the layout picker in the saved command dialog', () => {
     removeTerminal(3);
     removeTerminal(2);
     expect(picker()).toBeNull();
+    click('#save-command');
+    await vi.waitFor(() => expect(update).toHaveBeenCalled());
+    const { layout: _, ...rest } = trio;
+    expect(update).toHaveBeenLastCalledWith({
+      commands: [{ ...rest, terminals: [{ command: 'npm run api' }] }],
+    });
+  });
+});
+
+describe('tab view in the saved command dialog', () => {
+  it('comes after the layouts, and saves the view while keeping the layout', async () => {
+    const { update } = await openDialog(trio);
+    choose('tabs');
+    expect(selected()).toBe('tabs');
+    click('#save-command');
+    await vi.waitFor(() =>
+      expect(update).toHaveBeenLastCalledWith({ commands: [{ ...trio, view: 'tabs' }] }),
+    );
+  });
+
+  it("selects a command's tab view, and a layout goes back to split", async () => {
+    const { update } = await openDialog({ ...trio, view: 'tabs' });
+    expect(selected()).toBe('tabs');
+    choose('rows');
+    expect(selected()).toBe('rows');
+    click('#save-command');
+    await vi.waitFor(() =>
+      expect(update).toHaveBeenLastCalledWith({ commands: [{ ...trio, layout: 'rows' }] }),
+    );
+  });
+
+  it('saves no view for 1 terminal', async () => {
+    const { update } = await openDialog({ ...trio, view: 'tabs' });
+    removeTerminal(3);
+    removeTerminal(2);
     click('#save-command');
     await vi.waitFor(() => expect(update).toHaveBeenCalled());
     const { layout: _, ...rest } = trio;

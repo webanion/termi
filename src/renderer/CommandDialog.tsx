@@ -9,10 +9,11 @@ import {
 } from './appStore';
 import { cx } from './cx';
 import { CloseIcon, FolderIcon, PlusIcon } from './Icons';
-import { LayoutOptions } from './LayoutOptions';
+import { LayoutOptions, TABS_CHOICE } from './LayoutOptions';
 import { useAppState } from './useAppState';
 import { fittingLayout, LAYOUTS } from '@/shared/layouts';
 import { MAX_TERMINALS, MAX_TITLE, savedTerminal } from '@/shared/savedCommands';
+import type { PaneView } from '@/shared/types';
 
 interface Field {
   key: number;
@@ -37,6 +38,7 @@ export function CommandDialog() {
   const [name, setName] = useState('');
   const [fields, setFields] = useState<Field[]>([field()]);
   const [layoutId, setLayoutId] = useState<string>();
+  const [view, setView] = useState<PaneView>('split');
   const [cwd, setCwd] = useState('');
   const [autoStart, setAutoStart] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -56,6 +58,7 @@ export function CommandDialog() {
     const terminals = (cmd?.terminals ?? [{ command: '' }]).slice(0, MAX_TERMINALS);
     setFields(terminals.map((t) => field(t.command, t.title)));
     setLayoutId(fittingLayout(terminals.length, cmd?.layout)?.id);
+    setView(cmd?.view === 'tabs' ? 'tabs' : 'split');
     setCwd(cmd?.cwd ?? '');
     setAutoStart(cmd?.autoStart ?? false);
     setConfirmDelete(false);
@@ -111,6 +114,7 @@ export function CommandDialog() {
       cwd: cwd.trim(),
       autoStart,
       layout: layoutId,
+      view,
     };
     if (!data.name || !data.terminals[0]?.command) return;
     await saveCommand(editingId, data);
@@ -255,9 +259,18 @@ export function CommandDialog() {
               className="layout-options"
               id="command-layout"
               layouts={layouts}
-              selected={layoutId}
+              tabs
+              selected={view === 'tabs' ? TABS_CHOICE : layoutId}
               labeled
-              onSelect={setLayoutId}
+              onSelect={(id) => {
+                // Tab view keeps the layout, for when the tab splits again.
+                if (id === TABS_CHOICE) {
+                  setView('tabs');
+                  return;
+                }
+                setView('split');
+                setLayoutId(id);
+              }}
             />
           </div>
         )}
