@@ -52,7 +52,7 @@ When a directory already does something else consistently, follow the directory.
 
 ## Imports
 
-A module imports from its own folder with `./`, and from any other folder of `src/` with `@/`, which is `src/`: `@/shared/types`, never `../shared/types`. Tests do the same, in `vi.mock()` and `await import()` too, so `@/renderer/appStore` rather than `../../../src/renderer/appStore`. Files outside `src/`, the logos in `assets/` and `package.json`, keep their relative paths. ESLint refuses a `../` import that `@/` could replace.
+A module imports from its own folder with `./`, and from any other folder of `src/` with `@/`, which is `src/`: `@/shared/types`, never `../shared/types`. Tests do the same, in `vi.mock()` and `await import()` too, so `@/renderer/appStore` rather than `../../../src/renderer/appStore`. Files outside `src/`, the logos in `assets/` and `package.json`, keep their relative paths. Oxlint refuses a `../` import that `@/` could replace.
 
 ## Versions and releases
 

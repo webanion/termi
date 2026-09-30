@@ -26,7 +26,7 @@ These rules are what keep a page that shows untrusted terminal output from reach
 - Main treats what the renderer sends as untrusted. `src/main/ipc.ts` checks that the sender is the app's own page and validates every argument before using it.
 - Text from a terminal (titles, OSC sequences, process names) and from settings goes into the page as text, never as HTML. In React that means never `dangerouslySetInnerHTML`.
 - A component never starts or stops a shell. Store actions create and dispose terminal runtimes, and a pane only lends its element with `attach()` and `detach()`, so React re-rendering, remounting, or StrictMode running effects twice in development cannot spawn or kill anything.
-- `src/shared/` imports neither Node nor Electron, because the sandboxed renderer loads it. `src/mcp/` never imports Electron, because it runs under plain Node. ESLint enforces both.
+- `src/shared/` imports neither Node nor Electron, because the sandboxed renderer loads it. `src/mcp/` never imports Electron, because it runs under plain Node. Oxlint enforces both, from `.oxlintrc.json`. Write a new boundary as a `group` of glob patterns, never a regex: Oxlint's regex engine has no lookahead, and a pattern it cannot run matches nothing without an error. Prove each new boundary by adding a violating import and watching the lint fail.
 - When the shape of `settings.json` changes, bump `SETTINGS_VERSION` in `src/shared/settings.ts` and add a migration step. Keys a build does not know are kept, so an older build does not destroy a newer build's settings.
 
 ## Commands
@@ -38,7 +38,7 @@ These rules are what keep a page that shows untrusted terminal output from reach
 | `npm start` | Build into `out/` and run the build. |
 | `npm run build` | Build main, preload, renderer and the MCP server into `out/`. |
 | `npm run typecheck` | TypeScript for both projects, node (`tsconfig.node.json`) and web (`tsconfig.web.json`). |
-| `npm run lint` | ESLint, including the import rules above. |
+| `npm run lint` | Oxlint in type-aware mode, with the import rules above. Every rule is an error, and `--deny-warnings` keeps it that way. `npm run lint:fix` applies the safe fixes. |
 | `npm run format:check` | Prettier. `npm run format` fixes it. |
 | `npm run test:scripts` | The tests for the scripts in `scripts/`, such as the changelog tool and the AppArmor script, run with `node --test`. |
 | `npm run setup:apparmor` | On Ubuntu 23.10 and later, reports whether the development Electron needs an AppArmor profile. With `-- --execute`, installs it with `sudo`. |
@@ -63,7 +63,7 @@ The full conventions are in [CONTRIBUTING](.github/CONTRIBUTING.md). The short v
 - One-line Conventional Commits, `type(scope): description`, with the type matching the branch.
 - Pull requests merge with a merge commit. Never force push, and never rewrite `main`.
 - Source files and scripts are named in camelCase, React component files in PascalCase. Image assets keep kebab-case names, and config files keep the names their tools expect.
-- Import from another folder of `src/` with `@/`, which is `src/`, as in `@/shared/types`, and from the same folder with `./`. Tests do the same. Only files outside `src/`, the logos in `assets/` and `package.json`, keep a `../` path, and ESLint refuses any other.
+- Import from another folder of `src/` with `@/`, which is `src/`, as in `@/shared/types`, and from the same folder with `./`. Tests do the same. Only files outside `src/`, the logos in `assets/` and `package.json`, keep a `../` path, and Oxlint refuses any other.
 - Documentation moves with the code: if a change makes the README or `src/mcp/docs.md` wrong, fix it in the same pull request.
 - Never use an em dash in any text, and never hard wrap markdown. One paragraph is one line.
 - If you used a coding assistant, say which one in the pull request body. A `Co-authored-by` trailer naming the model is welcome on commits, and "generated with" footers are not. The maintainers' own commits carry no trailer.
