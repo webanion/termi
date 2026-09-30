@@ -8,6 +8,7 @@ import {
   type IpcMainInvokeEvent,
 } from 'electron';
 import { readTerminalContext, showTerminalMenu } from './contextMenu';
+import { setWordWrapChecked } from './menu';
 import { getSettings, updateSettings } from './settings';
 import { isAppPage } from './window';
 import { cleanSettingsPatch } from '@/shared/settings';
@@ -107,6 +108,10 @@ export function registerIpc(
     const win = getWindow();
     const context = readTerminalContext(value);
     if (win && context) showTerminalMenu(win, context, send);
+  });
+
+  on('menu:word-wrap', (_event, on) => {
+    if (typeof on === 'boolean') setWordWrapChecked(on);
   });
 
   handle('dialog:pick-folder', async (_event, defaultPath) => {

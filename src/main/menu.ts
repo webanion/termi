@@ -8,6 +8,12 @@ const isMac = process.platform === 'darwin';
 
 const keys = (name: ShortcutAction) => shortcutAccelerator(name, process.platform);
 
+// The check mark on View > Word Wrap follows the focused terminal.
+export function setWordWrapChecked(on: boolean): void {
+  const menuItem = Menu.getApplicationMenu()?.getMenuItemById('toggle-word-wrap');
+  if (menuItem) menuItem.checked = on;
+}
+
 // Other systems give the page every key before the menu, and xterm keeps Ctrl+letters, so a key
 // the menu registered would go to the menu or to the shell depending on focus. There no item
 // registers its key, a role's included, which leaves Ctrl+Z, Ctrl+A and Ctrl+Q to the shell.

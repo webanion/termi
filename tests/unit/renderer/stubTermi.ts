@@ -33,6 +33,7 @@ const api: TermiApi = {
   },
   copyText: noop,
   showTerminalMenu: noop,
+  setWordWrapMenu: noop,
   onStats: subscribe,
   pickFolder: async () => null,
   loginItem: { get: async () => null, set: async () => null },

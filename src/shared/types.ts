@@ -112,5 +112,6 @@ export interface TermiApi {
     getState: () => Promise<WindowState>;
     onState: (callback: (state: WindowState) => void) => Unsubscribe;
   };
+  setWordWrapMenu: (on: boolean) => void;
   onMenuAction: (callback: (action: string) => void) => Unsubscribe;
 }
