@@ -81,10 +81,6 @@ export function TerminalRow({ tab, index, presence }: Props) {
         presence === 'leaving' && 'leaving',
       )}
       title={cmd ? commandSummary(cmd) : tab.name}
-      onClick={() => activate(tab.id)}
-      onDoubleClick={() => {
-        if (!renaming && presence !== 'leaving') startRename();
-      }}
     >
       <span className={`dot ${dot}`}></span>
       {renaming ? (
@@ -92,6 +88,8 @@ export function TerminalRow({ tab, index, presence }: Props) {
           key="editing"
           ref={nameRef}
           className="item-name"
+          role="textbox"
+          aria-label="Terminal name"
           contentEditable="true"
           suppressContentEditableWarning
           onKeyDown={onKeyDown}
@@ -100,9 +98,22 @@ export function TerminalRow({ tab, index, presence }: Props) {
           {renameText}
         </span>
       ) : (
-        <span key="name" ref={nameRef} className="item-name">
+        // The row's button, which covers the whole row. A double-click or F2 renames the tab.
+        <button
+          key="name"
+          className="item-name row-button"
+          onClick={() => activate(tab.id)}
+          onDoubleClick={() => {
+            if (presence !== 'leaving') startRename();
+          }}
+          onKeyDown={(event) => {
+            if (event.key !== 'F2' || presence === 'leaving') return;
+            event.preventDefault();
+            startRename();
+          }}
+        >
           {tab.name}
-        </span>
+        </button>
       )}
       <span className="item-meta" hidden={!meta}>
         {meta}
