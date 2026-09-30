@@ -31,7 +31,8 @@ permissions:
 
 jobs:
   # Things that are never legitimate here, checked before anything installs or runs: env files
-  # in git, eval or new Function in source, and an em dash in any tracked text.
+  # in git, eval or new Function in source, an em dash in any tracked text, and a hard-wrapped
+  # paragraph in Markdown.
   hygiene:
     name: Source hygiene
     runs-on: ubuntu-latest
@@ -58,6 +59,12 @@ jobs:
           if [ -n "$dashes" ]; then
             echo "::error::An em dash in tracked text. Use a comma, or a full stop between two sentences:"
             echo "$dashes"
+            status=1
+          fi
+          # Markdown is one line per paragraph, since it is read in viewers that wrap on their own.
+          # The runner's own Node is enough: the check needs no dependencies.
+          if ! node scripts/checkMarkdown.mjs; then
+            echo "::error::A hard-wrapped paragraph in Markdown. Join each paragraph, list item or quote onto one line."
             status=1
           fi
           exit "$status"

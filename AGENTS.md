@@ -13,7 +13,7 @@ Termi is an Electron terminal app: xterm.js in the window, shells through node-p
 | `src/renderer/` | The window's page, in React. `main.tsx` starts the store and renders `App.tsx`. `appStore.ts` holds the state, every action and the IPC listeners, and components read it with `useAppState`. `terminalRuntime.ts` owns each pane's xterm terminal and shell, outside React. `fileDrop.ts` is the one handler for files and folders dropped on the window. `SettingsDialog.tsx` is the settings panel. The help is `GuideDialog.tsx`, with its pages as markdown in `guide/` read by `guideMarkdown.ts` into text, `ShortcutSheet.tsx` and `CommandPalette.tsx`. `CommandLauncher.tsx` lists the saved commands to run from the keyboard. It and the palette share their search field and list, in `PaletteDialog.tsx`. Components are PascalCase `.tsx` files, and `styles/` holds the stylesheet, one file per section, imported in order by `main.tsx`. |
 | `src/mcp/` | The MCP server. `server.ts` is the entry and dispatch, `jsonRpc.ts` the stdio transport, `tools.ts` the tools, `docs.ts` and `docs.md` the guide, `settingsFile.ts` where it finds the settings. |
 | `src/shared/` | Code every process loads: `types.ts`, `ipc.ts` (the IPC contract), `settings.ts` (the settings file's schema, version, migrations and update checks), `savedCommands.ts` (the saved command rules), `shortcuts.ts` (every shortcut's keys for macOS and Linux, their labels, and the key matcher), `appActions.ts` (every action's name, which the menu, the palette and the shortcut sheet show) and `layouts.ts`. |
-| `scripts/` | Build helpers, such as `buildIcons.sh`, the changelog tool, and `devAppArmor.mjs`. |
+| `scripts/` | Build helpers, such as `buildIcons.sh`, the changelog tool, `devAppArmor.mjs`, and `checkMarkdown.mjs`, which finds hard-wrapped Markdown. |
 | `assets/` | Logo sources and icons, also used by electron-builder. |
 | `out/` | Build output, not tracked. |
 
@@ -66,7 +66,7 @@ The full conventions are in [CONTRIBUTING](.github/CONTRIBUTING.md). The short v
 - Import from another folder of `src/` with `@/`, which is `src/`, as in `@/shared/types`, and from the same folder with `./`. Tests do the same. Only files outside `src/`, the logos in `assets/` and `package.json`, keep a `../` path, and Oxlint refuses any other.
 - The lint includes the jsx-a11y rules, so anything clickable is a button or follows a WAI-ARIA pattern. Custom widgets follow their pattern, such as tabs, a listbox, a radio group or a menu: `prefer-tag-over-role` is off, and `ul` and `li` may take those roles. An element whose handlers only catch events bubbling up from its children takes `role="presentation"`. The palette's options are clicked with the mouse only, since its search field owns the keyboard, so `click-events-have-key-events` is off in `PaletteDialog.tsx`.
 - Documentation moves with the code: if a change makes the README or `src/mcp/docs.md` wrong, fix it in the same pull request.
-- Never use an em dash in any text, and never hard wrap markdown. One paragraph is one line.
+- Never use an em dash in any text, and never hard wrap markdown. One paragraph is one line. CI's hygiene job checks both, the second with `node scripts/checkMarkdown.mjs`.
 - If you used a coding assistant, say which one in the pull request body. A `Co-authored-by` trailer naming the model is welcome on commits, and "generated with" footers are not. The maintainers' own commits carry no trailer.
 
 ## Ask first
