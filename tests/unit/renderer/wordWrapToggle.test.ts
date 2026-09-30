@@ -19,7 +19,13 @@ vi.mock('@/renderer/terminalRuntime', () => ({
     created.push(options);
     return {};
   },
-  getRuntime: (paneId: string) => ({ setWrap: (on: boolean) => setWrap(paneId, on) }),
+  // The store also fits and focuses panes in animation frames, which can run after a test ends.
+  getRuntime: (paneId: string) => ({
+    setWrap: (on: boolean) => setWrap(paneId, on),
+    fit: () => {},
+    focus: () => {},
+    dispose: () => {},
+  }),
   allRuntimes: () => [].values(),
   routePtyData: () => undefined,
   runtimeForPty: () => undefined,
