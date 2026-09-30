@@ -1,15 +1,25 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "options": { "typeAware": true, "denyWarnings": true },
-  "plugins": ["typescript", "unicorn", "oxc", "react"],
-  "categories": { "correctness": "error" },
+  "options": {
+    "typeAware": true,
+    "denyWarnings": true
+  },
+  "plugins": ["typescript", "unicorn", "oxc", "react", "jsx-a11y"],
+  "categories": {
+    "correctness": "error"
+  },
   "ignorePatterns": ["out/**", "_releases/**"],
   "rules": {
     "no-eval": "error",
     "no-new-func": "error",
-    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "ignoreRestSiblings": true }],
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "ignoreRestSiblings": true
+      }
+    ],
     "typescript/no-explicit-any": "error",
-
     "typescript/await-thenable": "error",
     "typescript/no-array-delete": "error",
     "typescript/no-base-to-string": "error",
@@ -33,7 +43,6 @@
     "typescript/restrict-plus-operands": "error",
     "typescript/restrict-template-expressions": "error",
     "typescript/unbound-method": "error",
-
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "error",
     "react/error-boundaries": "error",
@@ -49,7 +58,6 @@
     "react/unsupported-syntax": "error",
     "react/use-memo": "error",
     "react/void-use-memo": "error",
-
     "no-restricted-imports": [
       "error",
       {
@@ -59,6 +67,30 @@
             "message": "Import from another folder of src with @/, as in @/shared/types."
           }
         ]
+      }
+    ],
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "jsx-a11y/no-noninteractive-element-to-interactive-role": [
+      "error",
+      {
+        "ul": ["listbox", "menu", "menubar", "radiogroup", "tablist", "tree", "treegrid"],
+        "ol": ["listbox", "menu", "menubar", "radiogroup", "tablist", "tree", "treegrid"],
+        "li": ["menuitem", "menuitemradio", "menuitemcheckbox", "option", "row", "tab", "treeitem"],
+        "table": ["grid"],
+        "td": ["gridcell"],
+        "fieldset": ["radiogroup", "presentation"]
+      }
+    ],
+    "jsx-a11y/control-has-associated-label": [
+      "error",
+      {
+        "ignoreRoles": ["separator"]
+      }
+    ],
+    "jsx-a11y/label-has-associated-control": [
+      "error",
+      {
+        "depth": 3
       }
     ]
   },
@@ -155,6 +187,12 @@
         "typescript/no-unsafe-return": "off",
         "typescript/require-await": "off",
         "typescript/unbound-method": "off"
+      }
+    },
+    {
+      "files": ["src/renderer/PaletteDialog.tsx"],
+      "rules": {
+        "jsx-a11y/click-events-have-key-events": "off"
       }
     }
   ]
