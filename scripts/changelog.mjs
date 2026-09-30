@@ -82,7 +82,7 @@ export function suggestBump(commits, currentVersion) {
   if (!parsed.length) return null;
   const breaking = parsed.some((c) => c.breaking);
   const feature = parsed.some((c) => c.type === 'feat');
-  if (/^0\./.test(currentVersion)) return breaking ? 'minor' : 'patch';
+  if (currentVersion.startsWith('0.')) return breaking ? 'minor' : 'patch';
   return breaking ? 'major' : feature ? 'minor' : 'patch';
 }
 

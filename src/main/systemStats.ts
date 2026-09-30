@@ -26,7 +26,7 @@ export interface NetworkBytes {
 
 function run(file: string, args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
-    execFile(file, args, { timeout: 2000 }, (error, stdout) =>
+    execFile(file, args, { timeout: 2000 }, (error: Error | null, stdout) =>
       error ? reject(error) : resolve(stdout),
     );
   });

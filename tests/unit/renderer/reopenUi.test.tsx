@@ -203,7 +203,9 @@ describe("the saved command's row", () => {
     const { store, tab, close } = await renderHeader();
     const first = tab().id;
     close(1);
-    act(() => store.openTab());
+    act(() => {
+      store.openTab();
+    });
     expect(store.activeTab()?.id).not.toBe(first);
     act(() => container.querySelector<HTMLElement>('#command-list .item')?.click());
     expect(store.activeTab()?.id).toBe(first);

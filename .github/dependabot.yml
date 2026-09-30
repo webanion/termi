@@ -9,7 +9,9 @@
 # that fail npm ci. Remove a rule once what it waits for has shipped.
 # - @types/node follows the Node that Electron bundles (Node 24 in Electron 44) and .nvmrc, so
 #   its major moves by hand, with the Electron upgrade that changes Node.
-# - TypeScript majors wait for typescript-eslint to accept them (8.70 accepts below 6.1).
+# - TypeScript majors move by hand. TypeScript 7 ships no programmatic API until 7.1, and the
+#   build and test tools that load TypeScript have to accept it first. The lint does not hold it
+#   back: oxlint-tsgolint already runs on TypeScript 7's checker.
 # - Vite majors, and the @vitejs/plugin-react major that needs them, wait for electron-vite to
 #   accept them (5.0 accepts Vite 5 to 7). electron-vite itself is not held, so its next major
 #   arrives as a pull request, which is the signal to lift this rule.

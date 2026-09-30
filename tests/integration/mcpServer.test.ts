@@ -97,7 +97,7 @@ describe('MCP server', () => {
       layout: 'main-top',
     });
     expect(added.result?.isError).toBeUndefined();
-    const id = (added.result?.structuredContent?.added as { id: string }).id;
+    const id = (added.result?.structuredContent?.added as { id: string } | undefined)?.id;
     expect(settings().commands[0]).toMatchObject({ id, name: 'Dev', layout: 'main-top' });
     expect(settings().version).toBe(SETTINGS_VERSION);
 
@@ -158,7 +158,7 @@ describe('MCP server', () => {
       await call('edit_saved_command', { target: 'Pair', terminals: ['a'] });
       expect(settings().commands[0]).not.toHaveProperty('view');
       const listed = await call('list_saved_commands');
-      const [pair] = listed.result?.structuredContent?.commands as object[];
+      const [pair] = (listed.result?.structuredContent?.commands as object[] | undefined) ?? [];
       expect(pair).not.toHaveProperty('view');
     });
 
@@ -326,7 +326,7 @@ describe('MCP server', () => {
 
   it('serves its guide as a resource and a tool', async () => {
     const resource = await request('resources/read', { uri: 'termi://docs' });
-    const text = (resource.result?.contents as { text: string }[])[0]?.text ?? '';
+    const text = (resource.result?.contents as { text: string }[] | undefined)?.[0]?.text ?? '';
     expect(text).toMatch(/^# Termi MCP server/);
     expect(text).toMatch(/## Tool reference/);
     expect(text).toContain(dir);

@@ -90,7 +90,9 @@ describe('isSavedCommandShape', () => {
     );
     for (const title of [1, null, true, ['API'], { text: 'API' }]) {
       const terminal = { command: 'a', title } as unknown as { command: string };
-      expect(isSavedCommandShape(command({ terminals: [terminal] })), String(title)).toBe(false);
+      expect(isSavedCommandShape(command({ terminals: [terminal] })), JSON.stringify(title)).toBe(
+        false,
+      );
     }
     expect(isSavedCommandShape(command({ view: 'tabs' }))).toBe(true);
     expect(isSavedCommandShape({ ...command(), view: 2 })).toBe(false);
