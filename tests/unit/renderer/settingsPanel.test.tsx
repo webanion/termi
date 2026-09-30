@@ -132,8 +132,27 @@ describe('the settings panel', () => {
       expect(term.options).toMatchObject({ cursorStyle: 'block', cursorBlink: false });
   });
 
+  it('turns smooth scrolling off and on for every terminal', async () => {
+    const { update, $, click } = await openPanel();
+    await click('#settings-tab-terminal');
+    const toggle = '#setting-smooth-scroll [role="switch"]';
+    expect($(toggle)?.getAttribute('aria-checked')).toBe('true');
+    await click(toggle);
+    expect(update).toHaveBeenLastCalledWith({ smoothScroll: false });
+    for (const term of terms) expect(term.options).toMatchObject({ smoothScrollDuration: 0 });
+    await click(reset('smooth-scroll'));
+    expect(update).toHaveBeenLastCalledWith({ smoothScroll: true });
+    expect($(toggle)?.getAttribute('aria-checked')).toBe('true');
+    for (const term of terms) expect(term.options).toMatchObject({ smoothScrollDuration: 125 });
+  });
+
   it('puts every setting back with Reset all', async () => {
-    const saved = { fontSize: 18, cursorStyle: 'underline', cursorBlink: false } as const;
+    const saved = {
+      fontSize: 18,
+      cursorStyle: 'underline',
+      cursorBlink: false,
+      smoothScroll: false,
+    } as const;
     const { update, $, click } = await openPanel({ saved, loginItem: true });
     expect(($('#settings-reset-all') as HTMLButtonElement).disabled).toBe(false);
     await click('#settings-reset-all');
@@ -141,6 +160,7 @@ describe('the settings panel', () => {
       fontSize: 13,
       cursorStyle: 'bar',
       cursorBlink: true,
+      smoothScroll: true,
       sidebarHidden: false,
     });
     expect(window.termi.loginItem.set).toHaveBeenCalledWith(false);

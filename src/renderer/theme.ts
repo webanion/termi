@@ -1,6 +1,12 @@
 import type { ITheme } from '@xterm/xterm';
 
 export const DURATION = 220; // matches --dur in styles/base.css
+// How long a mouse wheel's scroll takes with smooth scrolling on, as in VS Code's editor. xterm
+// draws whole rows, so the animation steps through them rather than gliding. Only a mouse wheel
+// animates, which xterm tells from a trackpad by the size of its steps. A trackpad already
+// follows the fingers, and a jump, such as to the bottom when you type or after a clear, is
+// always instant.
+export const SMOOTH_SCROLL_MS = 125;
 export const SIDEBAR_MIN = 170;
 export const SIDEBAR_MAX = 420;
 export const SIDEBAR_DEFAULT = 232;

@@ -32,6 +32,7 @@ async function startWith(commands: SavedCommand[]) {
     fontSize: 13,
     cursorStyle: 'bar',
     cursorBlink: true,
+    smoothScroll: true,
     guideSeen: true,
   });
   const update = vi.spyOn(window.termi.settings, 'update');

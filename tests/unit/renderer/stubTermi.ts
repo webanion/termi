@@ -11,6 +11,7 @@ const settings: Settings = {
   fontSize: 13,
   cursorStyle: 'bar',
   cursorBlink: true,
+  smoothScroll: true,
   guideSeen: true,
 };
 
