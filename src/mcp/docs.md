@@ -1,13 +1,10 @@
 # Termi MCP server
 
-Termi is the user's own terminal app for macOS (Electron, xterm.js, node-pty). The source is in this repository.
-This MCP server lets an assistant list, add, and edit Termi's **saved commands**.
+Termi is the user's own terminal app for macOS (Electron, xterm.js, node-pty). The source is in this repository. This MCP server lets an assistant list, add, and edit Termi's **saved commands**.
 
 ## Saved commands
 
-A saved command is an entry in the lower part of the Termi sidebar. Clicking it opens one tab. The tab has 1 to 4
-terminals, and each terminal runs its own shell command. Clicking a saved command that is already running focuses
-its tab instead of starting it again.
+A saved command is an entry in the lower part of the Termi sidebar. Clicking it opens one tab. The tab has 1 to 4 terminals, and each terminal runs its own shell command. Clicking a saved command that is already running focuses its tab instead of starting it again.
 
 Each saved command has these fields:
 
@@ -37,11 +34,9 @@ A tool that breaks a rule returns an error that says what to fix. Nothing is sav
 
 ## How edits work
 
-- `edit_saved_command` finds the command by `target`: its id first, then its exact name (not case-sensitive). If two
-  commands have the same name, use the id.
+- `edit_saved_command` finds the command by `target`: its id first, then its exact name (not case-sensitive). If two commands have the same name, use the id.
 - Only the fields you pass change.
-- `terminals` replaces the whole list. To add a terminal to a command, pass the old commands plus the new one. Call
-  `list_saved_commands` first to get the old list.
+- `terminals` replaces the whole list. To add a terminal to a command, pass the old commands plus the new one. Call `list_saved_commands` first to get the old list.
 - An empty `layout` string removes the layout, so the app uses the default one.
 - If the number of terminals changes and the saved layout does not fit the new number, the server removes it.
 - `view: "split"` removes the view, since split is the default. A command left with 1 terminal loses its view.
@@ -55,15 +50,13 @@ A running Termi watches the file. After a change from this server:
 
 - the sidebar shows the new or changed command right away;
 - a running tab of a renamed command takes the new name;
-- a change to the terminals, folder, layout, or view applies the next time the command starts. A running tab keeps its
-  terminals.
+- a change to the terminals, folder, layout, or view applies the next time the command starts. A running tab keeps its terminals.
 
 The watcher is in the app source (`src/main/settings.ts`). A packaged build made before the MCP server was added does not have it. That build shows changes only after a restart, and its next save can overwrite them. Rebuild it with `npm run dist:mac` or `npm run dist:linux`.
 
 ## What the server cannot do
 
-- Delete a saved command. The user can do it in the app: the edit (pencil) button on the command, then "Delete",
-  clicked twice.
+- Delete a saved command. The user can do it in the app: the edit (pencil) button on the command, then "Delete", clicked twice.
 - Start or stop a command, or open, close, or type into terminals.
 - Change other settings, such as text size or sidebar width.
 - Set the title of a terminal. The user does it in the saved command dialog.
