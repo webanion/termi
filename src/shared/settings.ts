@@ -111,5 +111,5 @@ export function cleanSettingsPatch(patch: unknown): Partial<Settings> {
     if (!check(patch[key])) throw new TypeError(`The setting "${key}" has a wrong value.`);
     clean[key] = patch[key];
   }
-  return clean as Partial<Settings>;
+  return clean;
 }

@@ -36,7 +36,7 @@ const isOptionalString = (value: unknown, max: number): value is string | undefi
 
 // A string that stands for bytes: each character is one byte, from 0 to 255.
 const isByteString = (value: unknown): value is string =>
-  typeof value === 'string' && /^[\x00-\xff]*$/.test(value);
+  typeof value === 'string' && !/[\u0100-\uffff]/.test(value);
 
 function ptyOptions(value: unknown): PtyCreateOptions {
   if (!isRecord(value)) throw new TypeError('pty:create needs an options object.');

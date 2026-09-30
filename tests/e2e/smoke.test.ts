@@ -131,7 +131,7 @@ beforeAll(async () => {
 afterAll(async () => {
   if (app) {
     await app.evaluate(({ dialog }) => {
-      dialog.showMessageBoxSync = (() => 0) as unknown as typeof dialog.showMessageBoxSync;
+      dialog.showMessageBoxSync = () => 0;
     });
     await app.close();
   }
@@ -607,9 +607,9 @@ describe('Termi', () => {
     await app.evaluate(({ shell }) => {
       const record = globalThis as unknown as { opened: string[] };
       record.opened = [];
-      shell.openExternal = (async (url: string) => {
+      shell.openExternal = async (url: string) => {
         record.opened.push(url);
-      }) as typeof shell.openExternal;
+      };
     });
     await clickMenu('report-issue');
     const opened = () => app.evaluate(() => (globalThis as unknown as { opened: string[] }).opened);
@@ -697,10 +697,10 @@ describe('Termi', () => {
     await app.evaluate(({ dialog }) => {
       const record = globalThis as unknown as { asked: number };
       record.asked = 0;
-      dialog.showMessageBoxSync = (() => {
+      dialog.showMessageBoxSync = () => {
         record.asked += 1;
         return 1; // Cancel
-      }) as unknown as typeof dialog.showMessageBoxSync;
+      };
     });
     await page.evaluate('window.termi.window.close()');
     await new Promise((r) => setTimeout(r, 800));
