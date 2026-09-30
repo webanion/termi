@@ -557,6 +557,11 @@ export function setCursorBlink(cursorBlink: boolean): void {
   void saveSettings({ cursorBlink }).then(applyTerminalOptions);
 }
 
+// Only new terminals follow it. The open ones keep what they have.
+export function setWordWrap(wordWrap: boolean): void {
+  void saveSettings({ wordWrap });
+}
+
 // Give every terminal the text size and cursor of the settings. A new text size changes how
 // many rows and columns fit, so the terminals on screen refit.
 function applyTerminalOptions(): void {
@@ -843,7 +848,13 @@ function applyWindowState({ isFullScreen, isFocused }: WindowState): void {
 
 // The settings the panel shows, which Reset all puts back. The sidebar's width, the saved
 // commands and whether the guide has opened stay as they are.
-export const PANEL_SETTINGS = ['fontSize', 'cursorStyle', 'cursorBlink', 'sidebarHidden'] as const;
+export const PANEL_SETTINGS = [
+  'fontSize',
+  'cursorStyle',
+  'cursorBlink',
+  'wordWrap',
+  'sidebarHidden',
+] as const;
 
 export async function setOpenAtLogin(open: boolean): Promise<void> {
   setState({ openAtLogin: await api.loginItem.set(open) });
