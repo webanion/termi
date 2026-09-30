@@ -1,4 +1,4 @@
-import { app, nativeImage, type BrowserWindow } from 'electron';
+import { app, dialog, nativeImage, type BrowserWindow } from 'electron';
 import { APP_ICON, createWindow } from './window';
 import { handleContextMenus } from './contextMenu';
 import { buildMenu } from './menu';
@@ -20,6 +20,16 @@ const sendToRenderer: SendEvent = (channel, ...args) => {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, ...args);
 };
 
+// Startup failed. Say so and quit, rather than run on with no window and the error only on
+// stderr, which a packaged app never shows.
+function failToStart(error: unknown): void {
+  dialog.showErrorBox(
+    'Termi could not start',
+    error instanceof Error ? error.message : String(error),
+  );
+  app.exit(1);
+}
+
 function openWindow(terminals: PtyManager, stats: SystemStats): void {
   const win = createWindow(terminals, stats, sendToRenderer);
   handleShortcuts(win, sendToRenderer);
@@ -30,29 +40,32 @@ function openWindow(terminals: PtyManager, stats: SystemStats): void {
   });
 }
 
-app.whenReady().then(() => {
-  if (process.platform === 'darwin') {
-    app.dock?.setIcon(nativeImage.createFromPath(APP_ICON));
-  }
-  app.setAboutPanelOptions({
-    applicationName: 'Termi',
-    applicationVersion: app.getVersion(),
-    copyright: 'A terminal with saved commands and auto-start.',
-    iconPath: APP_ICON,
-  });
+app
+  .whenReady()
+  .then(() => {
+    if (process.platform === 'darwin') {
+      app.dock?.setIcon(nativeImage.createFromPath(APP_ICON));
+    }
+    app.setAboutPanelOptions({
+      applicationName: 'Termi',
+      applicationVersion: app.getVersion(),
+      copyright: 'A terminal with saved commands and auto-start.',
+      iconPath: APP_ICON,
+    });
 
-  const terminals = new PtyManager(sendToRenderer);
-  const stats = new SystemStats((sample) => sendToRenderer('stats:update', sample));
-  ptys = terminals;
-  registerIpc(terminals, () => mainWindow, sendToRenderer);
-  watchSettings((settings) => sendToRenderer('settings:changed', settings));
-  buildMenu(sendToRenderer);
-  openWindow(terminals, stats);
+    const terminals = new PtyManager(sendToRenderer);
+    const stats = new SystemStats((sample) => sendToRenderer('stats:update', sample));
+    ptys = terminals;
+    registerIpc(terminals, () => mainWindow, sendToRenderer);
+    watchSettings((settings) => sendToRenderer('settings:changed', settings));
+    buildMenu(sendToRenderer);
+    openWindow(terminals, stats);
 
-  app.on('activate', () => {
-    if (!mainWindow) openWindow(terminals, stats);
-  });
-});
+    app.on('activate', () => {
+      if (!mainWindow) openWindow(terminals, stats);
+    });
+  })
+  .catch(failToStart);
 
 // The terminals belong to the window, so closing it quits the app.
 app.on('window-all-closed', () => app.quit());

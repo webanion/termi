@@ -71,8 +71,12 @@ export function createWindow(ptys: PtyManager, stats: SystemStats, send: SendEve
   trackWindowState(win);
 
   win.once('ready-to-show', () => win.show());
-  if (DEV_URL) win.loadURL(DEV_URL);
-  else win.loadURL(PAGE_URL);
+  // A page that fails to load never becomes ready to show, so the window would stay hidden.
+  win.loadURL(DEV_URL ?? PAGE_URL).catch((error: unknown) => {
+    const reason = error instanceof Error ? error.message : String(error);
+    dialog.showErrorBox('Termi could not open its window', reason);
+    app.quit();
+  });
 
   const sendWindowState = () =>
     send('window:state', {

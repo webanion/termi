@@ -108,7 +108,7 @@ export function registerIpc(
   });
 
   on('clipboard:write', (_event, text) => {
-    if (typeof text === 'string' && text) clipboard.writeText(text);
+    if (typeof text === 'string' && text) clipboard.writeText(text).catch(() => {});
   });
 
   on('terminal:context-menu', (_event, value) => {

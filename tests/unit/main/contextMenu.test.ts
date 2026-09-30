@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   built: [] as MenuItemConstructorOptions[][],
   popup: (() => {}) as (options: unknown) => void,
-  openExternal: (() => {}) as (url: string) => void,
-  writeText: (() => {}) as (text: string) => void,
+  openExternal: (() => Promise.resolve()) as (url: string) => Promise<void>,
+  writeText: (() => Promise.resolve()) as (text: string) => Promise<void>,
 }));
 
 vi.mock('electron', () => ({
@@ -59,8 +59,8 @@ const byLabel = (items: MenuItemConstructorOptions[], label: string) =>
 beforeEach(() => {
   mocks.built = [];
   mocks.popup = vi.fn();
-  mocks.openExternal = vi.fn();
-  mocks.writeText = vi.fn();
+  mocks.openExternal = vi.fn(() => Promise.resolve());
+  mocks.writeText = vi.fn(() => Promise.resolve());
 });
 
 afterEach(() => {
@@ -161,6 +161,29 @@ describe('terminalMenuTemplate', () => {
     expect(mocks.openExternal).toHaveBeenCalledWith(link);
     click(byLabel(items, 'Copy Link Address'));
     expect(mocks.writeText).toHaveBeenCalledWith(link);
+  });
+
+  // In Electron 44 both return a promise, which rejects when no app takes the link or the
+  // clipboard cannot be written. Main must handle each one, or it is an unhandled rejection.
+  it('handles a link that fails to open or to copy', () => {
+    const failing = (message: string) => {
+      const promise = Promise.reject(new Error(message));
+      return { promise, handled: vi.spyOn(promise, 'catch') };
+    };
+    const open = failing('no app for the link');
+    const copy = failing('clipboard busy');
+    mocks.openExternal = vi.fn(() => open.promise);
+    mocks.writeText = vi.fn(() => copy.promise);
+    const { win } = fakeWindow();
+    const items = terminalMenuTemplate(
+      { hasSelection: false, link: 'https://example.com' },
+      win,
+      vi.fn(),
+    );
+    click(byLabel(items, 'Open Link'));
+    click(byLabel(items, 'Copy Link Address'));
+    expect(open.handled).toHaveBeenCalledOnce();
+    expect(copy.handled).toHaveBeenCalledOnce();
   });
 });
 
