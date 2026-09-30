@@ -38,7 +38,7 @@ These rules are what keep a page that shows untrusted terminal output from reach
 | `npm start` | Build into `out/` and run the build. |
 | `npm run build` | Build main, preload, renderer and the MCP server into `out/`. |
 | `npm run typecheck` | TypeScript for both projects, node (`tsconfig.node.json`) and web (`tsconfig.web.json`). |
-| `npm run lint` | Oxlint in type-aware mode, with the import rules above. Every rule is an error, and `--deny-warnings` keeps it that way. `npm run lint:fix` applies the safe fixes. |
+| `npm run lint` | Oxlint, with its type-aware rules and the import rules above. Every rule is an error. The `options` in `.oxlintrc.json` turn on the type-aware rules and make any warning fail, so a bare `oxlint` in any editor or tool runs the same rules as CI. `npm run lint:fix` applies the safe fixes. |
 | `npm run format:check` | Prettier. `npm run format` fixes it. |
 | `npm run test:scripts` | The tests for the scripts in `scripts/`, such as the changelog tool and the AppArmor script, run with `node --test`. |
 | `npm run setup:apparmor` | On Ubuntu 23.10 and later, reports whether the development Electron needs an AppArmor profile. With `-- --execute`, installs it with `sudo`. |
