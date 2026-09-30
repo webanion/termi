@@ -186,6 +186,7 @@ export function CommandDialog() {
           {/* One box per terminal. With more than one, each gets a number, a title and a remove
               button. */}
           <div
+            role="presentation"
             className={cx('term-fields', multi && 'multi')}
             id="term-fields"
             // Cmd+Enter saves from inside a command box.

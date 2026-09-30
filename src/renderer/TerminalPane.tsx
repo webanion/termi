@@ -43,6 +43,8 @@ export function TerminalPane({ tab, pane, area }: Props) {
 
   return (
     <div
+      // A box for the pane. Its handlers catch what bubbles up from the terminal inside.
+      role="presentation"
       className={cx('term-pane', split && pane.id === tab.focusedPaneId && 'focused')}
       // The drop handler finds the pane under the pointer by this.
       data-pane-id={pane.id}
@@ -54,7 +56,8 @@ export function TerminalPane({ tab, pane, area }: Props) {
       }}
       onFocus={() => focusPane(pane.id)}
     >
-      <div className="pane-head" onClick={() => getRuntime(pane.id)?.focus()}>
+      {/* A click on the head focuses the terminal, as Tab or the pane shortcuts do. */}
+      <div role="presentation" className="pane-head" onClick={() => getRuntime(pane.id)?.focus()}>
         <span className={`dot ${split && busy ? 'busy' : ''}`}></span>
         {/* A title stands in for the command, which stays in the tooltip. */}
         <span

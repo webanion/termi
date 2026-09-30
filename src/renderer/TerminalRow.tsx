@@ -90,6 +90,7 @@ export function TerminalRow({ tab, index, presence }: Props) {
           className="item-name"
           role="textbox"
           aria-label="Terminal name"
+          tabIndex={0}
           contentEditable="true"
           suppressContentEditableWarning
           onKeyDown={onKeyDown}

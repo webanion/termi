@@ -56,7 +56,6 @@ export function PaletteSearch({ name, placeholder, searchLabel, results, note }:
         type="text"
         placeholder={placeholder}
         aria-label={searchLabel}
-        autoFocus
         value={query}
         onChange={(event) => {
           setQuery(event.target.value);
