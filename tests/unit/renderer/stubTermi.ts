@@ -24,6 +24,7 @@ const api: TermiApi = {
   pty: {
     create: async () => ({ id: 1, pid: 1, title: 'zsh' }),
     write: noop,
+    writeBinary: noop,
     resize: noop,
     kill: noop,
     onData: subscribe,
