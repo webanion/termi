@@ -58,6 +58,7 @@ async function openDialog(cmd: SavedCommand | null) {
     fontSize: 13,
     cursorStyle: 'bar',
     cursorBlink: true,
+    smoothScroll: true,
     wordWrap: true,
     guideSeen: true,
   });

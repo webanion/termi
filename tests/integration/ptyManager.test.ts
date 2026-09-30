@@ -76,6 +76,13 @@ describe('PtyManager', () => {
     expect(sent.find((s) => s.channel === 'pty:exit')?.args).toEqual([id, 3]);
   });
 
+  it('writes binary data as one byte a character, above 127 too', async () => {
+    const { id } = ptys.create({ command: 'echo ready$((1+1)); head -c 4 | od -An -tx1' }, 1);
+    await until(() => output(id).includes('ready2'));
+    ptys.writeBinary(id, '\x80\xe9\xff\n');
+    await until(() => /80 +e9 +ff +0a/.test(output(id)));
+  });
+
   it('counts a terminal as busy while a program runs, and idle again after', async () => {
     const { id } = ptys.create({}, 1);
     await until(() => output(id).length > 0);

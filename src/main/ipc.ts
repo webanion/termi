@@ -34,6 +34,10 @@ const isInteger = (value: unknown, min: number, max: number): value is number =>
 const isOptionalString = (value: unknown, max: number): value is string | undefined =>
   value === undefined || (typeof value === 'string' && value.length <= max);
 
+// A string that stands for bytes: each character is one byte, from 0 to 255.
+const isByteString = (value: unknown): value is string =>
+  typeof value === 'string' && /^[\x00-\xff]*$/.test(value);
+
 function ptyOptions(value: unknown): PtyCreateOptions {
   if (!isRecord(value)) throw new TypeError('pty:create needs an options object.');
   const { cols, rows, cwd, command } = value;
@@ -87,6 +91,9 @@ export function registerIpc(
   handle('pty:create', (event, options) => ptys.create(ptyOptions(options), event.sender.id));
   on('pty:write', (_event, id, data) => {
     if (isInteger(id, 1, Number.MAX_SAFE_INTEGER) && typeof data === 'string') ptys.write(id, data);
+  });
+  on('pty:write-binary', (_event, id, data) => {
+    if (isInteger(id, 1, Number.MAX_SAFE_INTEGER) && isByteString(data)) ptys.writeBinary(id, data);
   });
   on('pty:resize', (_event, id, cols, rows) => {
     if (

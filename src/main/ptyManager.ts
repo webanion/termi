@@ -202,6 +202,12 @@ export class PtyManager {
     this.ptys.get(id)?.proc.write(data);
   }
 
+  // Each character is one byte. Written as a string, node-pty would encode it as UTF-8, and a
+  // character above 127 would become two bytes.
+  writeBinary(id: number, data: string): void {
+    this.ptys.get(id)?.proc.write(Buffer.from(data, 'latin1'));
+  }
+
   resize(id: number, cols: number, rows: number): void {
     const entry = this.ptys.get(id);
     if (!entry || cols < 1 || rows < 1) return;

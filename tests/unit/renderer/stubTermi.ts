@@ -11,6 +11,7 @@ const settings: Settings = {
   fontSize: 13,
   cursorStyle: 'bar',
   cursorBlink: true,
+  smoothScroll: true,
   wordWrap: true,
   guideSeen: true,
 };
@@ -25,6 +26,7 @@ const api: TermiApi = {
   pty: {
     create: async () => ({ id: 1, pid: 1, title: 'zsh' }),
     write: noop,
+    writeBinary: noop,
     resize: noop,
     kill: noop,
     onData: subscribe,

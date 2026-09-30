@@ -132,6 +132,20 @@ describe('the settings panel', () => {
       expect(term.options).toMatchObject({ cursorStyle: 'block', cursorBlink: false });
   });
 
+  it('turns smooth scrolling off and on for every terminal', async () => {
+    const { update, $, click } = await openPanel();
+    await click('#settings-tab-terminal');
+    const toggle = '#setting-smooth-scroll [role="switch"]';
+    expect($(toggle)?.getAttribute('aria-checked')).toBe('true');
+    await click(toggle);
+    expect(update).toHaveBeenLastCalledWith({ smoothScroll: false });
+    for (const term of terms) expect(term.options).toMatchObject({ smoothScrollDuration: 0 });
+    await click(reset('smooth-scroll'));
+    expect(update).toHaveBeenLastCalledWith({ smoothScroll: true });
+    expect($(toggle)?.getAttribute('aria-checked')).toBe('true');
+    for (const term of terms) expect(term.options).toMatchObject({ smoothScrollDuration: 125 });
+  });
+
   it('saves whether a new terminal wraps, and leaves the open ones as they are', async () => {
     const { update, $, click } = await openPanel();
     await click('#settings-tab-terminal');
@@ -151,6 +165,7 @@ describe('the settings panel', () => {
       fontSize: 18,
       cursorStyle: 'underline',
       cursorBlink: false,
+      smoothScroll: false,
       wordWrap: false,
     } as const;
     const { update, $, click } = await openPanel({ saved, loginItem: true });
@@ -160,6 +175,7 @@ describe('the settings panel', () => {
       fontSize: 13,
       cursorStyle: 'bar',
       cursorBlink: true,
+      smoothScroll: true,
       wordWrap: true,
       sidebarHidden: false,
     });

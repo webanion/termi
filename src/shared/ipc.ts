@@ -27,6 +27,8 @@ export interface InvokeChannels {
 // Messages the renderer sends without waiting for an answer: ipcRenderer.send and ipcMain.on.
 export interface SendChannels {
   'pty:write': [id: number, data: string];
+  // Bytes, one per character from 0 to 255, such as a mouse report in the X10 encoding.
+  'pty:write-binary': [id: number, data: string];
   'pty:resize': [id: number, cols: number, rows: number];
   'pty:kill': [id: number];
   'clipboard:write': [text: string];

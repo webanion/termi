@@ -76,15 +76,25 @@ describe('readSettingsFile', () => {
     expect(file).toMatchObject({ cursorStyle: 'bar', cursorBlink: true, fontSize: 15 });
   });
 
-  it('migrates a version 5 file: new terminals still wrap long lines', () => {
+  it('migrates a version 5 file: smooth scrolling is on', () => {
     const file = readSettingsFile({ version: 5, commands: [], cursorBlink: false });
     expect(file.version).toBe(SETTINGS_VERSION);
-    expect(file).toMatchObject({ wordWrap: true, cursorBlink: false });
-    expect(SETTINGS_VERSION).toBe(6);
+    expect(file).toMatchObject({ smoothScroll: true, cursorBlink: false });
+  });
+
+  it('reads smooth scrolling turned off', () => {
+    expect(readSettingsFile({ version: 6, smoothScroll: false }).smoothScroll).toBe(false);
+  });
+
+  it('migrates a version 6 file: new terminals still wrap long lines', () => {
+    const file = readSettingsFile({ version: 6, commands: [], smoothScroll: false });
+    expect(file.version).toBe(SETTINGS_VERSION);
+    expect(file).toMatchObject({ wordWrap: true, smoothScroll: false });
+    expect(SETTINGS_VERSION).toBe(7);
   });
 
   it('reads word wrap turned off', () => {
-    expect(readSettingsFile({ version: 6, wordWrap: false }).wordWrap).toBe(false);
+    expect(readSettingsFile({ version: 7, wordWrap: false }).wordWrap).toBe(false);
   });
 
   it('reads the cursor settings', () => {
@@ -98,6 +108,7 @@ describe('readSettingsFile', () => {
       fontSize: 'big',
       cursorStyle: 'beam',
       cursorBlink: 'yes',
+      smoothScroll: 'off',
       wordWrap: 'off',
       sidebarHidden: 0,
       sidebarWidth: null,
@@ -167,6 +178,7 @@ describe('cleanSettingsPatch', () => {
     expect(() => cleanSettingsPatch({ sidebarHidden: 'yes' })).toThrow(/sidebarHidden/);
     expect(() => cleanSettingsPatch({ guideSeen: 1 })).toThrow(/guideSeen/);
     expect(() => cleanSettingsPatch({ cursorBlink: 'on' })).toThrow(/cursorBlink/);
+    expect(() => cleanSettingsPatch({ smoothScroll: 0 })).toThrow(/smoothScroll/);
     expect(() => cleanSettingsPatch({ wordWrap: 0 })).toThrow(/wordWrap/);
   });
 
@@ -174,6 +186,7 @@ describe('cleanSettingsPatch', () => {
     const patch = { cursorStyle: 'underline', cursorBlink: false, fontSize: 9 };
     expect(cleanSettingsPatch(patch)).toEqual(patch);
     expect(cleanSettingsPatch({ fontSize: 28 })).toEqual({ fontSize: 28 });
+    expect(cleanSettingsPatch({ smoothScroll: false })).toEqual({ smoothScroll: false });
     expect(cleanSettingsPatch({ wordWrap: false })).toEqual({ wordWrap: false });
   });
 

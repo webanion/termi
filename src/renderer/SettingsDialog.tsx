@@ -7,6 +7,7 @@ import {
   setFontSize,
   setOpenAtLogin,
   setSidebarHidden,
+  setSmoothScroll,
   setWordWrap,
 } from './appStore';
 import { cx } from './cx';
@@ -106,11 +107,12 @@ export function SettingsDialog() {
   const [section, setSection] = useState<Section>('general');
 
   const keys = (action: Parameters<typeof shortcutLabel>[0]) => shortcutLabel(action, platform);
-  const { fontSize, cursorStyle, cursorBlink, wordWrap, sidebarHidden } = settings;
+  const { fontSize, cursorStyle, cursorBlink, smoothScroll, wordWrap, sidebarHidden } = settings;
   const allDefault =
     fontSize === DEFAULT_SETTINGS.fontSize &&
     cursorStyle === DEFAULT_SETTINGS.cursorStyle &&
     cursorBlink === DEFAULT_SETTINGS.cursorBlink &&
+    smoothScroll === DEFAULT_SETTINGS.smoothScroll &&
     wordWrap === DEFAULT_SETTINGS.wordWrap &&
     sidebarHidden === DEFAULT_SETTINGS.sidebarHidden &&
     !openAtLogin;
@@ -265,6 +267,20 @@ export function SettingsDialog() {
                       checked={cursorBlink}
                       labelledBy="setting-cursor-blink-label"
                       onChange={setCursorBlink}
+                    />
+                  </SettingRow>
+                  <SettingRow
+                    id="smooth-scroll"
+                    label="Smooth scrolling"
+                    hint="A mouse wheel scrolls in a short animation. A trackpad is not affected."
+                    defaultText={onOff(DEFAULT_SETTINGS.smoothScroll)}
+                    isDefault={smoothScroll === DEFAULT_SETTINGS.smoothScroll}
+                    onReset={() => setSmoothScroll(DEFAULT_SETTINGS.smoothScroll)}
+                  >
+                    <Switch
+                      checked={smoothScroll}
+                      labelledBy="setting-smooth-scroll-label"
+                      onChange={setSmoothScroll}
                     />
                   </SettingRow>
                   <SettingRow

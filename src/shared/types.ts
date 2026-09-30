@@ -34,6 +34,7 @@ export interface Settings {
   fontSize: number;
   cursorStyle: CursorStyle;
   cursorBlink: boolean;
+  smoothScroll: boolean; // a mouse wheel scrolls in a short animation
   wordWrap: boolean; // whether a new terminal wraps long lines
   guideSeen: boolean; // the guide opens by itself once, on the first launch
 }
@@ -89,6 +90,7 @@ export interface TermiApi {
   pty: {
     create: (options: PtyCreateOptions) => Promise<PtyCreated>;
     write: (id: number, data: string) => void;
+    writeBinary: (id: number, data: string) => void;
     resize: (id: number, cols: number, rows: number) => void;
     kill: (id: number) => void;
     onData: (callback: (id: number, data: string) => void) => Unsubscribe;

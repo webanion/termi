@@ -24,6 +24,7 @@ interface RuntimeOptions {
   fontSize: number;
   cursorStyle: CursorStyle;
   cursorBlink: boolean;
+  smoothScrollDuration: number;
   wrap: boolean;
   events: RuntimeEvents;
 }
@@ -64,6 +65,7 @@ export class TerminalRuntime {
     fontSize,
     cursorStyle,
     cursorBlink,
+    smoothScrollDuration,
     wrap,
     events,
   }: RuntimeOptions) {
@@ -80,6 +82,11 @@ export class TerminalRuntime {
       cursorStyle,
       cursorWidth: 2,
       scrollback: 10000,
+      smoothScrollDuration,
+      // A wheel's notch scrolls 50 pixels, about 3 rows at the default text size, and 5 times
+      // that with Alt held. These are xterm's defaults, and VS Code's terminal uses the same.
+      scrollSensitivity: 1,
+      fastScrollSensitivity: 5,
       allowProposedApi: true,
       macOptionClickForcesSelection: true,
       theme: THEME,
@@ -101,6 +108,10 @@ export class TerminalRuntime {
       if (this.ptyId !== null) window.termi.pty.write(this.ptyId, data);
       this.lastInput = performance.now();
       this.followCursor();
+    });
+    // xterm sends a mouse report in the X10 encoding here, as bytes that can be above 127.
+    this.term.onBinary((data) => {
+      if (this.ptyId !== null) window.termi.pty.writeBinary(this.ptyId, data);
     });
     this.term.onCursorMove(() => {
       if (performance.now() - this.lastInput < FOLLOW_MS) this.followCursor();

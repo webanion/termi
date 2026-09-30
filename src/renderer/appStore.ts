@@ -32,7 +32,7 @@ import {
   watchDrops,
   type DroppedItem,
 } from './fileDrop';
-import { DURATION, SIDEBAR_DEFAULT } from './theme';
+import { DURATION, SIDEBAR_DEFAULT, SMOOTH_SCROLL_MS } from './theme';
 import { issueUrl, releaseNotesUrl } from './helpLinks';
 import { commandLabel } from './commandText';
 import { layoutGrid, tracksFor, type Axis, type TrackSizes } from './paneTracks';
@@ -299,6 +299,7 @@ function createPane(
     cursorStyle: state.settings.cursorStyle,
     cursorBlink: state.settings.cursorBlink,
     wrap: pane.wrap,
+    smoothScrollDuration: scrollDuration(),
     events: runtimeEvents,
   });
   return pane;
@@ -557,15 +558,22 @@ export function setCursorBlink(cursorBlink: boolean): void {
   void saveSettings({ cursorBlink }).then(applyTerminalOptions);
 }
 
+export function setSmoothScroll(smoothScroll: boolean): void {
+  void saveSettings({ smoothScroll }).then(applyTerminalOptions);
+}
+
 // Only new terminals follow it. The open ones keep what they have.
 export function setWordWrap(wordWrap: boolean): void {
   void saveSettings({ wordWrap });
 }
 
-// Give every terminal the text size and cursor of the settings. A new text size changes how
-// many rows and columns fit, so the terminals on screen refit.
+const scrollDuration = () => (state.settings.smoothScroll ? SMOOTH_SCROLL_MS : 0);
+
+// Give every terminal the text size, cursor and scrolling of the settings. A new text size
+// changes how many rows and columns fit, so the terminals on screen refit.
 function applyTerminalOptions(): void {
   const { fontSize, cursorStyle, cursorBlink } = state.settings;
+  const smoothScrollDuration = scrollDuration();
   let resized = false;
   for (const runtime of allRuntimes()) {
     const options = runtime.term.options;
@@ -575,6 +583,8 @@ function applyTerminalOptions(): void {
     }
     if (options.cursorStyle !== cursorStyle) options.cursorStyle = cursorStyle;
     if (options.cursorBlink !== cursorBlink) options.cursorBlink = cursorBlink;
+    if (options.smoothScrollDuration !== smoothScrollDuration)
+      options.smoothScrollDuration = smoothScrollDuration;
   }
   if (resized) fitActiveTab();
 }
@@ -852,6 +862,7 @@ export const PANEL_SETTINGS = [
   'fontSize',
   'cursorStyle',
   'cursorBlink',
+  'smoothScroll',
   'wordWrap',
   'sidebarHidden',
 ] as const;

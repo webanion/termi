@@ -481,6 +481,27 @@ describe('Termi', () => {
     expect(fs.readFileSync(marker(13), 'utf8')).toContain('\x1b[<2;');
   });
 
+  // Without 1006, xterm encodes each report as ESC [ M and three bytes, and sends it as bytes.
+  it('sends mouse reports in the X10 encoding to the program', async () => {
+    const term = page.locator('.tab-view.active .xterm').first();
+    const takesMouse = async () =>
+      (await term.getAttribute('class'))?.includes('enable-mouse-events') ?? false;
+    await page.locator('.tab-view.active .xterm-helper-textarea').first().focus();
+    await page.keyboard.type(`printf '\\033[?1000h'; cat > '${marker(14)}'; printf '\\033[?1000l'`);
+    await page.keyboard.press('Enter');
+    await until(takesMouse);
+
+    await term.locator('.xterm-screen').click({ position: { x: 20, y: 20 } });
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Control+D');
+    await until(async () => !(await takesMouse()));
+    // A press of the main button (32) and its release (35), each three bytes after ESC [ M.
+    const bytes = fs.readFileSync(marker(14));
+    const press = bytes.indexOf('\x1b[M ');
+    expect(press).toBeGreaterThanOrEqual(0);
+    expect(bytes.subarray(press + 6, press + 10).toString('latin1')).toBe('\x1b[M#');
+  });
+
   it('types a dropped file into the terminal under the pointer, quoted for the shell', async () => {
     const dropped = path.join(dir, "it's a drop.txt");
     fs.writeFileSync(dropped, 'dropped\n');

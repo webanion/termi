@@ -62,6 +62,7 @@ async function renderHeader() {
     fontSize: 13,
     cursorStyle: 'bar',
     cursorBlink: true,
+    smoothScroll: true,
     wordWrap: true,
     guideSeen: true,
   });
