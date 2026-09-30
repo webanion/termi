@@ -84,6 +84,10 @@ export class TerminalRuntime {
     this.term.onData((data) => {
       if (this.ptyId !== null) window.termi.pty.write(this.ptyId, data);
     });
+    // xterm sends a mouse report in the X10 encoding here, as bytes that can be above 127.
+    this.term.onBinary((data) => {
+      if (this.ptyId !== null) window.termi.pty.writeBinary(this.ptyId, data);
+    });
     this.term.onResize(({ cols, rows }) => {
       if (this.ptyId !== null) window.termi.pty.resize(this.ptyId, cols, rows);
     });

@@ -88,6 +88,7 @@ export interface TermiApi {
   pty: {
     create: (options: PtyCreateOptions) => Promise<PtyCreated>;
     write: (id: number, data: string) => void;
+    writeBinary: (id: number, data: string) => void;
     resize: (id: number, cols: number, rows: number) => void;
     kill: (id: number) => void;
     onData: (callback: (id: number, data: string) => void) => Unsubscribe;

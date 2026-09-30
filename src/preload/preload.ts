@@ -37,6 +37,7 @@ const api: TermiApi = {
   pty: {
     create: (options) => invoke('pty:create', options),
     write: (id, data) => send('pty:write', id, data),
+    writeBinary: (id, data) => send('pty:write-binary', id, data),
     resize: (id, cols, rows) => send('pty:resize', id, cols, rows),
     kill: (id) => send('pty:kill', id),
     onData: (callback) => listen('pty:data', callback),
