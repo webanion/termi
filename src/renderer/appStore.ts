@@ -820,7 +820,13 @@ function applyWindowState({ isFullScreen, isFocused }: WindowState): void {
 
 // The settings the panel shows, which Reset all puts back. The sidebar's width, the saved
 // commands and whether the guide has opened stay as they are.
-export const PANEL_SETTINGS = ['fontSize', 'cursorStyle', 'cursorBlink', 'sidebarHidden'] as const;
+export const PANEL_SETTINGS = [
+  'fontSize',
+  'cursorStyle',
+  'cursorBlink',
+  'smoothScroll',
+  'sidebarHidden',
+] as const;
 
 export async function setOpenAtLogin(open: boolean): Promise<void> {
   setState({ openAtLogin: await api.loginItem.set(open) });
