@@ -107,6 +107,7 @@ export function ReopenControl({ tab, closed }: Props) {
           id="reopen-menu"
           role="menu"
           aria-label="Closed terminals"
+          tabIndex={-1}
           onKeyDown={onMenuKey}
         >
           {closed.map((c) => (

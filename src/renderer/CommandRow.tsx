@@ -38,15 +38,20 @@ export function CommandRow({ cmd, presence }: Props) {
         presence === 'leaving' && 'leaving',
       )}
       title={`${commandSummary(cmd)}${cmd.cwd ? `\nin ${cmd.cwd}` : ''}`}
-      // A running command gets focus, even with terminals closed. A stopped one starts.
-      onClick={() => {
-        const current = commandById(cmd.id);
-        if (running) activate(running.id);
-        else if (current) runCommand(current);
-      }}
     >
       <span className="cmd-state">{running ? <span className="dot"></span> : <PlayIcon />}</span>
-      <span className="item-name">{cmd.name}</span>
+      {/* The row's button, which covers the whole row. A running command gets focus, even with
+          terminals closed. A stopped one starts. */}
+      <button
+        className="item-name row-button"
+        onClick={() => {
+          const current = commandById(cmd.id);
+          if (running) activate(running.id);
+          else if (current) runCommand(current);
+        }}
+      >
+        {cmd.name}
+      </button>
       {count && (
         <span className="item-count" title={`${count} terminals open`}>
           {count}

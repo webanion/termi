@@ -6,12 +6,14 @@ import {
   paneName,
   removePane,
   setSelecting,
+  showsTabs,
   showTerminalMenu,
   type PaneState,
   type TabState,
 } from './appStore';
 import { cx } from './cx';
 import { CloseIcon } from './Icons';
+import { panePanelId, paneTabId } from './PaneTabs';
 import { getRuntime } from './terminalRuntime';
 
 interface Props {
@@ -35,6 +37,7 @@ export function TerminalPane({ tab, pane, area }: Props) {
   }, [pane.id]);
 
   const split = tab.panes.length > 1;
+  const tabbed = showsTabs(tab);
   const name = paneName(pane);
   const busy = isBusy(pane);
 
@@ -75,6 +78,9 @@ export function TerminalPane({ tab, pane, area }: Props) {
       <div
         className="pane-body"
         ref={host}
+        id={panePanelId(pane.id)}
+        role={tabbed ? 'tabpanel' : undefined}
+        aria-labelledby={tabbed ? paneTabId(pane.id) : undefined}
         onContextMenu={(event) => {
           event.preventDefault();
           showTerminalMenu(pane.id, event);

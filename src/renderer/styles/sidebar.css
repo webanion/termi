@@ -175,10 +175,16 @@
 
 /* The buttons always keep their space and only fade in on hover, so nothing in the row moves. */
 .item-actions {
+  position: relative;
+  z-index: 1;
   flex: none;
   display: flex;
   align-items: center;
   gap: 2px;
+}
+
+.item .row-button::after {
+  border-radius: 5px;
 }
 
 .item > .item-actions {

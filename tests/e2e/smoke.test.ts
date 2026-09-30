@@ -289,7 +289,7 @@ describe('Termi', () => {
       .evaluateAll((els) => els.map((el) => el.getAttribute('data-pane-id')));
     await tabs.nth(2).click();
     await until(async () => JSON.stringify(await shown()) === JSON.stringify([ids[2]]));
-    expect(await tabs.nth(2).getAttribute('aria-selected')).toBe('true');
+    expect(await tabs.nth(2).locator('[role="tab"]').getAttribute('aria-selected')).toBe('true');
     const widths = await page
       .locator('.tab-view.active .term-pane')
       .evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().width)));

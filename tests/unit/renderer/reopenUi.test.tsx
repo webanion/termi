@@ -207,7 +207,7 @@ describe("the saved command's row", () => {
       store.openTab();
     });
     expect(store.activeTab()?.id).not.toBe(first);
-    act(() => container.querySelector<HTMLElement>('#command-list .item')?.click());
+    act(() => container.querySelector<HTMLElement>('#command-list .item .item-name')?.click());
     expect(store.activeTab()?.id).toBe(first);
     expect(tab().panes.map((p) => p.terminal)).toEqual([0, 2]);
     expect(count()).toBe('2 of 3');

@@ -112,7 +112,7 @@ Releases are made by the Release workflow in GitHub Actions, never by hand. Run 
 
 On Linux a plain Ctrl+letter always reaches the shell, so Ctrl+C interrupts, Ctrl+W deletes a word, Ctrl+K deletes to the end of the line and Ctrl+B stays the tmux prefix. Termi's own shortcuts use the keys other Linux terminals use: Ctrl+Shift with a letter, Alt+1 to 9 for tabs, and Ctrl+Page Up and Page Down to move between them.
 
-Double-click a running terminal in the sidebar to rename it. In a tab with more than one terminal, closing the terminal closes the whole tab. To close one terminal, use the × in its pane header, or type `exit`. To get a saved command's terminal back, use Reopen in the header.
+Double-click a running terminal in the sidebar to rename it, or press F2 while its row has keyboard focus. In a tab with more than one terminal, closing the terminal closes the whole tab. To close one terminal, use the × in its pane header, or type `exit`. To get a saved command's terminal back, use Reopen in the header.
 
 ## MCP server
 
