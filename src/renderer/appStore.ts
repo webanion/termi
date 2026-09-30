@@ -379,9 +379,11 @@ export function focusPane(paneId: string): void {
 
 // Focus a pane from a click on its tab or a shortcut. In tab view it shows only once React has
 // drawn it, and a hidden terminal cannot take focus, so the terminal focuses on the next frame.
-export function selectPane(paneId: string): void {
+// Shows a pane and, unless the keyboard should stay where it is, as in the tab strip, focuses
+// its terminal on the next frame.
+export function selectPane(paneId: string, focusTerminal = true): void {
   focusPane(paneId);
-  requestAnimationFrame(() => getRuntime(paneId)?.focus());
+  if (focusTerminal) requestAnimationFrame(() => getRuntime(paneId)?.focus());
 }
 
 export function closeTab(id: number): void {

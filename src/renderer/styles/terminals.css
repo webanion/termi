@@ -108,6 +108,8 @@
 }
 
 .pane-tab .icon-btn {
+  position: relative;
+  z-index: 1;
   flex: none;
   width: 18px;
   height: 18px;

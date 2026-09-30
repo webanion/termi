@@ -83,3 +83,32 @@ textarea:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
+
+/* A row's main action, such as a sidebar row's name or a pane tab's name. It looks like the text
+   it stands for, and its ::after covers the whole row, so a click anywhere in the row lands on
+   it, and its focus ring goes around the row. The row is position: relative, and the row's other
+   buttons sit above the cover. */
+.row-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: inherit;
+}
+
+.row-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.row-button:focus-visible {
+  outline: none;
+}
+
+.row-button:focus-visible::after {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}

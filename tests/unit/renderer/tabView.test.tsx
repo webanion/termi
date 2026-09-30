@@ -178,15 +178,18 @@ describe('the tab strip', () => {
     root = mounted;
     act(() => mounted.render(<Active />));
     const tabs = () => [...(container?.querySelectorAll<HTMLElement>('.pane-tab') ?? [])];
+    const tabButtons = () => [
+      ...(container?.querySelectorAll<HTMLElement>('.pane-tab [role="tab"]') ?? []),
+    ];
     const shown = () =>
       [...(container?.querySelectorAll<HTMLElement>('.term-pane.focused') ?? [])].map(
         (el) => el.dataset.paneId,
       );
-    return { ...started, tabs, shown };
+    return { ...started, tabs, tabButtons, shown };
   }
 
   it('names each terminal like a pane head, and shows the focused one', async () => {
-    const { tab, tabs, shown } = await render();
+    const { tab, tabs, tabButtons, shown } = await render();
     expect(container?.querySelector('.tab-view.tabbed')).not.toBeNull();
     expect(container?.querySelector('.tab-view.split')).toBeNull();
     expect(tabs().map((t) => t.querySelector('.pane-name')?.textContent)).toEqual([
@@ -194,16 +197,21 @@ describe('the tab strip', () => {
       'npm run web',
       '',
     ]);
-    expect(tabs().map((t) => t.getAttribute('aria-selected'))).toEqual(['true', 'false', 'false']);
+    expect(tabButtons().map((t) => t.getAttribute('aria-selected'))).toEqual([
+      'true',
+      'false',
+      'false',
+    ]);
     expect(container?.querySelectorAll('.term-pane')).toHaveLength(3);
     expect(shown()).toEqual([tab().panes[0]?.id]);
   });
 
   it('shows a terminal when its tab is clicked, and marks one with new output', async () => {
-    const { tab, tabs, shown, output } = await render();
+    const { tab, tabs, tabButtons, shown, output } = await render();
     act(() => output(3));
     expect(tabs()[2]?.querySelector('.dot')?.classList.contains('activity')).toBe(true);
-    act(() => tabs()[2]?.click());
+    expect(tabButtons()[2]?.getAttribute('aria-label')).toContain('new output');
+    act(() => tabButtons()[2]?.click());
     expect(shown()).toEqual([tab().panes[2]?.id]);
     expect(tabs()[2]?.classList.contains('on')).toBe(true);
     expect(tabs()[2]?.querySelector('.dot')?.classList.contains('activity')).toBe(false);
@@ -211,11 +219,68 @@ describe('the tab strip', () => {
 
   it('closes a terminal from its tab, and goes away when 1 is left', async () => {
     const { tab, tabs } = await render();
-    act(() => tabs()[1]?.querySelector('button')?.click());
+    act(() => tabs()[1]?.querySelector<HTMLElement>('.icon-btn')?.click());
     expect(tab().panes).toHaveLength(2);
     expect(tabs()).toHaveLength(2);
-    act(() => tabs()[1]?.querySelector('button')?.click());
+    act(() => tabs()[1]?.querySelector<HTMLElement>('.icon-btn')?.click());
     expect(tabs()).toHaveLength(0);
     expect(container?.querySelector('.tab-view.tabbed')).toBeNull();
+  });
+
+  // The WAI-ARIA tabs pattern: the selected tab is the one tab stop, and Left, Right, Home and
+  // End show another terminal while the keyboard stays in the strip.
+  it('moves between tabs with the arrow keys, Home and End, and keeps the keyboard in the strip', async () => {
+    const { tab, tabButtons, shown } = await render();
+    const press = (key: string) =>
+      act(() => {
+        document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+      });
+    const stops = () => tabButtons().map((b) => b.tabIndex);
+    expect(stops()).toEqual([0, -1, -1]);
+    act(() => tabButtons()[0]?.focus());
+    press('ArrowRight');
+    expect(shown()).toEqual([tab().panes[1]?.id]);
+    expect(document.activeElement).toBe(tabButtons()[1]);
+    expect(stops()).toEqual([-1, 0, -1]);
+    press('End');
+    expect(document.activeElement).toBe(tabButtons()[2]);
+    press('ArrowRight');
+    expect(document.activeElement).toBe(tabButtons()[0]);
+    press('ArrowLeft');
+    expect(document.activeElement).toBe(tabButtons()[2]);
+    press('Home');
+    expect(document.activeElement).toBe(tabButtons()[0]);
+    expect(shown()).toEqual([tab().panes[0]?.id]);
+    press('ArrowDown');
+    expect(document.activeElement).toBe(tabButtons()[0]);
+  });
+
+  it('closes the selected tab with Delete, and moves to the tab shown next', async () => {
+    const { tab, tabButtons } = await render();
+    act(() => tabButtons()[0]?.focus());
+    act(() => {
+      document.activeElement?.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
+      );
+    });
+    act(() => {
+      document.activeElement?.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }),
+      );
+    });
+    expect(tab().panes).toHaveLength(2);
+    await act(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+    expect(tabButtons()[1]?.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(tabButtons()[1]);
+  });
+
+  it('links each tab to its terminal as a tab panel', async () => {
+    const { tabButtons } = await render();
+    expect(tabButtons()).toHaveLength(3);
+    for (const button of tabButtons()) {
+      const panel = document.getElementById(button.getAttribute('aria-controls') ?? '');
+      expect(panel?.getAttribute('role')).toBe('tabpanel');
+      expect(panel?.getAttribute('aria-labelledby')).toBe(button.id);
+    }
   });
 });
