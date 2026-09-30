@@ -283,6 +283,19 @@ describe('MCP server', () => {
     expect(reply.result?.content?.[0]?.text).toMatch(/More than one saved command/);
   });
 
+  // A client can send any JSON. A value that is not a string is named as JSON in the reply,
+  // never as [object Object].
+  it('names a target, tool or resource that is not a string as JSON', async () => {
+    await call('add_saved_command', { name: 'Kept', terminals: ['a'] });
+    const edit = await call('edit_saved_command', { target: { id: 'x' }, autoStart: true });
+    expect(edit.result?.isError).toBe(true);
+    expect(edit.result?.content?.[0]?.text).toMatch(/Give the id or the name/);
+    const tool = await request('tools/call', { name: { tool: 'x' }, arguments: {} });
+    expect(tool.error?.message).toBe('Unknown tool: {"tool":"x"}');
+    const resource = await request('resources/read', { uri: ['termi://docs'] });
+    expect(resource.error?.message).toBe('Resource not found: ["termi://docs"]');
+  });
+
   it('returns a rule violation as a tool error and writes nothing', async () => {
     const cases = [
       { name: 'Empty', terminals: [''] },

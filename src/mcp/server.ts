@@ -22,7 +22,8 @@ const INSTRUCTIONS =
 
 function callTool(params: Request['params']): Reply {
   const tool = TOOLS.find((t) => t.name === params?.name);
-  if (!tool) return { error: { code: -32602, message: `Unknown tool: ${params?.name}` } };
+  if (!tool)
+    return { error: { code: -32602, message: `Unknown tool: ${JSON.stringify(params?.name)}` } };
   try {
     const result = tool.run((params?.arguments as ToolArgs) || {});
     if (typeof result === 'string')
@@ -44,7 +45,10 @@ function callTool(params: Request['params']): Reply {
 
 function readResource(params: Request['params']): Reply {
   const resource = RESOURCES.find((r) => r.uri === params?.uri);
-  if (!resource) return { error: { code: -32002, message: `Resource not found: ${params?.uri}` } };
+  if (!resource)
+    return {
+      error: { code: -32002, message: `Resource not found: ${JSON.stringify(params?.uri)}` },
+    };
   try {
     return {
       result: {

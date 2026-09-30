@@ -37,7 +37,7 @@ export function terminalMenuTemplate(
   const linkItems: MenuItemConstructorOptions[] = link
     ? [
         { label: 'Open Link', click: () => openLink(link) },
-        { label: 'Copy Link Address', click: () => clipboard.writeText(link) },
+        { label: 'Copy Link Address', click: () => void clipboard.writeText(link).catch(() => {}) },
         { type: 'separator' },
       ]
     : [];

@@ -136,7 +136,7 @@ export class SystemStats {
     networkBytes()
       .then((net) => (this.lastNet = net))
       .catch(() => {});
-    this.timer = setInterval(() => this.sample(), SAMPLE_MS);
+    this.timer = setInterval(() => void this.sample(), SAMPLE_MS);
   }
 
   stop(): void {

@@ -4,5 +4,6 @@ import { shell } from 'electron';
 export const isWebLink = (url: string): boolean => /^https?:\/\//.test(url);
 
 export function openLink(url: string): void {
-  if (isWebLink(url)) shell.openExternal(url);
+  // It rejects when no app handles the link, which leaves nothing more to do.
+  if (isWebLink(url)) shell.openExternal(url).catch(() => {});
 }
