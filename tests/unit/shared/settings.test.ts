@@ -74,7 +74,17 @@ describe('readSettingsFile', () => {
     const file = readSettingsFile({ version: 4, commands: [], fontSize: 15, guideSeen: true });
     expect(file.version).toBe(SETTINGS_VERSION);
     expect(file).toMatchObject({ cursorStyle: 'bar', cursorBlink: true, fontSize: 15 });
-    expect(SETTINGS_VERSION).toBe(5);
+  });
+
+  it('migrates a version 5 file: new terminals still wrap long lines', () => {
+    const file = readSettingsFile({ version: 5, commands: [], cursorBlink: false });
+    expect(file.version).toBe(SETTINGS_VERSION);
+    expect(file).toMatchObject({ wordWrap: true, cursorBlink: false });
+    expect(SETTINGS_VERSION).toBe(6);
+  });
+
+  it('reads word wrap turned off', () => {
+    expect(readSettingsFile({ version: 6, wordWrap: false }).wordWrap).toBe(false);
   });
 
   it('reads the cursor settings', () => {
@@ -88,6 +98,7 @@ describe('readSettingsFile', () => {
       fontSize: 'big',
       cursorStyle: 'beam',
       cursorBlink: 'yes',
+      wordWrap: 'off',
       sidebarHidden: 0,
       sidebarWidth: null,
       guideSeen: 'no',
@@ -156,12 +167,14 @@ describe('cleanSettingsPatch', () => {
     expect(() => cleanSettingsPatch({ sidebarHidden: 'yes' })).toThrow(/sidebarHidden/);
     expect(() => cleanSettingsPatch({ guideSeen: 1 })).toThrow(/guideSeen/);
     expect(() => cleanSettingsPatch({ cursorBlink: 'on' })).toThrow(/cursorBlink/);
+    expect(() => cleanSettingsPatch({ wordWrap: 0 })).toThrow(/wordWrap/);
   });
 
   it('accepts the cursor settings, and a text size from 9 to 28', () => {
     const patch = { cursorStyle: 'underline', cursorBlink: false, fontSize: 9 };
     expect(cleanSettingsPatch(patch)).toEqual(patch);
     expect(cleanSettingsPatch({ fontSize: 28 })).toEqual({ fontSize: 28 });
+    expect(cleanSettingsPatch({ wordWrap: false })).toEqual({ wordWrap: false });
   });
 
   it('refuses a text size out of the range, or not whole, and a cursor style it does not know', () => {

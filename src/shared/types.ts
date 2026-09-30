@@ -34,6 +34,7 @@ export interface Settings {
   fontSize: number;
   cursorStyle: CursorStyle;
   cursorBlink: boolean;
+  wordWrap: boolean; // whether a new terminal wraps long lines
   guideSeen: boolean; // the guide opens by itself once, on the first launch
 }
 
