@@ -54,6 +54,19 @@ When a directory already does something else consistently, follow the directory.
 
 A module imports from its own folder with `./`, and from any other folder of `src/` with `@/`, which is `src/`: `@/shared/types`, never `../shared/types`. Tests do the same, in `vi.mock()` and `await import()` too, so `@/renderer/appStore` rather than `../../../src/renderer/appStore`. Files outside `src/`, the logos in `assets/` and `package.json`, keep their relative paths. Oxlint refuses a `../` import that `@/` could replace.
 
+## Editor setup
+
+The rules CI checks live in files every editor can read: `.editorconfig`, `.prettierrc` and `.prettierignore` for Prettier, and `.oxlintrc.json` for Oxlint, whose `options` turn on the type-aware rules and fail on warnings. Give your editor an Oxlint and a Prettier integration that use the copies in `node_modules`, and it shows and fixes what CI checks, at the pinned versions.
+
+In VS Code, install `oxc.oxc-vscode`, `esbenp.prettier-vscode` and `editorconfig.editorconfig`. Then, in the workspace settings:
+
+- Turn off the Oxc extension's formatter with `"oxc.enable.oxfmt": false`. Termi formats with Prettier.
+- Make Prettier the formatter for each language the repository has. A formatter set for one language in your user settings, such as `[json]`, beats a general `editor.defaultFormatter` in the workspace, so give each one its own entry: `[typescript]`, `[typescriptreact]`, `[javascript]`, `[json]`, `[jsonc]`, `[css]`, `[yaml]`, `[html]` and `[markdown]`. VS Code's own JSON formatter puts every array item on its own line, which fails `format:check` on `.oxlintrc.json`.
+- Use the TypeScript in `node_modules` with `"typescript.tsdk": "node_modules/typescript/lib"`, so the editor's type errors match `npm run typecheck`.
+- Optionally, `"editor.codeActionsOnSave": { "source.fixAll.oxc": "explicit" }` applies the safe fixes on save, as `npm run lint:fix` does.
+
+The repository commits no editor settings. `.vscode/` and `.idea/` are ignored, so keep yours in your own checkout, where they never reach a commit.
+
 ## Versions and releases
 
 Termi follows semantic versioning. Below 1.0 a breaking change bumps the minor version and anything else the patch. From 1.0 on, it is plain semver. Breaking means a user's existing setup stops working: a settings file that cannot be upgraded, an MCP tool removed or its contract changed, or a shortcut removed.
